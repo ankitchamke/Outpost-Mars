@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-11-14T12:46:48.747Z",
+  "source": "NASA OSDR",
+  "studies": [
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-661",
+        "datasetId": "OSD-661",
+        "retrievalDate": "2026-11-14",
+        "instrument": "Dual-Energy X-Ray Absorptiometry (DXA) Scanner & Immunoblotting",
+        "location": "Low Earth Orbit (ISS) & Earth Ground Control",
+        "timeContext": "Archival Spaceflight Tissue (BION-M1, RR-1, RR-9, RR-18) & Ground Unloading",
+        "methodology": "Dual-energy X-ray absorptiometry bone densitometry, immunoblotting, and muscle-specific gene knockout assays",
+        "limitations": "Preclinical murine study combining 0g spaceflight tissue archives with Earth-based hindlimb suspension (HLS) disuse. This study does NOT provide direct proof of human physiological outcomes or bone remodeling under Martian partial gravity (0.38g)."
+      },
+      "accession": "OSD-661",
+      "studyTitle": "Toward countering muscle and bone loss with spaceflight: GSK3 as a potential target (Lumbar Spine, HLS, DXA Scanning)",
+      "organism": "Mus musculus",
+      "studyPopulation": "Mice (Mus musculus). Flox control and muscle-specific Gsk3 knockdown cohorts subjected to Earth-based hindlimb suspension (HLS/HLU) unloading experiments, compared with archived spaceflight tissue samples from BION-M1 and Rodent Research (RR-1, RR-9, RR-18) missions.",
+      "materialType": "Lumbar Spine & Skeletal Muscle",
+      "flightProgram": "International Space Station (ISS) & Rodent Research Program",
+      "missionName": "BION-M1, RR-1, RR-9, RR-18",
+      "exposureDurationDays": 30,
+      "experimentalConditions": "Multi-mission comparative analysis: (1) Archival tissue from ~30-day spaceflight missions (BION-M1, RR-1, RR-9, RR-18) evaluating GSK3b content and serine phosphorylation; (2) Ground-based hindlimb suspension (HLS) disuse model comparing wild-type versus muscle-specific Gsk3 knockout cohorts.",
+      "assayType": "Dual-Energy X-Ray Absorptiometry (DXA Scanning)",
+      "measuredParameters": [
+        "Bone Mineral Density (BMD)",
+        "GSK3b Content",
+        "Serine Phosphorylation",
+        "Muscle Mass",
+        "Type IIA Oxidative Muscle Fiber Ratio"
+      ],
+      "keyFindings": "Spaceflight microgravity consistently reduced GSK3b content across flight missions and enhanced bone GSK3 activation. In ground hindlimb suspension models of musculoskeletal disuse, muscle-specific Gsk3 deletion preserved muscle mass, maintained muscle force, and increased bone mineral density (BMD) in the lumbar spine, identifying GSK3 as a molecular target for disuse-induced bone and muscle degradation.",
+      "publications": [
+        {
+          "title": "Toward countering muscle and bone loss with spaceflight: GSK3 as a potential target",
+          "authors": [
+            "Baranowski RW",
+            "Braun JL",
+            "Hockey BL",
+            "Yumol JL",
+            "Geromella MS",
+            "Watson CJ",
+            "Kurgan N",
+            "Messner HN",
+            "Whitley KC",
+            "MacNeil AJ",
+            "Gauquelin-Koch G",
+            "Bertile F",
+            "Gittings W",
+            "Vandenboom R",
+            "Ward WE",
+            "Fajardo VA."
+          ],
+          "doi": "10.1016/j.isci.2023.107047",
+          "journal": "iScience",
+          "year": 2023
+        }
+      ],
+      "limitations": "Preclinical murine study combining 0g LEO spaceflight archival tissue with Earth-based hindlimb suspension unloading. This study does NOT provide direct proof of human physiological outcomes or bone remodeling under Martian partial gravity (0.38g)."
+    },
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://osdr.nasa.gov/bio/repo/data/studies/OSD-121",
+        "datasetId": "OSD-121",
+        "retrievalDate": "2026-11-14",
+        "instrument": "Biological Research in Canisters (BRIC-16), Affymetrix GeneChip Microarray, ELISA",
+        "location": "Low Earth Orbit (Space Shuttle Discovery, STS-131)",
+        "timeContext": "April 2010 Spaceflight Mission",
+        "methodology": "Comparative transcriptomics (Affymetrix GeneChip), glycomics screening, and morphometric photography of spaceflight seedlings",
+        "limitations": "Dark canister microgravity in LEO; this study does NOT provide direct proof of mature crop cultivation, food production, or plant growth under Martian partial gravity (0.38g) and illuminated greenhouse regolith conditions."
+      },
+      "accession": "OSD-121",
+      "studyTitle": "Biological Research in Canisters-16 (BRIC-16): Transcriptomics, Glycomics, and Morphometric photography.",
+      "organism": "Arabidopsis thaliana",
+      "studyPopulation": "Arabidopsis thaliana Columbia-0 (Col-0) wild-type and cell-wall mutant seedlings",
+      "materialType": "Whole Seedlings & Petioles",
+      "flightProgram": "Space Transportation System (STS)",
+      "missionName": "STS-131 (Space Shuttle Discovery, April 2010)",
+      "exposureDurationDays": 15,
+      "experimentalConditions": "Seedlings grown in dark Petri dishes inside Biological Research in Canisters (BRIC-16) hardware aboard STS-131 in microgravity (0g), compared with identical 1g ground control hardware under matched temperature and relative humidity profiles.",
+      "assayType": "Transcriptomics (Microarray), Glycomics (ELISA), and Morphometric Photography",
+      "measuredParameters": [
+        "Cell Wall Composition and Architecture",
+        "Differential Gene Expression (Hypoxia and Heat Shock Pathways)",
+        "DNA Repair and Stress Markers",
+        "Seedling Morphometrics and Petiole Curvature"
+      ],
+      "keyFindings": "Spaceflight microgravity significantly alters plant cell-wall structural organization and induces differential expression of gene networks governing cell-wall development, hypoxia response, heat-shock response, and DNA repair, demonstrating that gravitational acceleration is fundamental to vegetative cell-wall morphogenesis and physiological stress signaling.",
+      "publications": [
+        {
+          "title": "Comparative transcriptomics indicate changes in cell wall organization and stress response in seedlings during spaceflight",
+          "authors": [
+            "Christina M. Johnson",
+            "Aswati Subramanian",
+            "Sivakumar Pattathil",
+            "Melanie J. Correll",
+            "John Z. Kiss"
+          ],
+          "doi": "10.3732/ajb.1700079",
+          "journal": "American Journal of Botany",
+          "year": 2017
+        },
+        {
+          "title": "Morphometric analyses of petioles of seedlings grown in a spaceflight experiment",
+          "authors": [
+            "Johnson Christina M.",
+            "Subramanian Aswati",
+            "Edelmann Richard E.",
+            "Kiss John Z."
+          ],
+          "doi": "10.1007/s10265-015-0749-0",
+          "journal": "American Journal of Botany",
+          "year": 2017
+        }
+      ],
+      "limitations": "Experimental study performed on Arabidopsis seedlings inside sealed, dark canisters in 0g LEO microgravity for 15 days. This study does NOT provide direct proof of mature plant cultivation, food crop growth, or regolith farming under Martian partial gravity (0.38g) and illuminated greenhouse conditions."
+    }
+  ]
+}
