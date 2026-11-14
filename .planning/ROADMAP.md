@@ -9,7 +9,7 @@ OUTPOST: MARS is developed across 9 sequential phases totaling exactly 20 workin
 ## Phases & Time Accounting
 
 - [x] **Phase 00: Planning & Scope Lock** (2h) — [COMPLETE] Architecture, scientific validity audit, GSD setup, 100-point scorecard, and risk register.
-- [ ] **Phase 01: Project Foundation & Architecture** (1h) — Greenfield Vite + TypeScript scaffolding, HTML5 Canvas viewport, standard CSS layout, and state persistence.
+- [x] **Phase 01: Project Foundation & Architecture** (1h) — [COMPLETE] Greenfield Vite + TypeScript scaffolding, HTML5 Canvas viewport, standard CSS layout, and state persistence.
 - [ ] **Phase 02: Science & Data Integration Engine** (3h) — Bundled NASA DONKI space weather snapshots, MSL Curiosity RAD Gale Crater dosimetry baseline ($0.64 \pm 0.12\text{ mSv/day}$), Perseverance MEDA meteorological ranges, and strict REAL/DERIVED/GAME-SIMPLIFIED labeling.
 - [ ] **Phase 03: 2D Base Simulation & Resource Systems** (3h) — 4 essential MVP modules, 3-resource interdependent engine (Power, Life Support, Storm Protection), Crew Safety outcome indicator, and turn-based Sol progression.
 - [ ] **Phase 04: Mission Scenarios & Space Weather Events** (3h) — 3-mission story campaign, CME/solar flare event handling, emergency shelter protocols, and educational debriefs explaining the distinction between real observations and exaggerated scenarios.
@@ -20,8 +20,8 @@ OUTPOST: MARS is developed across 9 sequential phases totaling exactly 20 workin
 
 **Time Accounting Summary:**
 - Total Project Budget: 20.0 hours
-- Time Spent (Phase 00): 2.0 hours [COMPLETE]
-- Remaining Time (Phases 01–08): Exactly 18.0 hours
+- Time Spent (Phases 00 & 01): 3.0 hours [COMPLETE]
+- Remaining Time (Phases 02–08): Exactly 17.0 hours
 
 ---
 

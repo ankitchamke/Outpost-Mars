@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="OUTPOST: MARS — A NASA Space Apps 2D Mars outpost mission trainer for young explorers." />
+    <meta name="theme-color" content="#121822" />
+    <title>OUTPOST: MARS</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="app-header" role="banner">
+        <div class="brand-section">
+          <span class="brand-title">OUTPOST: MARS</span>
+          <span class="brand-badge">Jezero Crater</span>
+        </div>
+        <div class="header-controls">
+          <button id="btn-save-state" class="btn btn-sm" aria-label="Save current mission state">Save</button>
+          <button id="btn-reset-state" class="btn btn-sm" aria-label="Reset mission state">Reset</button>
+        </div>
+      </header>
+
+      <main class="viewport-container" role="main">
+        <canvas id="game-canvas" aria-label="Martian base viewport rendering Outpost Mars surface and title" role="img"></canvas>
+        <div id="hud-container" class="hud-overlay"></div>
+      </main>
+
+      <footer class="app-footer" role="contentinfo">
+        <span>Sol 1 &bull; Status: Foundation Active</span>
+        <span class="footer-credits">Scientific Trainer &bull; NASA Space Apps</span>
+      </footer>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
