@@ -1,11 +1,21 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createDefaultOfflineLoader,
   loadDonkiSnapshotFromRaw,
   loadOsdrSnapshotFromRaw,
   loadRadLabSnapshotFromRaw,
   OfflineSnapshotLoader,
   parseRawSnapshotInput,
 } from '../../src/data/loader';
+import {
+  validateDonkiSnapshot,
+  validateOsdrSnapshot,
+  validateRadLabSnapshot,
+} from '../../src/data/validation';
+import bundledDonki from '../../src/data/snapshots/donki-events.json';
+import bundledRadLab from '../../src/data/snapshots/radlab-dosimetry.json';
+import bundledOsdr from '../../src/data/snapshots/osdr-studies.json';
+import bundledCuriosity from '../../src/data/snapshots/curiosity-rad.json';
 import {
   SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_OSDR_SNAPSHOT_FIXTURE,
@@ -178,3 +188,120 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     expect(loader.loadDonki().success).toBe(false);
   });
 });
+
+describe('Phase 02.3B: Authentic Bundled Snapshots & Default Offline Loader', () => {
+  it('validates the authentic bundled DONKI snapshot against strict contracts', () => {
+    const res = validateDonkiSnapshot(bundledDonki);
+    expect(res.success).toBe(true);
+    expect(res.data?.source).toBe('NASA DONKI');
+    expect(res.data?.cmes.length).toBe(4);
+    expect(res.data?.solarFlares.length).toBe(3);
+    expect(res.data?.sepEvents.length).toBe(2);
+
+    // Verify 2013-04-11 CME is excluded from DONKI Mars records (since ENLIL only modeled Spitzer)
+    const has2013Cme = res.data?.cmes.some((c) => c.activityId.startsWith('2013-04-11'));
+    expect(has2013Cme).toBe(false);
+
+    // Verify presence of historic X8.7 flare (largest of Cycle 25)
+    const x87 = res.data?.solarFlares.find((f) => f.classType === 'X8.7');
+    expect(x87).toBeDefined();
+    expect(x87?.flareId).toBe('2024-05-14T16:46:00-FLR-001');
+
+    // Verify all 4 CMEs possess authentic WSA-ENLIL Mars shock arrival model predictions
+    for (const cme of res.data?.cmes || []) {
+      const marsImpact = cme.analyses.some((a) =>
+        a.enlilList?.some((sim) => sim.impactList.some((imp) => imp.location === 'Mars'))
+      );
+      expect(marsImpact).toBe(true);
+      expect(cme.analyses[0].speedUnit).toBe('km/s');
+    }
+
+    expect(x87?.fluxUnit).toBe('class');
+  });
+
+  it('validates Curiosity RAD snapshot baseline, Sol 242 event, and GAME-SIMPLIFIED drill', () => {
+    expect(bundledCuriosity.schemaVersion).toBe('1.0');
+    expect(bundledCuriosity.instrument).toBe('Radiation Assessment Detector (RAD)');
+    expect(bundledCuriosity.spacecraft).toBe('Mars Science Laboratory (Curiosity Rover)');
+    expect(bundledCuriosity.location.region).toBe('Gale Crater');
+
+    // GCR baseline verification
+    const gcr = bundledCuriosity.datasets.gcrBaseline;
+    expect(gcr.classification).toBe('REAL');
+    expect(gcr.doseEquivalentRate).toBe(0.64);
+    expect(gcr.doseEquivalentRateUncertainty).toBe(0.12);
+    expect(gcr.doseEquivalentRateUnit).toBe('mSv/day');
+    expect(gcr.absorbedDoseRateSilicon).toBe(0.21);
+    expect(gcr.absorbedDoseRateSiliconUnit).toBe('mGy/day');
+
+    // Sol 242 SEP event verification (peak rate enhancement vs integrated excess dose)
+    const sol242 = bundledCuriosity.datasets.sol242SepEvent;
+    expect(sol242.classification).toBe('REAL');
+    expect(sol242.peakAbsorbedDoseRate).toBe(260);
+    expect(sol242.peakAbsorbedDoseRateUnit).toBe('uGy/day');
+    expect(sol242.integratedExcessDoseEquivalent).toBe(0.05);
+    expect(sol242.integratedExcessDoseEquivalentUnit).toBe('mSv');
+    expect(sol242.integratedExcessDoseEquivalentMicroSv).toBe(50);
+    expect(sol242.measurementClarification).toContain('integrated excess dose equivalent');
+
+    // Strict empirical separation: Curiosity RAD snapshot contains ONLY empirical observations (no game scenario)
+    expect((bundledCuriosity.datasets as Record<string, unknown>).pedagogicalComparison).toBeUndefined();
+    expect(Object.keys(bundledCuriosity.datasets)).toEqual(['gcrBaseline', 'sol242SepEvent']);
+  });
+
+  it('validates the authentic bundled RadLab snapshot against strict contracts & SEC-01', () => {
+    const res = validateRadLabSnapshot(bundledRadLab);
+    expect(res.success).toBe(true);
+    expect(res.data?.source).toBe('NASA OSDR RadLab');
+    expect(res.data?.records.length).toBeGreaterThan(0);
+
+    for (const rec of res.data?.records || []) {
+      expect(rec.spacecraft).toBe('ISS');
+      expect(rec.trajectory).toBe('LEO');
+      expect(rec.absorbedDoseRateUnit).toBe('uGy/h');
+      expect(rec.instrument).toBe('DosTel1');
+      // SEC-01 check: verify provenance location never claims Mars surface
+      expect(rec.provenance.location?.toLowerCase().includes('mars')).toBe(false);
+    }
+  });
+
+  it('validates the authentic bundled OSDR study snapshot against strict contracts', () => {
+    const res = validateOsdrSnapshot(bundledOsdr);
+    expect(res.success).toBe(true);
+    expect(res.data?.source).toBe('NASA OSDR');
+    expect(res.data?.studies.length).toBe(2);
+
+    // OSD-661: Bone & muscle countermeasure study
+    const study661 = res.data?.studies.find((s) => s.accession === 'OSD-661');
+    expect(study661).toBeDefined();
+    expect(study661?.organism).toBe('Mus musculus');
+    expect(study661?.publications[0].doi).toBe('10.1016/j.isci.2023.107047');
+
+    // OSD-121: Plant seedling transcriptomics study (BRIC-16)
+    const study121 = res.data?.studies.find((s) => s.accession === 'OSD-121');
+    expect(study121).toBeDefined();
+    expect(study121?.organism).toBe('Arabidopsis thaliana');
+    expect(study121?.publications.length).toBeGreaterThan(0);
+  });
+
+  it('CFG-01 & createDefaultOfflineLoader: loads all authentic bundled snapshots offline', () => {
+    const loader = createDefaultOfflineLoader();
+    expect(loader.hasSnapshot('donki')).toBe(true);
+    expect(loader.hasSnapshot('radlab')).toBe(true);
+    expect(loader.hasSnapshot('osdr')).toBe(true);
+
+    const allRes = loader.loadAll();
+    expect(allRes.success).toBe(true);
+    expect(allRes.data.donki).toBeDefined();
+    expect(allRes.data.radlab).toBeDefined();
+    expect(allRes.data.osdr).toBeDefined();
+    expect(Object.keys(allRes.errors).length).toBe(0);
+
+    // Verify truth classification on loaded records
+    expect(allRes.data.donki?.cmes[0].classification).toBe('DERIVED');
+    expect(allRes.data.donki?.solarFlares[0].classification).toBe('REAL');
+    expect(allRes.data.radlab?.records[0].classification).toBe('REAL');
+    expect(allRes.data.osdr?.studies[0].classification).toBe('REAL');
+  });
+});
+

@@ -8,9 +8,11 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ingest:data": "esbuild scripts/ingest-nasa-data.ts --bundle --platform=node --format=esm --outfile=dist/.ingest-bundle.mjs && node dist/.ingest-bundle.mjs"
   },
   "devDependencies": {
+    "esbuild": "^0.25.12",
     "typescript": "^5.7.2",
     "vite": "^6.2.0",
     "vitest": "^5.1.0"

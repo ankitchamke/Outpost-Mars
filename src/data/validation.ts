@@ -729,6 +729,40 @@ export function validateRadLabObservationRecord(
     if (!validateNumber(value.lShell, `${path}.lShell`, errors, { min: 0 })) valid = false;
   }
 
+  // SEC-01: Cross-field validation preventing ISS/LEO observations from being represented as Mars surface measurements
+  if (typeof value.spacecraft === 'string' && typeof value.trajectory === 'string') {
+    const isIss = value.spacecraft.toUpperCase().includes('ISS');
+    const isLeo = value.trajectory.toUpperCase().includes('LEO');
+    const trajectoryUpper = value.trajectory.toUpperCase();
+    const isSurfaceOrMarsTrajectory =
+      trajectoryUpper.includes('SURFACE') || trajectoryUpper.includes('MARS');
+
+    if ((isIss || isLeo) && isSurfaceOrMarsTrajectory) {
+      errors.push({
+        path: `${path}.trajectory`,
+        message: `Cross-field validation failure: ISS/LEO observations cannot have a surface or Mars trajectory (received spacecraft: '${value.spacecraft}', trajectory: '${value.trajectory}').`,
+        value: value.trajectory,
+      });
+      valid = false;
+    }
+
+    if ((isIss || isLeo) && provenance && typeof provenance.location === 'string') {
+      const locationLower = provenance.location.toLowerCase();
+      if (
+        locationLower.includes('mars') ||
+        locationLower.includes('gale crater') ||
+        locationLower.includes('martian')
+      ) {
+        errors.push({
+          path: `${path}.provenance.location`,
+          message: `Cross-field validation failure: ISS/LEO observations cannot claim Mars surface location in provenance (received location: '${provenance.location}').`,
+          value: provenance.location,
+        });
+        valid = false;
+      }
+    }
+  }
+
   if (!valid || !provenance) {
     return { success: false, errors };
   }

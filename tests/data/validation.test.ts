@@ -260,6 +260,34 @@ describe('NASA RadLab Validation', () => {
     expect(res.data?.source).toBe('NASA OSDR RadLab');
   });
 
+  it('SEC-01: rejects RadLab observation where ISS spacecraft claims surface/Mars trajectory', () => {
+    const invalidIssSurface = {
+      ...SYNTHETIC_VALID_RADLAB_RECORD_FIXTURE,
+      spacecraft: 'ISS',
+      trajectory: 'Surface',
+    };
+    const res = validateRadLabObservationRecord(invalidIssSurface);
+    expect(res.success).toBe(false);
+    expect(res.errors.some((e) => e.path.includes('trajectory'))).toBe(true);
+    expect(res.errors.some((e) => e.message.includes('ISS/LEO observations cannot have a surface or Mars trajectory'))).toBe(true);
+  });
+
+  it('SEC-01: rejects RadLab observation where ISS/LEO claims Mars surface in provenance location', () => {
+    const invalidIssLocation = {
+      ...SYNTHETIC_VALID_RADLAB_RECORD_FIXTURE,
+      spacecraft: 'ISS',
+      trajectory: 'LEO',
+      provenance: {
+        ...SYNTHETIC_VALID_RADLAB_RECORD_FIXTURE.provenance,
+        location: 'Mars Surface (Gale Crater)',
+      },
+    };
+    const res = validateRadLabObservationRecord(invalidIssLocation);
+    expect(res.success).toBe(false);
+    expect(res.errors.some((e) => e.path.includes('provenance.location'))).toBe(true);
+    expect(res.errors.some((e) => e.message.includes('ISS/LEO observations cannot claim Mars surface location'))).toBe(true);
+  });
+
   it('rejects an empty RadLab snapshot with zero records', () => {
     const emptyRadLab = {
       schemaVersion: '1.0',

@@ -15,6 +15,9 @@ import {
   validateOsdrSnapshot,
   validateRadLabSnapshot,
 } from './validation';
+import defaultDonkiSnapshot from './snapshots/donki-events.json';
+import defaultRadLabSnapshot from './snapshots/radlab-dosimetry.json';
+import defaultOsdrSnapshot from './snapshots/osdr-studies.json';
 
 export type SnapshotKey = 'donki' | 'radlab' | 'osdr';
 
@@ -250,3 +253,17 @@ export class OfflineSnapshotLoader {
     delete this.cache.osdr;
   }
 }
+
+/**
+ * Factory that returns an OfflineSnapshotLoader pre-populated with
+ * statically bundled authentic NASA science data snapshots.
+ * Zero network calls, zero API keys, validates every snapshot on retrieval.
+ */
+export function createDefaultOfflineLoader(): OfflineSnapshotLoader {
+  return new OfflineSnapshotLoader({
+    donki: defaultDonkiSnapshot,
+    radlab: defaultRadLabSnapshot,
+    osdr: defaultOsdrSnapshot,
+  });
+}
+
