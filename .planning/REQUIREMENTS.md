@@ -13,18 +13,18 @@
 - [ ] **SCI-02**: Radiation model incorporates real MSL Curiosity RAD Gale Crater baseline measurements ($0.64 \pm 0.12\text{ mSv/day}$) as a representative surface baseline, utilizes NASA RadLab measurements for educational comparisons and shielding explanations (preserving instrument, spacecraft, trajectory, dose type, and units, and strictly never presenting ISS readings as Mars surface readings), labels the $+50\text{ mSv}$ storm surge as an intentionally exaggerated hypothetical game scenario (contrasted with the $\approx 50\ \mu\text{Sv}$ event observed on Mars in 2013), and labels 80% regolith attenuation as a hypothetical game-simplified parameter.
 - [ ] **SCI-03**: Astronaut health model reflects biological spaceflight trade-offs informed by NASA OSDR (P1) public research metadata and studies (preserving organism, population, study conditions, and limitations; citing $1.0\%\text{--}1.5\%/\text{month}$ bone mineral density loss in weight-bearing bones from orbital human cohorts in $0g$), explicitly noting that human physiological adaptation to partial $0.38g$ gravity is scientifically unverified.
 - [ ] **SCI-04**: Outpost environment reflects authentic Jezero Crater meteorological observations from Perseverance MEDA (representative $700\text{--}800\text{ Pa}$ surface pressure and extreme subzero daily temperature swings).
-- [ ] **SCI-05**: Space food production and life support baseline values reflect NASA BVAD standards ($0.84\text{ kg } O_2\text{ / person-day}$, $2.0\text{--}2.5\text{ L/day}$ direct water intake, $\sim 2,700\text{--}3,000\text{ kcal/day}$), with CSA greenhouse research integrated as an optional scenario upgrade.
+- [ ] **SCI-05**: Space food production and life support baseline values reflect NASA BVAD standards ($0.84\text{ kg } O_2\text{ / person-day}$, $2.0\text{--}2.5\text{ L/day}$ direct water intake, $\sim 2,700\text{--}3,000\text{ kcal/day}$), with Greenhouse crop cultivation research integrated into outpost simulation.
 
 ### 2. Base Simulation & Resource Systems (SIM)
-- [ ] **SIM-01**: Simulation models 3 core managed resources: **Sun Power** (kW generation and battery storage), **Life Support** (combined consumable reserve with O2, direct water, and nutritional sub-values visible upon inspection), and **Storm Shield** (regolith and shelter shielding readiness).
+- [ ] **SIM-01**: Simulation models 3 core managed resources: **Power** (UI may say Sun Power; kW generation and battery storage), **Life Support** (combined consumable reserve with O2, direct water, and nutritional sub-values visible upon inspection), and **Shielding** (UI may say Storm Shield; regolith and shelter shielding readiness).
 - [ ] **SIM-02**: **Crew Safety** is modeled as a primary **outcome indicator** (Nominal / Caution / Danger), directly reflecting power stability, life-support reserves, and radiation exposure. Crew Safety is strictly non-spendable.
-- [ ] **SIM-03**: Base grid supports placement and operation of 4 essential MVP modules:
+- [ ] **SIM-03**: Base grid supports placement and operation of 5 confirmed initial buildings:
   1. Habitat
-  2. Solar Array & Battery
-  3. Life Support System
-  4. Storm Shield / Shelter
-  *(Greenhouse available as an optional scenario upgrade).*
-- [ ] **SIM-04**: Simulation executes in turn-based Sols (Martian days) across a structured **Seven-Sol campaign**, with non-punitive degraded states and educational recovery prompts when resources enter caution thresholds.
+  2. Solar Farm
+  3. Greenhouse
+  4. Storm Shelter
+  5. Mission Control
+- [ ] **SIM-04**: Simulation executes in turn-based Sols (Martian days) across a structured **Seven-Sol campaign** (with 5-Sol MVP campaign loop), with non-punitive degraded states and educational recovery prompts when resources enter caution thresholds.
 
 ### 3. Mission Scenarios & Storytelling (EDU)
 - [ ] **EDU-01**: **Seven-Sol progressive story campaign** scaled for ages 7–12, integrating verified NASA DONKI space-weather events and mission trade-offs across Seven Sols.
@@ -32,7 +32,7 @@
 - [ ] **EDU-03**: Post-mission debrief evaluates player choices across Science, Safety, and Sustainability, explicitly explaining the difference between real Mars observations and exaggerated training scenarios, supported by NASA OSDR and RadLab educational research context.
 
 ### 4. Child-Friendly UI/UX & Accessibility (UIX)
-- [ ] **UIX-01**: Child-friendly HUD displaying the 3 core resources (Sun Power, Life Support, Storm Shield) and the Crew Safety outcome indicator using intuitive color-coded progress bars and dual-encoded icons.
+- [ ] **UIX-01**: Child-friendly HUD displaying the 3 core resources (Power [Sun Power], Life Support, Shielding [Storm Shield]) and the Crew Safety outcome indicator using intuitive color-coded progress bars and dual-encoded icons.
 - [ ] **UIX-02**: Virtual advisor "Commander Aiko" provides proactive speech-bubble guidance and non-punitive hints during crises.
 - [ ] **UIX-03**: Interface adheres to WCAG 2.1 AA accessibility guidelines (minimum 44x44px touch targets, high-contrast text >4.5:1, colorblind-safe palettes, full keyboard navigability).
 - [ ] **UIX-04**: Simplified terminology with click/tap glossary popups for complex scientific concepts (e.g., CME, Regolith, Sabatier, Dosimetry, Bone Mineral Density).

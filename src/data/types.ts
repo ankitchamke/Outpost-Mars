@@ -239,7 +239,67 @@ export interface OsdrSnapshot {
 }
 
 // ============================================================================
-// 5. Validation & Loading Contracts
+// 5. NASA Curiosity RAD Models (Mars Surface Dosimetry)
+// ============================================================================
+
+export interface CuriosityLocation {
+  body: string;
+  region: string;
+  latitude: number;
+  longitude: number;
+  altitudeMeters: number;
+}
+
+export interface CuriosityGcrBaseline extends ScientificRecord {
+  measurementType: string;
+  doseEquivalentRate: number;
+  doseEquivalentRateUncertainty: number;
+  doseEquivalentRateUnit: 'mSv/day';
+  absorbedDoseRateSilicon: number;
+  absorbedDoseRateSiliconUncertainty: number;
+  absorbedDoseRateSiliconUnit: 'mGy/day';
+  absorbedDoseRateWater: number;
+  absorbedDoseRateWaterUncertainty: number;
+  absorbedDoseRateWaterUnit: 'mGy/day';
+  qualityFactorAverage: number;
+  qualityFactorUncertainty: number;
+  measurementPeriod: string;
+}
+
+export interface CuriositySol242Event extends ScientificRecord {
+  measurementType: string;
+  eventDate: string;
+  peakAbsorbedDoseRate: number;
+  peakAbsorbedDoseRateUnit: 'uGy/day';
+  quiescentBaselineDoseRate: number;
+  quiescentBaselineDoseRateUnit: 'uGy/day';
+  peakDoseRateEnhancement: number;
+  peakDoseRateEnhancementUnit: 'uGy/day';
+  integratedExcessDoseEquivalent: number;
+  integratedExcessDoseEquivalentUnit: 'mSv';
+  integratedExcessDoseEquivalentMicroSv: number;
+  qualityFactor: number;
+  measurementClarification: string;
+}
+
+/**
+ * Bundled offline Curiosity RAD surface radiation snapshot envelope.
+ */
+export interface CuriosityRadSnapshot {
+  schemaVersion: '1.0';
+  generatedAt: string;
+  source: string;
+  instrument: string;
+  spacecraft: string;
+  location: CuriosityLocation;
+  datasets: {
+    gcrBaseline: CuriosityGcrBaseline;
+    sol242SepEvent: CuriositySol242Event;
+  };
+}
+
+// ============================================================================
+// 6. Validation & Loading Contracts
 // ============================================================================
 
 export interface ValidationError {

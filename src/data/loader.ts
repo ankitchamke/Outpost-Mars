@@ -4,6 +4,7 @@
  */
 
 import {
+  CuriosityRadSnapshot,
   DonkiSnapshot,
   OsdrSnapshot,
   RadLabSnapshot,
@@ -11,20 +12,23 @@ import {
   ValidationResult,
 } from './types';
 import {
+  validateCuriosityRadSnapshot,
   validateDonkiSnapshot,
   validateOsdrSnapshot,
   validateRadLabSnapshot,
 } from './validation';
+import defaultCuriositySnapshot from './snapshots/curiosity-rad.json';
 import defaultDonkiSnapshot from './snapshots/donki-events.json';
 import defaultRadLabSnapshot from './snapshots/radlab-dosimetry.json';
 import defaultOsdrSnapshot from './snapshots/osdr-studies.json';
 
-export type SnapshotKey = 'donki' | 'radlab' | 'osdr';
+export type SnapshotKey = 'donki' | 'radlab' | 'osdr' | 'curiosity';
 
 export interface LoadedScienceData {
   donki?: DonkiSnapshot;
   radlab?: RadLabSnapshot;
   osdr?: OsdrSnapshot;
+  curiosity?: CuriosityRadSnapshot;
 }
 
 export interface LoadAllResult {
@@ -102,6 +106,17 @@ export function loadOsdrSnapshotFromRaw(raw: unknown): ValidationResult<OsdrSnap
     return { success: false, errors: parseRes.errors };
   }
   return validateOsdrSnapshot(parseRes.data);
+}
+
+/**
+ * Validates and loads a raw Curiosity RAD snapshot payload.
+ */
+export function loadCuriositySnapshotFromRaw(raw: unknown): ValidationResult<CuriosityRadSnapshot> {
+  const parseRes = parseRawSnapshotInput(raw, 'curiosity');
+  if (!parseRes.success || parseRes.data === undefined) {
+    return { success: false, errors: parseRes.errors };
+  }
+  return validateCuriosityRadSnapshot(parseRes.data);
 }
 
 /**
@@ -204,6 +219,28 @@ export class OfflineSnapshotLoader {
   }
 
   /**
+   * Loads and validates the registered Curiosity RAD surface dosimetry snapshot.
+   */
+  public loadCuriosity(): ValidationResult<CuriosityRadSnapshot> {
+    if (this.cache.curiosity) {
+      return { success: true, data: this.cache.curiosity, errors: [] };
+    }
+
+    if (!this.rawRegistry.has('curiosity')) {
+      return {
+        success: false,
+        errors: [{ path: 'curiosity', message: 'Curiosity RAD snapshot not found in offline bundle' }],
+      };
+    }
+
+    const res = loadCuriositySnapshotFromRaw(this.rawRegistry.get('curiosity'));
+    if (res.success && res.data) {
+      this.cache.curiosity = res.data;
+    }
+    return res;
+  }
+
+  /**
    * Loads all registered snapshots and returns an aggregated status.
    */
   public loadAll(): LoadAllResult {
@@ -236,6 +273,14 @@ export class OfflineSnapshotLoader {
       errors.osdr = osdrRes.errors;
     }
 
+    const curiosityRes = this.loadCuriosity();
+    if (curiosityRes.success && curiosityRes.data) {
+      data.curiosity = curiosityRes.data;
+    } else {
+      overallSuccess = false;
+      errors.curiosity = curiosityRes.errors;
+    }
+
     return {
       success: overallSuccess,
       data,
@@ -251,6 +296,7 @@ export class OfflineSnapshotLoader {
     delete this.cache.donki;
     delete this.cache.radlab;
     delete this.cache.osdr;
+    delete this.cache.curiosity;
   }
 }
 
@@ -264,6 +310,7 @@ export function createDefaultOfflineLoader(): OfflineSnapshotLoader {
     donki: defaultDonkiSnapshot,
     radlab: defaultRadLabSnapshot,
     osdr: defaultOsdrSnapshot,
+    curiosity: defaultCuriositySnapshot,
   });
 }
 

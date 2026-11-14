@@ -10,8 +10,8 @@ OUTPOST: MARS is developed across 9 sequential phases totaling exactly 20 workin
 
 - [x] **Phase 00: Planning & Scope Lock** (2h) — [COMPLETE] Architecture, scientific validity audit, GSD setup, 100-point scorecard, and risk register.
 - [x] **Phase 01: Project Foundation & Architecture** (1h) — [COMPLETE] Greenfield Vite + TypeScript scaffolding, HTML5 Canvas foundation, standard CSS layout, Vitest setup, and state persistence.
-- [ ] **Phase 02: Science & Data Integration Engine** (3h) — **[CURRENT PHASE]** Endpoint research, schema definition, normalization, provenance, and snapshot pipelines for P0 NASA DONKI (solar flares, CMEs, SEPs) and P0 NASA RadLab (dosimetry telemetry); API investigation of P1 NASA OSDR (astronaut health); local ingestion security architecture; Curiosity RAD Gale Crater baseline ($0.64 \pm 0.12\text{ mSv/day}$); and strict REAL / DERIVED / GAME-SIMPLIFIED labeling.
-- [ ] **Phase 03: Phaser Integration, 2D Mars Base & Resource Simulation** (3h) — Integration of approved Phaser 2D game engine, cleanly replacing Phase 01 Canvas renderer (zero dual-engine maintenance); evaluation of P2 NASA Mars Trek terrain references; 4 essential MVP modules; 3-resource engine (Sun Power, Life Support, Storm Shield); Crew Safety outcome indicator; and turn-based Sol simulation.
+- [x] **Phase 02: Science & Data Integration Engine** (3h) — [COMPLETE] Endpoint verification, TypeScript contracts, runtime validation, and offline snapshot loaders for 4 NASA datasets: P0 DONKI (4 CMEs with verified Mars ENLIL arrivals: 2024-05-10T21:28:00-CME-001 [arrivals: 2024-05-13T23:50Z, 2024-05-14T06:18Z], 2024-05-11T01:36:00-CME-001 [arrivals: 2024-05-13T17:42Z, 2024-05-13T23:50Z, 2024-05-14T06:18Z], 2024-05-12T03:48:00-CME-001 [arrival: 2024-05-15T22:00Z], 2024-05-14T17:00:00-CME-001 [arrivals: 2024-05-16T20:47Z, 2024-05-17T02:11Z, 2024-05-16T19:08Z]; 3 solar flares: X3.9, X5.8, X8.7; 2 SEPs: 2024-05-10T12:59:00-SEP-001, 2024-05-10T13:35:00-SEP-001), P0 RadLab (8 DosTel1 LEO observation records with SEC-01 guards), P1 OSDR (2 spaceflight biology studies: OSD-661 & OSD-121), and MSL Curiosity RAD (2 empirical surface datasets: GCR baseline 0.64 mSv/day & Sol 242 SEP event 0.05 mSv integrated excess dose). Ingestion provides staged writes and rollback for handled failures (without claiming recovery from sudden unhandled process termination or power loss). 100% offline with zero network calls and zero API keys.
+- [ ] **Phase 03: Phaser Integration, 2D Mars Base & Resource Simulation** (3h) — **[NEXT PHASE]** Integration of approved Phaser 2D game engine, cleanly replacing Phase 01 Canvas renderer (zero dual-engine maintenance); top-down 2D pixel-art Mars outpost; hybrid astronaut movement and building interaction; 5 confirmed initial buildings: Habitat, Solar Farm, Greenhouse, Storm Shelter, Mission Control; contextual interaction panels; 3 spendable resources: Power (UI may say Sun Power), Life Support, Shielding (UI may say Storm Shield); Crew Safety outcome indicator (non-spendable); turn-based Sol simulation (5-Sol MVP campaign).
 - [ ] **Phase 04: Seven-Sol Mission Scenarios & Space-Weather Events** (3h) — Seven-Sol story campaign; verified NASA DONKI space-weather crises (CMEs, solar flares, particle events); emergency shelter protocols; and educational debriefs explaining the distinction between real observations and exaggerated scenarios.
 - [ ] **Phase 05: Child-Friendly UI/UX, Accessibility & Educational Explanations** (2h) — Accessible HUD (Sun Power, Life Support, Storm Shield, Crew Safety); Commander Aiko advisor speech bubbles; WCAG 2.1 AA controls; interactive glossary; and educational explanations of astronaut health (bone, muscle, radiation) supported by NASA OSDR and RadLab research.
 - [ ] **Phase 06: Audio, Visual Polish, Narrative & Mars Trek References** (2h) — Phaser visual polish and module operational states; selected NASA Mars Trek terrain visual references; Web Audio procedural sound synthesizer; and master mute toggle.
@@ -20,8 +20,8 @@ OUTPOST: MARS is developed across 9 sequential phases totaling exactly 20 workin
 
 **Time Accounting Summary:**
 - Total Project Budget: 20.0 hours
-- Time Spent (Phases 00 & 01): 3.0 hours [COMPLETE]
-- Remaining Time (Phases 02–08): Exactly 17.0 hours
+- Time Spent (Phases 00, 01, 02): 6.0 hours [COMPLETE]
+- Remaining Time (Phases 03–08): Exactly 14.0 hours
 
 ---
 
@@ -52,31 +52,40 @@ OUTPOST: MARS is developed across 9 sequential phases totaling exactly 20 workin
 
 ---
 
-### Phase 02: Science & Data Integration Engine (3h) — CURRENT PHASE
-**Goal:** Establish the offline-first scientific data engine with schemas, ingestion pipelines, normalization, provenance tracking, and bundled validated snapshots for P0 NASA DONKI and P0 NASA RadLab; investigate P1 NASA OSDR API capabilities; maintain Curiosity RAD Gale Crater baseline figures ($0.64 \pm 0.12\text{ mSv/day}$); and enforce strict API key security and data taxonomy.  
+### Phase 02: Science & Data Integration Engine (3h) — COMPLETE
+**Goal:** Establish the offline-first scientific data engine with schemas, ingestion pipelines, normalization, provenance tracking, and bundled validated snapshots for P0 NASA DONKI, P0 NASA RadLab, P1 NASA OSDR, and MSL Curiosity RAD; enforce strict SEC-01 cross-field guards, empirical dataset separation, and staged write failure safety with automatic rollback.  
 **Depends on:** Phase 01  
 **Requirements:** SCI-01, SCI-02, SCI-03, SCI-04, SCI-05, TECH-03  
 **Success Criteria:**
-1. P0 NASA DONKI endpoints researched, schema defined, and snapshot generated covering historical solar flare, CME, and SEP event profiles with verified provenance (source URL, dataset id, retrieval date, units, limitations); DONKI data strictly labeled as heliospheric context and not Mars surface dose.
-2. P0 NASA RadLab API researched, instrument-specific datasets selected and normalized into snapshots (preserving instrument, spacecraft, trajectory, dose type, units); telemetry strictly bounded to LEO/instrument context and never represented as Mars surface dose.
-3. P1 NASA OSDR search API investigated for public space biology studies and metadata on astronaut bone/muscle health, without downloading unnecessary bulk datasets.
-4. Strict API key and data security verified: Zero secrets in source code, zero `VITE_*` secrets, zero credentials exposed to browser; local ingestion scripts produce version-controlled snapshots for 100% offline gameplay.
-5. All scientific models and outputs display clear `[REAL]`, `[DERIVED]`, or `[GAME-SIMPLIFIED]` taxonomy tags.  
-**Plans:** 2 plans (02-01: Schemas, ingestion scripts, and snapshot generation; 02-02: Scientific calculation models, validation, and taxonomy badges)
+1. [x] P0 NASA DONKI endpoints researched, TypeScript schemas defined, and authentic snapshot generated covering 4 CMEs (all verified with authentic WSA-ENLIL Mars shock arrival model predictions: `2024-05-10T21:28:00-CME-001` [Mars arrivals: 2024-05-13T23:50Z, 2024-05-14T06:18Z], `2024-05-11T01:36:00-CME-001` [Mars arrivals: 2024-05-13T17:42Z, 2024-05-13T23:50Z, 2024-05-14T06:18Z], `2024-05-12T03:48:00-CME-001` [Mars arrival: 2024-05-15T22:00Z], `2024-05-14T17:00:00-CME-001` [Mars arrivals: 2024-05-16T20:47Z, 2024-05-17T02:11Z, 2024-05-16T19:08Z]), 3 solar flares (Cycle 25 peak X8.7 on 2024-05-14, X5.8 on 2024-05-11, X3.9 on 2024-05-10), and 2 SEPs (>10 MeV: `2024-05-10T12:59:00-SEP-001`, `2024-05-10T13:35:00-SEP-001`) with verified provenance. DONKI data strictly labeled as heliospheric context and not Mars surface dose.
+2. [x] P0 NASA RadLab API researched, instrument-specific datasets selected and normalized into snapshots (8 authentic DosTel1 LEO observation records from May 10, 2024 with exact `uGy/h` dose units: `RADLAB-ISS-DOSTEL1-20240510T120027-0` through `RADLAB-ISS-DOSTEL1-20240510T121400-7`). SEC-01 cross-field guards enforce that ISS/LEO observations cannot have a surface or Mars trajectory, nor claim Mars surface location in provenance.
+3. [x] P1 NASA OSDR search API investigated and normalized into snapshots with 2 authentic spaceflight biology studies (`OSD-661` murine bone/muscle countermeasure study and `OSD-121` BRIC-16 plant seedling transcriptomics) preserving full metadata, DOIs, and scientific limitations.
+4. [x] MSL Curiosity RAD Gale Crater empirical surface radiation datasets integrated (2 empirical datasets: GCR baseline $0.64 \pm 0.12\text{ mSv/day}$ [$0.21\text{ mGy/day}$ silicon, $0.24\text{ mGy/day}$ water] and Sol 242 SEP event with $260\ \mu\text{Gy/day}$ peak rate and $0.05\text{ mSv}$ integrated excess dose). Synthetic game simulation values (+50 mSv drill) strictly separated from empirical datasets.
+5. [x] Ingestion pipeline failure safety implemented via staged temporary writes and automatic rollback from `.bak` backups for handled failures (`scripts/ingest-nasa-data.ts`). Accurately documented as protecting against handled write/validation failures without claiming impossible guarantees against unhandled sudden process termination (SIGKILL) or catastrophic power loss.
+6. [x] Offline loader (`createDefaultOfflineLoader()`) integrates all 4 datasets with zero network calls, zero API keys, and comprehensive validation error reporting.
+7. [x] All scientific models and outputs display clear `[REAL]`, `[DERIVED]`, or `[GAME-SIMPLIFIED]` taxonomy tags.  
+**Plans:** 5 subphases completed (02.1 Scope & Boundaries, 02.2 Verification, 02.3A Data Models & Offline Loader, 02.3B Authentic Snapshots & Ingestion, 02.4-02.5 Final Integration & Verification) [Complete]
 
 ---
 
-### Phase 03: Phaser Integration, 2D Mars Base & Resource Simulation (3h)
-**Goal:** Integrate the approved Phaser 2D game engine into the project, cleanly replacing the Phase 01 custom Canvas renderer (no dual engines maintained); evaluate P2 NASA Mars Trek terrain references for the Phaser environment; build the 4 essential MVP modules; and implement the interconnected 3-resource engine (Sun Power, Life Support, Storm Shield) with the Crew Safety outcome indicator.  
+### Phase 03: Phaser Integration, 2D Mars Base & Resource Simulation (3h) — NEXT PHASE
+**Goal:** Integrate the approved Phaser 2D game engine into the project, cleanly replacing the Phase 01 custom Canvas renderer (no dual engines maintained); implement the confirmed gameplay direction: top-down 2D pixel-art Mars outpost; hybrid astronaut movement and building interaction; 5 confirmed initial buildings (Habitat, Solar Farm, Greenhouse, Storm Shelter, Mission Control); contextual interaction panels; interconnected 3-resource engine (Power [Sun Power], Life Support, Shielding [Storm Shield]) with Crew Safety outcome indicator (non-spendable); and turn-based Sol simulation (5-Sol MVP campaign).  
 **Depends on:** Phase 02  
 **Requirements:** SIM-01, SIM-02, SIM-03, SIM-04, ART-01  
 **Success Criteria:**
 1. Phaser is cleanly integrated as the sole 2D game engine, replacing the Phase 01 Canvas rendering code without regressions.
-2. Player can select, place, and inspect 4 essential MVP modules (Habitat, Solar Array & Battery, Life Support System, Storm Shield / Shelter) on the Phaser 2D Martian surface grid.
-3. Turn-based Sol tick accurately balances Sun Power (kW & battery kWh), Life Support (O2, H2O, food reserves), and Storm Shield readiness.
-4. Crew Safety indicator dynamically reflects environmental hazards and resource stability strictly as an outcome indicator (non-spendable).
-5. Degraded resource states trigger educational recovery prompts rather than abrupt game overs.
-6. P2 NASA Mars Trek terrain references evaluated for lightweight environment background integration.  
+2. Top-down 2D pixel-art visual rendering of the Martian surface and outpost grid.
+3. Hybrid interaction model: astronaut direct movement alongside contextual building interaction panels.
+4. 5 confirmed initial buildings operational:
+   - **Habitat:** Living quarters, communications hub, and crew exercise/health station.
+   - **Solar Farm:** Photovoltaic solar array and battery storage supplying base Power.
+   - **Greenhouse:** Hydroponic and protected environment food crop cultivation and supplemental biomass.
+   - **Storm Shelter:** Regolith-reinforced storm bunker providing critical Shielding.
+   - **Mission Control:** Operations center, telemetry coordination, and planetary surface monitoring station.
+5. Turn-based Sol tick accurately balances 3 spendable resources: **Power** (kW generation and battery storage; UI may say Sun Power), **Life Support** (combined buffer with O2, direct water intake, and caloric breakdown), and **Shielding** (regolith and shelter readiness; UI may say Storm Shield) across a 5-Sol MVP campaign.
+6. Crew Safety indicator dynamically reflects environmental hazards and resource stability strictly as an outcome indicator (non-spendable).
+7. Degraded resource states trigger educational recovery prompts rather than abrupt game overs.
+8. P2 NASA Mars Trek terrain references evaluated for lightweight environment background integration.  
 **Plans:** 2 plans (03-01: Phaser integration & module grid; 03-02: Sol turn-loop & resource balancing)
 
 ---

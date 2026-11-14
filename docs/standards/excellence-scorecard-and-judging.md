@@ -11,9 +11,9 @@ To ensure high-quality execution across all project disciplines within our 20-ho
 | **3. Data Validation & Security** | 10 pts | Bundled, verified NASA DONKI space-weather snapshots, RadLab dosimetry, and Gale Crater baselines; zero hardcoded secrets or frontend `VITE_*` keys; private local ingestion pipelines; 100% offline gameplay reliability. | 10 / 10 |
 | **4. Creativity & Innovation** | 10 pts | Novel translation of real solar storm alerts into an intuitive 2D base-building mission trainer for children aged 7–12. | 10 / 10 |
 | **5. Storytelling & Worldbuilding** | 5 pts | Compelling, age-appropriate narrative at Jezero Crater across a focused Seven-Sol campaign; encouraging guidance from virtual advisor Commander Aiko; clear educational debrief distinguishing real science from exaggerated game scenarios. | 5 / 5 |
-| **6. Game Design & Balance** | 10 pts | Streamlined 3-resource loop (Sun Power, Life Support, Storm Shield); Crew Safety as a non-spendable outcome indicator; 4 core MVP modules; non-punitive educational degraded states. | 10 / 10 |
+| **6. Game Design & Balance** | 10 pts | Streamlined 3-resource loop (Power [Sun Power], Life Support, Shielding [Storm Shield]); Crew Safety as a non-spendable outcome indicator; 5 confirmed initial buildings (Habitat, Solar Farm, Greenhouse, Storm Shelter, Mission Control); non-punitive educational degraded states. | 10 / 10 |
 | **7. UI/UX & Ergonomics** | 10 pts | Child-friendly HUD; large touch targets (≥44px); dual-encoded color/icon meters; zero confusing nested menus; intuitive click/touch placement. | 10 / 10 |
-| **8. Visual Art & Polish** | 5 pts | High-contrast 2D Phaser rendering of the Martian surface; lightweight NASA Mars Trek terrain references; clear operational sprite states (active, idle, degraded) for all 4 modules. | 5 / 5 |
+| **8. Visual Art & Polish** | 5 pts | High-contrast 2D Phaser rendering of the Martian surface; lightweight NASA Mars Trek terrain references; clear operational sprite states (active, idle, degraded) for all 5 buildings. | 5 / 5 |
 | **9. Accessibility (A11y)** | 10 pts | WCAG 2.1 AA compliance: contrast ratio >4.5:1, colorblind-safe HUD indicators, full keyboard navigation support, clear readable typography. | 10 / 10 |
 | **10. Editing & Copywriting** | 5 pts | 3rd-grade reading level clarity; scientifically accurate definitions; interactive scientific glossary for terms like CME, Regolith, Sabatier, and Dosimetry. | 5 / 5 |
 | **11. Presentation & Structure** | 5 pts | Professional GitHub repository structure, clear documentation links, comprehensive science bibliography, open-source MIT license. | 5 / 5 |
@@ -30,7 +30,7 @@ Every feature in OUTPOST: MARS maps directly to the five universal NASA Space Ap
 ### 1. Impact (Weight: 20%)
 - **Challenge Problem:** How can we inspire and educate young students (ages 7–12) about the severe physical and environmental hazards of living on Mars without overwhelming them?
 - **OUTPOST: MARS Solution:** Converts authentic NASA space weather and life-support findings into an intuitive, empowering 2D mission trainer where kids discover how science solves real space exploration challenges across a Seven-Sol mission.
-- **Measurable Value:** Hands-on experiential learning where students actively balance Sun Power, Life Support, and Storm Shield to protect Crew Safety against simulated space hazards.
+- **Measurable Value:** Hands-on experiential learning where students actively balance Power (Sun Power), Life Support, and Shielding (Storm Shield) to protect Crew Safety against simulated space hazards.
 
 ### 2. Creativity (Weight: 20%)
 - **Novelty:** Unlike fictional space games that use made-up mechanics, OUTPOST: MARS feeds real DONKI solar storm records and Curiosity RAD Gale Crater dosimetry baselines into its core simulation loop.

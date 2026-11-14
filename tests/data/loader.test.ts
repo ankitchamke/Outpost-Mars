@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   createDefaultOfflineLoader,
+  loadCuriositySnapshotFromRaw,
   loadDonkiSnapshotFromRaw,
   loadOsdrSnapshotFromRaw,
   loadRadLabSnapshotFromRaw,
@@ -8,6 +9,7 @@ import {
   parseRawSnapshotInput,
 } from '../../src/data/loader';
 import {
+  validateCuriosityRadSnapshot,
   validateDonkiSnapshot,
   validateOsdrSnapshot,
   validateRadLabSnapshot,
@@ -17,6 +19,7 @@ import bundledRadLab from '../../src/data/snapshots/radlab-dosimetry.json';
 import bundledOsdr from '../../src/data/snapshots/osdr-studies.json';
 import bundledCuriosity from '../../src/data/snapshots/curiosity-rad.json';
 import {
+  SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_OSDR_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_RADLAB_SNAPSHOT_FIXTURE,
@@ -75,12 +78,31 @@ describe('Offline Snapshot Loader — Raw Parsing & Error Handling', () => {
     expect(res.data?.studies.length).toBe(1);
   });
 
+  it('loads valid Curiosity RAD snapshot from raw object', () => {
+    const res = loadCuriositySnapshotFromRaw(SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE);
+    expect(res.success).toBe(true);
+    expect(res.data?.location.body).toBe('Mars');
+    expect(res.data?.location.region).toBe('Gale Crater');
+    expect(res.data?.datasets.gcrBaseline.doseEquivalentRate).toBe(0.64);
+    expect(res.data?.datasets.sol242SepEvent.integratedExcessDoseEquivalent).toBe(0.05);
+  });
+
   it('returns validation errors when raw DONKI snapshot contains invalid data', () => {
     const invalidDonki = {
       ...SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
       schemaVersion: '9.9', // invalid
     };
     const res = loadDonkiSnapshotFromRaw(invalidDonki);
+    expect(res.success).toBe(false);
+    expect(res.errors.some((e) => e.path.includes('schemaVersion'))).toBe(true);
+  });
+
+  it('returns validation errors when raw Curiosity snapshot contains invalid data', () => {
+    const invalidCuriosity = {
+      ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
+      schemaVersion: '9.9', // invalid
+    };
+    const res = loadCuriositySnapshotFromRaw(invalidCuriosity);
     expect(res.success).toBe(false);
     expect(res.errors.some((e) => e.path.includes('schemaVersion'))).toBe(true);
   });
@@ -92,6 +114,7 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     expect(loader.hasSnapshot('donki')).toBe(false);
     expect(loader.hasSnapshot('radlab')).toBe(false);
     expect(loader.hasSnapshot('osdr')).toBe(false);
+    expect(loader.hasSnapshot('curiosity')).toBe(false);
 
     const donkiRes = loader.loadDonki();
     expect(donkiRes.success).toBe(false);
@@ -104,6 +127,10 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     const osdrRes = loader.loadOsdr();
     expect(osdrRes.success).toBe(false);
     expect(osdrRes.errors[0].message).toContain('OSDR snapshot not found in offline bundle');
+
+    const curiosityRes = loader.loadCuriosity();
+    expect(curiosityRes.success).toBe(false);
+    expect(curiosityRes.errors[0].message).toContain('Curiosity RAD snapshot not found in offline bundle');
   });
 
   it('registers snapshots dynamically and loads typed data without network calls', () => {
@@ -132,11 +159,21 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     const osdrRes = loader.loadOsdr();
     expect(osdrRes.success).toBe(true);
     expect(osdrRes.data?.studies[0].accession).toBe('OSD-661');
+
+    // Register Curiosity RAD
+    loader.registerSnapshot('curiosity', SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE);
+    expect(loader.hasSnapshot('curiosity')).toBe(true);
+
+    const curiosityRes = loader.loadCuriosity();
+    expect(curiosityRes.success).toBe(true);
+    expect(curiosityRes.data?.location.region).toBe('Gale Crater');
+    expect(curiosityRes.data?.datasets.gcrBaseline.doseEquivalentRate).toBe(0.64);
   });
 
   it('caches loaded snapshot data on subsequent queries', () => {
     const loader = new OfflineSnapshotLoader({
       donki: SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
+      curiosity: SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
     });
 
     const firstLoad = loader.loadDonki();
@@ -144,6 +181,12 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     expect(firstLoad.success).toBe(true);
     expect(secondLoad.success).toBe(true);
     expect(firstLoad.data).toBe(secondLoad.data); // Same object reference from cache
+
+    const firstCuriosity = loader.loadCuriosity();
+    const secondCuriosity = loader.loadCuriosity();
+    expect(firstCuriosity.success).toBe(true);
+    expect(secondCuriosity.success).toBe(true);
+    expect(firstCuriosity.data).toBe(secondCuriosity.data);
   });
 
   it('loads all snapshots and reports aggregated success or errors', () => {
@@ -151,6 +194,7 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
       donki: SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
       radlab: SYNTHETIC_VALID_RADLAB_SNAPSHOT_FIXTURE,
       osdr: SYNTHETIC_VALID_OSDR_SNAPSHOT_FIXTURE,
+      curiosity: SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
     });
 
     const allRes = loader.loadAll();
@@ -158,6 +202,8 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
     expect(allRes.data.donki).toBeDefined();
     expect(allRes.data.radlab).toBeDefined();
     expect(allRes.data.osdr).toBeDefined();
+    expect(allRes.data.curiosity).toBeDefined();
+    expect(allRes.data.curiosity?.location.region).toBe('Gale Crater');
     expect(Object.keys(allRes.errors).length).toBe(0);
   });
 
@@ -166,26 +212,34 @@ describe('OfflineSnapshotLoader Registry & Workflow', () => {
       donki: SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
       // radlab missing
       osdr: { invalid: 'schema' },
+      // curiosity missing
     });
 
     const allRes = loader.loadAll();
     expect(allRes.success).toBe(false);
     expect(allRes.data.donki).toBeDefined();
     expect(allRes.data.radlab).toBeUndefined();
+    expect(allRes.data.curiosity).toBeUndefined();
     expect(allRes.errors.radlab).toBeDefined();
     expect(allRes.errors.osdr).toBeDefined();
+    expect(allRes.errors.curiosity).toBeDefined();
   });
 
   it('clears registry and cache properly', () => {
     const loader = new OfflineSnapshotLoader({
       donki: SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
+      curiosity: SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
     });
     expect(loader.hasSnapshot('donki')).toBe(true);
+    expect(loader.hasSnapshot('curiosity')).toBe(true);
     expect(loader.loadDonki().success).toBe(true);
+    expect(loader.loadCuriosity().success).toBe(true);
 
     loader.clear();
     expect(loader.hasSnapshot('donki')).toBe(false);
+    expect(loader.hasSnapshot('curiosity')).toBe(false);
     expect(loader.loadDonki().success).toBe(false);
+    expect(loader.loadCuriosity().success).toBe(false);
   });
 });
 
@@ -220,6 +274,9 @@ describe('Phase 02.3B: Authentic Bundled Snapshots & Default Offline Loader', ()
   });
 
   it('validates Curiosity RAD snapshot baseline, Sol 242 event, and GAME-SIMPLIFIED drill', () => {
+    const valRes = validateCuriosityRadSnapshot(bundledCuriosity);
+    expect(valRes.success).toBe(true);
+
     expect(bundledCuriosity.schemaVersion).toBe('1.0');
     expect(bundledCuriosity.instrument).toBe('Radiation Assessment Detector (RAD)');
     expect(bundledCuriosity.spacecraft).toBe('Mars Science Laboratory (Curiosity Rover)');
@@ -289,19 +346,44 @@ describe('Phase 02.3B: Authentic Bundled Snapshots & Default Offline Loader', ()
     expect(loader.hasSnapshot('donki')).toBe(true);
     expect(loader.hasSnapshot('radlab')).toBe(true);
     expect(loader.hasSnapshot('osdr')).toBe(true);
+    expect(loader.hasSnapshot('curiosity')).toBe(true);
 
+    // Verify individual typed load methods
+    const donkiRes = loader.loadDonki();
+    expect(donkiRes.success).toBe(true);
+    expect(donkiRes.data?.cmes.length).toBe(4);
+
+    const radlabRes = loader.loadRadLab();
+    expect(radlabRes.success).toBe(true);
+    expect(radlabRes.data?.records.length).toBe(8);
+
+    const osdrRes = loader.loadOsdr();
+    expect(osdrRes.success).toBe(true);
+    expect(osdrRes.data?.studies.length).toBe(2);
+
+    const curiosityRes = loader.loadCuriosity();
+    expect(curiosityRes.success).toBe(true);
+    expect(curiosityRes.data?.location.body).toBe('Mars');
+    expect(curiosityRes.data?.location.region).toBe('Gale Crater');
+
+    // Verify loadAll() aggregates all 4 snapshots with 0 errors
     const allRes = loader.loadAll();
     expect(allRes.success).toBe(true);
     expect(allRes.data.donki).toBeDefined();
     expect(allRes.data.radlab).toBeDefined();
     expect(allRes.data.osdr).toBeDefined();
+    expect(allRes.data.curiosity).toBeDefined();
     expect(Object.keys(allRes.errors).length).toBe(0);
 
-    // Verify truth classification on loaded records
+    // Verify truth classification and values on loaded records
     expect(allRes.data.donki?.cmes[0].classification).toBe('DERIVED');
     expect(allRes.data.donki?.solarFlares[0].classification).toBe('REAL');
     expect(allRes.data.radlab?.records[0].classification).toBe('REAL');
     expect(allRes.data.osdr?.studies[0].classification).toBe('REAL');
+    expect(allRes.data.curiosity?.datasets.gcrBaseline.classification).toBe('REAL');
+    expect(allRes.data.curiosity?.datasets.gcrBaseline.doseEquivalentRate).toBe(0.64);
+    expect(allRes.data.curiosity?.datasets.sol242SepEvent.classification).toBe('REAL');
+    expect(allRes.data.curiosity?.datasets.sol242SepEvent.integratedExcessDoseEquivalent).toBe(0.05);
   });
 });
 

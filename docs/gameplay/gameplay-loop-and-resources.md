@@ -58,9 +58,9 @@ Rather than overwhelming young players with complex multi-meter systems, OUTPOST
 
 | Resource | Description | Production Source | Drain Factors | Critical State Consequence |
 |---|---|---|---|---|
-| **1. Sun Power** | Kilowatts (kW) & Battery Storage (kWh) | Solar Array & Battery (+20 kW Day) | Habitat heating (-6 kW against extreme subzero night cold), Life Support (-6 kW), Storm Shield (-3 kW) | Night/Storm battery depletion; non-essential systems power down |
-| **2. Life Support** | Combined consumable reserve (Sols of air, water, and food) | Life Support System (+4 Sols capacity/day when powered) | 4 Astronauts consume 1 Sol equivalent reserve per Sol | Buffer hits 0: Emergency reserve activates; Crew Safety declines |
-| **3. Storm Shield** | Structural and radiation barrier readiness (%) | Storm Shield / Shelter module construction & maintenance | Degrades during severe space-weather events (CMEs, dust storms) | Shield readiness < 50%: Crew absorbs elevated radiation during solar storms |
+| **1. Power** (UI: Sun Power) | Kilowatts (kW) & Battery Storage (kWh) | Solar Farm (+20 kW Day) | Habitat heating (-6 kW against extreme subzero night cold), Greenhouse & systems (-6 kW), Storm Shelter (-3 kW) | Night/Storm battery depletion; non-essential systems power down |
+| **2. Life Support** | Combined consumable reserve (Sols of air, water, and food) | Habitat recycling & Greenhouse crops (+4 Sols capacity/day when powered) | 4 Astronauts consume 1 Sol equivalent reserve per Sol | Buffer hits 0: Emergency reserve activates; Crew Safety declines |
+| **3. Shielding** (UI: Storm Shield) | Structural and radiation barrier readiness (%) | Storm Shelter construction & regolith maintenance | Degrades during severe space-weather events (CMEs, dust storms) | Shield readiness < 50%: Crew absorbs elevated radiation during solar storms |
 
 > **Child-Friendly Transparency (Explanatory Sub-values):** Within the **Life Support** meter, players can tap to view the real NASA baseline figures:
 > - **Oxygen ($O_2$):** $0.84\text{ kg / person-day}$ `[REAL NASA BVAD]`.
@@ -70,23 +70,21 @@ Rather than overwhelming young players with complex multi-meter systems, OUTPOST
 ### B. Crew Safety (Outcome Indicator)
 - **Status:** **Crew Safety is an OUTCOME INDICATOR, NOT a spendable resource.**
 - **Scale:** **Nominal (Green) $\rightarrow$ Caution (Yellow) $\rightarrow$ Critical (Red)**.
-- **Behavior:** Reflects the combined health, radiation exposure, and life-support security of the 4 astronauts. If Sun Power runs out or Life Support depletes, Crew Safety shifts from Nominal to Caution. If uncorrected, it reaches Critical, triggering emergency rescue protocols.
+- **Behavior:** Reflects the combined health, radiation exposure, and life-support security of the 4 astronauts. If Power runs out or Life Support depletes, Crew Safety shifts from Nominal to Caution. If uncorrected, it reaches Critical, triggering emergency rescue protocols.
 
 ---
 
-## 4. The 4 Essential MVP Modules
+## 4. The 5 Confirmed Initial Buildings
 
-To keep the development scope strictly manageable within our 20-hour budget (17h remaining) and ensure crisp gameplay balance, base construction revolves around **4 core modules**:
+To keep the development scope strictly manageable within our 20-hour budget and ensure crisp gameplay balance, base construction revolves around **5 confirmed initial buildings**:
 
-| Module Name | Function & Trade-off | Power Dynamic | Science Grounding |
+| Building Name | Function & Trade-off | Power Dynamic | Science Grounding |
 |---|---|---|---|
 | **1. Habitat** | Core living dome, communications center, and astronaut exercise station. | Consumes 6 kW continuously (heating against extreme subzero night cold at Jezero). | Preserves astronaut bone and muscle health `[REAL ISS countermeasure principle; partial 0.38g gravity effect is hypothetical]`. |
-| **2. Solar Array & Battery** | Photovoltaic energy generator and overnight chemical battery storage (supplying Sun Power). | Generates +20 kW during Day; stores up to 60 kWh for night. | Models the 24h 39m Sol diurnal cycle and dust accumulation `[REAL]`. |
-| **3. Life Support System** | Consolidated Sabatier reactor, water recycler, and nutritional supply unit. | Consumes 6 kW; generates fresh Life Support buffer. | Models closed-loop recycling and atmospheric $CO_2$ conversion `[REAL NASA BVAD principles]`. |
-| **4. Storm Shield / Shelter** | Compacted Martian regolith berm and radiation shelter. | Consumes 3 kW when active radiation shields are engaged. | Attenuates solar energetic particle flux during storm events `[80% reduction is a GAME-SIMPLIFIED parameter]`. |
-
-### Optional Upgrade: CSA Greenhouse `[Scenario Action / Milestone Reward]`
-- The **Canadian Space Agency (CSA) Greenhouse** is integrated as an optional scenario upgrade in Sol 7. When activated, it supplements the Life Support reserve with fresh hydroponic crops and boosts crew morale.
+| **2. Solar Farm** | Consolidated photovoltaic solar generation field and chemical battery storage supplying base Power. | Generates +20 kW during Day; stores up to 60 kWh for night. | Models the 24h 39m Sol diurnal cycle and dust accumulation `[REAL]`. |
+| **3. Greenhouse** | Controlled-environment hydroponic crop cultivation supplying fresh nutrition and supplemental biomass. | Consumes 6 kW; generates fresh Life Support buffer. | Models closed-loop recycling and atmospheric $CO_2$ conversion `[REAL NASA BVAD principles]`. |
+| **4. Storm Shelter** | Compacted Martian regolith bunker providing critical radiation and storm Shielding. | Consumes 3 kW when active systems and airlocks are engaged. | Attenuates solar energetic particle flux during storm events `[80% reduction is a GAME-SIMPLIFIED parameter]`. |
+| **5. Mission Control** | Surface operations hub, telemetry coordination, and planetary monitoring center. | Consumes 4 kW continuously. | Connects surface habitat telemetry with NASA DONKI / orbital monitoring feeds `[REAL]`. |
 
 ---
 
@@ -94,7 +92,7 @@ To keep the development scope strictly manageable within our 20-hour budget (17h
 
 ### A. Non-Punitive Educational Feedback
 In typical survival games, resource failure causes an abrupt game over. In OUTPOST: MARS:
-- Depleting Life Support or Sun Power triggers an **Emergency Backup Protocol** for 1 Sol.
+- Depleting Life Support or Power triggers an **Emergency Backup Protocol** for 1 Sol.
 - Commander Aiko intervenes with clear causal reasoning:
   > *"Commander! Our batteries ran dry during the night because the dust storm blocked the sun. Real Mars rovers like Opportunity faced this too! Let's power down non-essentials and clean our solar panels!"*
 - The player is guided to fix the imbalance, teaching resilience and engineering logic.
@@ -102,32 +100,32 @@ In typical survival games, resource failure causes an abrupt game over. In OUTPO
 ### B. Space Weather Crisis & The Exaggerated Game Scenario
 - **Sol 5 ("The Solar Storm Surge"):** Challenges players with a major solar storm event featuring a hypothetical **$+50\text{ mSv}$** radiation spike.
 - **Educational Debrief:** Commander Aiko explicitly explains the scientific context:
-  > *"Great job sheltering the crew, Commander! In real life, Curiosity's RAD instrument detected a solar storm in 2013 that only added about 50 micro-Sieverts (0.05 mSv) to the surface because Mars's atmosphere absorbed most of it. Our +50 mSv storm was an exaggerated worst-case training drill—and thanks to our regolith Storm Shield, our crew stayed completely safe!"*
+  > *"Great job sheltering the crew, Commander! In real life, Curiosity's RAD instrument detected a solar storm in 2013 that only added about 50 micro-Sieverts (0.05 mSv) to the surface because Mars's atmosphere absorbed most of it. Our +50 mSv storm was an exaggerated worst-case training drill—and thanks to our regolith Storm Shelter, our crew stayed completely safe!"*
 
 ---
 
 ## 6. The Seven-Sol Mission Campaign
 
-The campaign is structured as an intensive **Seven-Sol mission** where each Sol introduces authentic space agency science and engineering choices:
+The campaign is structured as an intensive **Seven-Sol mission** (with a focused 5-Sol MVP loop) where each Sol introduces authentic space agency science and engineering choices:
 
 1. **Sol 1: Touchdown at Jezero Crater**
-   - *Goal:* Deploy Solar Array & Battery; establish daytime Sun Power generation and overnight battery reserves.
+   - *Goal:* Deploy Solar Farm; establish daytime Power generation and overnight battery reserves.
    - *Science Focus:* Martian diurnal cycle (24h 39m), extreme diurnal temperature swings from Perseverance MEDA records.
 
-2. **Sol 2: Atmospheric Extraction & Water Recycling**
-   - *Goal:* Construct Life Support System; extract oxygen from thin $CO_2$ atmosphere and start closed-loop water recovery.
+2. **Sol 2: Atmospheric Extraction & Food Cultivation**
+   - *Goal:* Construct Greenhouse; extract oxygen from thin $CO_2$ atmosphere and start closed-loop water/food recovery.
    - *Science Focus:* NASA BVAD human metabolic baselines ($0.84\text{ kg } O_2/\text{day}$, $2.0\text{--}2.5\text{ L/day}$ direct water intake).
 
-3. **Sol 3: Space Weather Watch & Radiation Telemetry**
-   - *Goal:* Ingest NASA DONKI space-weather alerts; compare LEO radiation data from NASA RadLab with Curiosity RAD surface baseline ($0.64 \pm 0.12\text{ mSv/day}$).
+3. **Sol 3: Space Weather Watch & Mission Control Telemetry**
+   - *Goal:* Establish Mission Control; ingest NASA DONKI space-weather alerts; compare LEO radiation data from NASA RadLab with Curiosity RAD surface baseline ($0.64 \pm 0.12\text{ mSv/day}$).
    - *Science Focus:* Heliospheric monitoring, difference between orbital magnetosphere-shielded radiation (RadLab ISS) and unshielded planetary surface radiation.
 
 4. **Sol 4: Coronal Mass Ejection (CME) Warning**
-   - *Goal:* DONKI detects high-speed CME shock front with 1-Sol transit time to Mars. Construct and reinforce Storm Shield regolith berm.
+   - *Goal:* DONKI detects high-speed CME shock front with 1-Sol transit time to Mars. Construct and reinforce Storm Shelter regolith berm.
    - *Science Focus:* CME transit time physics (`[DERIVED]` from shock speed), regolith shielding properties (`[GAME-SIMPLIFIED]` 80% attenuation vs. secondary neutron physics).
 
 5. **Sol 5: The Solar Storm Surge**
-   - *Goal:* Major solar energetic particle (SEP) storm impacts Jezero Crater (+50 mSv hypothetical training drill). Shelter crew inside Storm Shield and route emergency Sun Power.
+   - *Goal:* Major solar energetic particle (SEP) storm impacts Jezero Crater (+50 mSv hypothetical training drill). Shelter crew inside Storm Shelter and route emergency Power.
    - *Science Focus:* Real vs. exaggerated solar particle events (Curiosity 2013 actual $0.05\text{ mSv}$ event vs. $+50\text{ mSv}$ training drill).
 
 6. **Sol 6: Aftermath & Health Countermeasures**
@@ -135,7 +133,7 @@ The campaign is structured as an intensive **Seven-Sol mission** where each Sol 
    - *Science Focus:* NASA OSDR space biology research on microgravity bone mineral loss ($1.0\%\text{--}1.5\%/\text{month}$) and muscle atrophy; unverified nature of human adaptation to partial $0.38g$ gravity.
 
 7. **Sol 7: Long-Term Sustainability & Mission Certification**
-   - *Goal:* Balance all 3 resources across winter temperature drop; optional CSA Greenhouse activation; receive comprehensive Mission Commander certification.
+   - *Goal:* Balance all 3 resources across winter temperature drop; optimize Greenhouse crop yields; receive comprehensive Mission Commander certification.
    - *Science Focus:* Closed-loop life-support sustainability, space agriculture, and engineering debrief across Science, Safety, and Sustainability scores.
 
 ---

@@ -6,6 +6,10 @@
 import {
   AbsorbedDoseRateUnit,
   CmeClassificationType,
+  CuriosityGcrBaseline,
+  CuriosityLocation,
+  CuriosityRadSnapshot,
+  CuriositySol242Event,
   DonkiCmeAnalysis,
   DonkiCmeRecord,
   DonkiEnlilSimulation,
@@ -1019,6 +1023,351 @@ export function validateOsdrSnapshot(value: unknown): ValidationResult<OsdrSnaps
       generatedAt: value.generatedAt as string,
       source: 'NASA OSDR',
       studies,
+    },
+    errors: [],
+  };
+}
+
+// ============================================================================
+// 5. NASA Curiosity RAD Surface Dosimetry Validation
+// ============================================================================
+
+export function validateCuriosityLocation(
+  value: unknown,
+  path = 'location'
+): ValidationResult<CuriosityLocation> {
+  const errors: ValidationError[] = [];
+  if (!isObject(value)) {
+    return { success: false, errors: [{ path, message: 'Location must be an object', value }] };
+  }
+
+  let valid = true;
+  if (!validateString(value.body, `${path}.body`, errors, { allowEmpty: false })) {
+    valid = false;
+  } else if (value.body !== 'Mars') {
+    errors.push({
+      path: `${path}.body`,
+      message: `Expected body 'Mars', received '${value.body}'`,
+      value: value.body,
+    });
+    valid = false;
+  }
+
+  if (!validateString(value.region, `${path}.region`, errors, { allowEmpty: false })) valid = false;
+  if (!validateNumber(value.latitude, `${path}.latitude`, errors, { min: -90, max: 90 })) valid = false;
+  if (!validateNumber(value.longitude, `${path}.longitude`, errors, { min: -180, max: 360 })) valid = false;
+  if (!validateNumber(value.altitudeMeters, `${path}.altitudeMeters`, errors)) valid = false;
+
+  if (!valid) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      body: value.body as string,
+      region: value.region as string,
+      latitude: value.latitude as number,
+      longitude: value.longitude as number,
+      altitudeMeters: value.altitudeMeters as number,
+    },
+    errors: [],
+  };
+}
+
+export function validateCuriosityGcrBaseline(
+  value: unknown,
+  path = 'datasets.gcrBaseline'
+): ValidationResult<CuriosityGcrBaseline> {
+  const errors: ValidationError[] = [];
+  if (!isObject(value)) {
+    return { success: false, errors: [{ path, message: 'GCR baseline record must be an object', value }] };
+  }
+
+  let valid = true;
+
+  if (!validateClassification(value.classification, `${path}.classification`, errors)) {
+    valid = false;
+  } else if (value.classification !== 'REAL') {
+    errors.push({
+      path: `${path}.classification`,
+      message: `Empirical Curiosity GCR baseline must have classification 'REAL', received '${value.classification}'`,
+      value: value.classification,
+    });
+    valid = false;
+  }
+
+  const provenance = validateProvenance(value.provenance, `${path}.provenance`, errors);
+  if (!provenance) valid = false;
+
+  if (!validateString(value.measurementType, `${path}.measurementType`, errors, { allowEmpty: false })) valid = false;
+  if (!validateNumber(value.doseEquivalentRate, `${path}.doseEquivalentRate`, errors, { min: 0 })) valid = false;
+  if (!validateNumber(value.doseEquivalentRateUncertainty, `${path}.doseEquivalentRateUncertainty`, errors, { min: 0 })) valid = false;
+
+  if (value.doseEquivalentRateUnit !== 'mSv/day') {
+    errors.push({
+      path: `${path}.doseEquivalentRateUnit`,
+      message: `Expected unit 'mSv/day', received '${String(value.doseEquivalentRateUnit)}'`,
+      value: value.doseEquivalentRateUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.absorbedDoseRateSilicon, `${path}.absorbedDoseRateSilicon`, errors, { min: 0 })) valid = false;
+  if (!validateNumber(value.absorbedDoseRateSiliconUncertainty, `${path}.absorbedDoseRateSiliconUncertainty`, errors, { min: 0 })) valid = false;
+
+  if (value.absorbedDoseRateSiliconUnit !== 'mGy/day') {
+    errors.push({
+      path: `${path}.absorbedDoseRateSiliconUnit`,
+      message: `Expected unit 'mGy/day', received '${String(value.absorbedDoseRateSiliconUnit)}'`,
+      value: value.absorbedDoseRateSiliconUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.absorbedDoseRateWater, `${path}.absorbedDoseRateWater`, errors, { min: 0 })) valid = false;
+  if (!validateNumber(value.absorbedDoseRateWaterUncertainty, `${path}.absorbedDoseRateWaterUncertainty`, errors, { min: 0 })) valid = false;
+
+  if (value.absorbedDoseRateWaterUnit !== 'mGy/day') {
+    errors.push({
+      path: `${path}.absorbedDoseRateWaterUnit`,
+      message: `Expected unit 'mGy/day', received '${String(value.absorbedDoseRateWaterUnit)}'`,
+      value: value.absorbedDoseRateWaterUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.qualityFactorAverage, `${path}.qualityFactorAverage`, errors, { min: 0 })) valid = false;
+  if (!validateNumber(value.qualityFactorUncertainty, `${path}.qualityFactorUncertainty`, errors, { min: 0 })) valid = false;
+  if (!validateString(value.measurementPeriod, `${path}.measurementPeriod`, errors, { allowEmpty: false })) valid = false;
+
+  // Strict boundary: verify no synthetic game simulation values
+  if ('pedagogicalComparison' in value || 'synthetic' in value || 'trainingScenario' in value) {
+    errors.push({
+      path,
+      message: 'Empirical Curiosity RAD snapshot must not contain synthetic game values or training scenarios',
+      value,
+    });
+    valid = false;
+  }
+
+  if (!valid || !provenance) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      classification: value.classification as 'REAL',
+      provenance,
+      measurementType: value.measurementType as string,
+      doseEquivalentRate: value.doseEquivalentRate as number,
+      doseEquivalentRateUncertainty: value.doseEquivalentRateUncertainty as number,
+      doseEquivalentRateUnit: 'mSv/day',
+      absorbedDoseRateSilicon: value.absorbedDoseRateSilicon as number,
+      absorbedDoseRateSiliconUncertainty: value.absorbedDoseRateSiliconUncertainty as number,
+      absorbedDoseRateSiliconUnit: 'mGy/day',
+      absorbedDoseRateWater: value.absorbedDoseRateWater as number,
+      absorbedDoseRateWaterUncertainty: value.absorbedDoseRateWaterUncertainty as number,
+      absorbedDoseRateWaterUnit: 'mGy/day',
+      qualityFactorAverage: value.qualityFactorAverage as number,
+      qualityFactorUncertainty: value.qualityFactorUncertainty as number,
+      measurementPeriod: value.measurementPeriod as string,
+    },
+    errors: [],
+  };
+}
+
+export function validateCuriositySol242Event(
+  value: unknown,
+  path = 'datasets.sol242SepEvent'
+): ValidationResult<CuriositySol242Event> {
+  const errors: ValidationError[] = [];
+  if (!isObject(value)) {
+    return { success: false, errors: [{ path, message: 'Sol 242 event record must be an object', value }] };
+  }
+
+  let valid = true;
+
+  if (!validateClassification(value.classification, `${path}.classification`, errors)) {
+    valid = false;
+  } else if (value.classification !== 'REAL') {
+    errors.push({
+      path: `${path}.classification`,
+      message: `Empirical Curiosity Sol 242 event must have classification 'REAL', received '${value.classification}'`,
+      value: value.classification,
+    });
+    valid = false;
+  }
+
+  const provenance = validateProvenance(value.provenance, `${path}.provenance`, errors);
+  if (!provenance) valid = false;
+
+  if (!validateString(value.measurementType, `${path}.measurementType`, errors, { allowEmpty: false })) valid = false;
+  if (!validateString(value.eventDate, `${path}.eventDate`, errors, { allowEmpty: false })) valid = false;
+  if (!validateNumber(value.peakAbsorbedDoseRate, `${path}.peakAbsorbedDoseRate`, errors, { min: 0 })) valid = false;
+
+  if (value.peakAbsorbedDoseRateUnit !== 'uGy/day') {
+    errors.push({
+      path: `${path}.peakAbsorbedDoseRateUnit`,
+      message: `Expected unit 'uGy/day', received '${String(value.peakAbsorbedDoseRateUnit)}'`,
+      value: value.peakAbsorbedDoseRateUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.quiescentBaselineDoseRate, `${path}.quiescentBaselineDoseRate`, errors, { min: 0 })) valid = false;
+
+  if (value.quiescentBaselineDoseRateUnit !== 'uGy/day') {
+    errors.push({
+      path: `${path}.quiescentBaselineDoseRateUnit`,
+      message: `Expected unit 'uGy/day', received '${String(value.quiescentBaselineDoseRateUnit)}'`,
+      value: value.quiescentBaselineDoseRateUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.peakDoseRateEnhancement, `${path}.peakDoseRateEnhancement`, errors, { min: 0 })) valid = false;
+
+  if (value.peakDoseRateEnhancementUnit !== 'uGy/day') {
+    errors.push({
+      path: `${path}.peakDoseRateEnhancementUnit`,
+      message: `Expected unit 'uGy/day', received '${String(value.peakDoseRateEnhancementUnit)}'`,
+      value: value.peakDoseRateEnhancementUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.integratedExcessDoseEquivalent, `${path}.integratedExcessDoseEquivalent`, errors, { min: 0 })) valid = false;
+
+  if (value.integratedExcessDoseEquivalentUnit !== 'mSv') {
+    errors.push({
+      path: `${path}.integratedExcessDoseEquivalentUnit`,
+      message: `Expected unit 'mSv', received '${String(value.integratedExcessDoseEquivalentUnit)}'`,
+      value: value.integratedExcessDoseEquivalentUnit,
+    });
+    valid = false;
+  }
+
+  if (!validateNumber(value.integratedExcessDoseEquivalentMicroSv, `${path}.integratedExcessDoseEquivalentMicroSv`, errors, { min: 0 })) valid = false;
+  if (!validateNumber(value.qualityFactor, `${path}.qualityFactor`, errors, { min: 0 })) valid = false;
+  if (!validateString(value.measurementClarification, `${path}.measurementClarification`, errors, { allowEmpty: false })) valid = false;
+
+  // Strict boundary: verify no synthetic game simulation values
+  if ('pedagogicalComparison' in value || 'synthetic' in value || 'trainingScenario' in value) {
+    errors.push({
+      path,
+      message: 'Empirical Curiosity RAD snapshot must not contain synthetic game values or training scenarios',
+      value,
+    });
+    valid = false;
+  }
+
+  if (!valid || !provenance) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      classification: value.classification as 'REAL',
+      provenance,
+      measurementType: value.measurementType as string,
+      eventDate: value.eventDate as string,
+      peakAbsorbedDoseRate: value.peakAbsorbedDoseRate as number,
+      peakAbsorbedDoseRateUnit: 'uGy/day',
+      quiescentBaselineDoseRate: value.quiescentBaselineDoseRate as number,
+      quiescentBaselineDoseRateUnit: 'uGy/day',
+      peakDoseRateEnhancement: value.peakDoseRateEnhancement as number,
+      peakDoseRateEnhancementUnit: 'uGy/day',
+      integratedExcessDoseEquivalent: value.integratedExcessDoseEquivalent as number,
+      integratedExcessDoseEquivalentUnit: 'mSv',
+      integratedExcessDoseEquivalentMicroSv: value.integratedExcessDoseEquivalentMicroSv as number,
+      qualityFactor: value.qualityFactor as number,
+      measurementClarification: value.measurementClarification as string,
+    },
+    errors: [],
+  };
+}
+
+export function validateCuriosityRadSnapshot(value: unknown): ValidationResult<CuriosityRadSnapshot> {
+  const errors: ValidationError[] = [];
+  if (!isObject(value)) {
+    return { success: false, errors: [{ path: 'snapshot', message: 'Snapshot payload must be an object', value }] };
+  }
+
+  if (value.schemaVersion !== '1.0') {
+    errors.push({
+      path: 'snapshot.schemaVersion',
+      message: `Expected schemaVersion '1.0', received '${String(value.schemaVersion)}'`,
+      value: value.schemaVersion,
+    });
+  }
+
+  validateTimestamp(value.generatedAt, 'snapshot.generatedAt', errors);
+  validateString(value.source, 'snapshot.source', errors, { allowEmpty: false });
+  validateString(value.instrument, 'snapshot.instrument', errors, { allowEmpty: false });
+
+  if (!validateString(value.spacecraft, 'snapshot.spacecraft', errors, { allowEmpty: false })) {
+    // error handled
+  } else if (!value.spacecraft.includes('Curiosity') && !value.spacecraft.includes('Mars Science Laboratory')) {
+    errors.push({
+      path: 'snapshot.spacecraft',
+      message: `Expected spacecraft to identify Curiosity / Mars Science Laboratory, received '${value.spacecraft}'`,
+      value: value.spacecraft,
+    });
+  }
+
+  let location: CuriosityLocation | undefined;
+  const locRes = validateCuriosityLocation(value.location, 'snapshot.location');
+  if (!locRes.success || !locRes.data) {
+    errors.push(...locRes.errors);
+  } else {
+    location = locRes.data;
+  }
+
+  let gcrBaseline: CuriosityGcrBaseline | undefined;
+  let sol242SepEvent: CuriositySol242Event | undefined;
+
+  if (!isObject(value.datasets)) {
+    errors.push({
+      path: 'snapshot.datasets',
+      message: 'datasets property must be an object',
+      value: value.datasets,
+    });
+  } else {
+    const gcrRes = validateCuriosityGcrBaseline(value.datasets.gcrBaseline, 'snapshot.datasets.gcrBaseline');
+    if (!gcrRes.success || !gcrRes.data) {
+      errors.push(...gcrRes.errors);
+    } else {
+      gcrBaseline = gcrRes.data;
+    }
+
+    const solRes = validateCuriositySol242Event(value.datasets.sol242SepEvent, 'snapshot.datasets.sol242SepEvent');
+    if (!solRes.success || !solRes.data) {
+      errors.push(...solRes.errors);
+    } else {
+      sol242SepEvent = solRes.data;
+    }
+  }
+
+  if (errors.length > 0 || !location || !gcrBaseline || !sol242SepEvent) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      schemaVersion: '1.0',
+      generatedAt: value.generatedAt as string,
+      source: value.source as string,
+      instrument: value.instrument as string,
+      spacecraft: value.spacecraft as string,
+      location,
+      datasets: {
+        gcrBaseline,
+        sol242SepEvent,
+      },
     },
     errors: [],
   };

@@ -550,18 +550,22 @@ export interface SnapshotBatchItem {
 }
 
 /**
- * Multi-snapshot transactional writer:
- * Guarantees that either ALL snapshots in the batch are committed to disk,
- * or NONE are updated.
+ * Multi-snapshot staged transactional writer:
+ * Provides staged writes and automatic rollback from .bak backups for handled failures
+ * during batch replacement.
  *
  * Steps:
  * 1. Staging: All data is serialized and written to temporary staged files.
  * 2. Pre-state Backup: Any existing files are preserved in temporary backups.
- * 3. Atomic Commit: All files are replaced in sequence.
+ * 3. Replacement: All files are replaced in sequence.
  * 4. Automatic Rollback: If replacing ANY file fails (e.g. at file 2 or 3),
  *    all target files are immediately restored from their backups, and temporary files
  *    are cleaned up.
  * 5. Success Cleanup: Temporary backups and staging files are unlinked.
+ *
+ * Limitation note: Protects against handled execution, validation, and write errors.
+ * Does not claim guaranteed recovery from unhandled sudden OS process termination (SIGKILL)
+ * or system power loss before directory metadata is synced to disk.
  */
 export async function writeSnapshotBatchTransactional(
   targetDir: string,

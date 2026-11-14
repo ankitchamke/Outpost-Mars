@@ -366,15 +366,15 @@ To maintain an offline-first bundle that is compact ($\le 100\text{ KB}$ total J
 
 | Resource | Final Disposition | Target Phase | Implementation Action |
 |---|---|---|---|
-| **NASA DONKI** | **Full Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 04 (Scenarios) | Ingest May 2024 and April 2013 historical flares, CMEs, and SEPs into `donki-events.json`. |
-| **NASA RadLab** | **Full Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 05 (Education) | Ingest selected ISS DosTel1 telemetry into `radlab-dosimetry.json` for LEO radiation education. |
-| **NASA OSDR** | **Reference Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 05 (Education) | Ingest study metadata for OSD-661 and OSD-121 into `osdr-studies.json` to ground astronaut gym workouts. |
+| **NASA DONKI** | **Full Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 04 (Scenarios) | Ingest May 2024 historical flares, CMEs with authentic WSA-ENLIL Mars arrivals, and SEPs into `donki-events.json`. (Note: The April 2013 event is preserved empirically in `curiosity-rad.json` as a surface observation rather than asserting an unverified DONKI ENLIL Mars shock arrival). |
+| **NASA RadLab** | **Full Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 05 (Education) | Ingest selected ISS DosTel1 telemetry (8 records) into `radlab-dosimetry.json` for LEO radiation education. |
+| **NASA OSDR** | **Reference Integration (Snapshot)** | Phase 02 (Snapshots)<br>Phase 05 (Education) | Ingest study metadata for OSD-661 and OSD-121 into `osdr-studies.json` to ground astronaut health and life support. |
 | **NASA Mars Trek** | **Deferred to Phase 06** | Phase 06 (Polish) | Use selected MOLA elevation maps as static background imagery; do not build live WMTS integration. |
 
 ### B. Implementation Sequence for Phase 02
-1. **First Implementation Task:** Implement TypeScript data schemas and validators (`src/data/types.ts`) for DONKI, RadLab, and OSDR snapshot formats.
+1. **First Implementation Task:** Implement TypeScript data schemas and validators (`src/data/types.ts`) for DONKI, RadLab, OSDR, and Curiosity RAD snapshot formats.
 2. **Second Implementation Task:** Implement the local snapshot loader and offline data access service (`src/data/loader.ts`).
-3. **Third Implementation Task:** Construct private local ingestion script (`scripts/ingest-nasa-data.ts`) to fetch and bundle verified snapshots for May 2024 and April 2013.
+3. **Third Implementation Task:** Construct private local ingestion script (`scripts/ingest-nasa-data.ts`) to fetch and bundle verified snapshots with staged writes and rollback for handled failures.
 4. **API Key Requirement:** A free NASA API key is **optional** because direct CCMC and OSDR endpoints are completely public, but having a free key configured in local `.env` ensures standard `api.nasa.gov` compatibility for DONKI ingestion scripts.
 
 ---

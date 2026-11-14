@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   validateClassification,
+  validateCuriosityGcrBaseline,
+  validateCuriosityLocation,
+  validateCuriosityRadSnapshot,
+  validateCuriositySol242Event,
   validateDonkiCmeRecord,
   validateDonkiSepRecord,
   validateDonkiSnapshot,
@@ -14,6 +18,7 @@ import {
 import {
   SYNTHETIC_PROVENANCE_FIXTURE,
   SYNTHETIC_VALID_CME_FIXTURE,
+  SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_DONKI_SNAPSHOT_FIXTURE,
   SYNTHETIC_VALID_FLARE_FIXTURE,
   SYNTHETIC_VALID_OSDR_SNAPSHOT_FIXTURE,
@@ -379,5 +384,86 @@ describe('NASA OSDR Validation', () => {
     const res = validateOsdrSnapshot(emptyOsdr);
     expect(res.success).toBe(false);
     expect(res.errors.some((e) => e.message.includes('must not be empty'))).toBe(true);
+  });
+});
+
+describe('NASA Curiosity RAD Surface Dosimetry Validation', () => {
+  it('validates a complete Curiosity RAD snapshot with empirical Gale Crater data', () => {
+    const res = validateCuriosityRadSnapshot(SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE);
+    expect(res.success).toBe(true);
+    expect(res.data?.location.body).toBe('Mars');
+    expect(res.data?.location.region).toBe('Gale Crater');
+    expect(res.data?.datasets.gcrBaseline.doseEquivalentRate).toBe(0.64);
+    expect(res.data?.datasets.gcrBaseline.doseEquivalentRateUnit).toBe('mSv/day');
+    expect(res.data?.datasets.sol242SepEvent.integratedExcessDoseEquivalent).toBe(0.05);
+    expect(res.data?.datasets.sol242SepEvent.peakAbsorbedDoseRate).toBe(260);
+  });
+
+  it('validates Curiosity location and rejects non-Mars body', () => {
+    const locRes = validateCuriosityLocation(SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.location);
+    expect(locRes.success).toBe(true);
+    expect(locRes.data?.body).toBe('Mars');
+
+    const earthLoc = {
+      ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.location,
+      body: 'Earth',
+    };
+    const badRes = validateCuriosityLocation(earthLoc);
+    expect(badRes.success).toBe(false);
+    expect(badRes.errors[0].message).toContain("Expected body 'Mars'");
+  });
+
+  it('validates GCR baseline units and rejects invalid units', () => {
+    const validGcr = SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.datasets.gcrBaseline;
+    const res = validateCuriosityGcrBaseline(validGcr);
+    expect(res.success).toBe(true);
+
+    const badUnits = {
+      ...validGcr,
+      doseEquivalentRateUnit: 'uSv/h',
+    };
+    const badRes = validateCuriosityGcrBaseline(badUnits);
+    expect(badRes.success).toBe(false);
+    expect(badRes.errors.some((e) => e.path.includes('doseEquivalentRateUnit'))).toBe(true);
+  });
+
+  it('validates Sol 242 event and rejects invalid units or negative rates', () => {
+    const validSol = SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.datasets.sol242SepEvent;
+    const res = validateCuriositySol242Event(validSol);
+    expect(res.success).toBe(true);
+
+    const badRate = {
+      ...validSol,
+      peakAbsorbedDoseRate: -10,
+    };
+    const badRes = validateCuriositySol242Event(badRate);
+    expect(badRes.success).toBe(false);
+    expect(badRes.errors.some((e) => e.path.includes('peakAbsorbedDoseRate'))).toBe(true);
+  });
+
+  it('guards against synthetic game simulation values or training scenarios inside empirical snapshot', () => {
+    const syntheticSnapshot = {
+      ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
+      datasets: {
+        ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.datasets,
+        gcrBaseline: {
+          ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE.datasets.gcrBaseline,
+          trainingScenario: 'Emergency drill +50 mSv dose',
+        },
+      },
+    };
+    const res = validateCuriosityRadSnapshot(syntheticSnapshot);
+    expect(res.success).toBe(false);
+    expect(res.errors.some((e) => e.message.includes('synthetic game values or training scenarios'))).toBe(true);
+  });
+
+  it('rejects Curiosity RAD snapshot when spacecraft does not identify Curiosity / MSL', () => {
+    const alienSpacecraft = {
+      ...SYNTHETIC_VALID_CURIOSITY_RAD_SNAPSHOT_FIXTURE,
+      spacecraft: 'Voyager 1',
+    };
+    const res = validateCuriosityRadSnapshot(alienSpacecraft);
+    expect(res.success).toBe(false);
+    expect(res.errors.some((e) => e.path.includes('spacecraft'))).toBe(true);
   });
 });
