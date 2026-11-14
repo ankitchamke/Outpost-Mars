@@ -40,8 +40,8 @@
 ### 5. Visuals, Audio & Technical Architecture (ART/TECH)
 - [ ] **ART-01**: Clean, responsive 2D Martian surface and module graphics rendered via HTML5 Canvas with visual operational states (active, idle, degraded).
 - [ ] **ART-02**: Web Audio API procedural synthesizer providing atmospheric Martian wind, module hums, and alert sirens with a prominent one-click mute control.
-- [ ] **TECH-01**: Zero-dependency, client-side web application built with Vite + TypeScript + HTML/CSS, running in modern desktop and tablet browsers without installation or live API dependencies.
-- [ ] **TECH-02**: Client-side mission state persistence in browser `localStorage`.
+- [x] **TECH-01**: Zero-dependency, client-side web application built with Vite + TypeScript + HTML/CSS, running in modern desktop and tablet browsers without installation or live API dependencies.
+- [x] **TECH-02**: Client-side mission state persistence in browser `localStorage`.
 
 ### 6. Quality Assurance & Submission Package (QA/SUB)
 - [ ] **QA-01**: Automated unit test suite verifying simulation balance, resource math equations, and offline snapshot data loading.
@@ -65,7 +65,7 @@
 
 | Requirement Group | Mapped Phase | Target Duration | Status |
 |---|---|---|---|
-| TECH-01, TECH-02 | Phase 01: Project Foundation & Architecture | 1h | Pending |
+| TECH-01, TECH-02 | Phase 01: Project Foundation & Architecture | 1h | Completed |
 | SCI-01 to SCI-05 | Phase 02: Science & Data Integration Engine | 3h | Pending |
 | SIM-01 to SIM-04 | Phase 03: 2D Base Simulation & Resource Systems | 3h | Pending |
 | EDU-01 to EDU-03 | Phase 04: Mission Scenarios & Space Weather Events | 3h | Pending |
@@ -78,7 +78,7 @@
 - Total MVP Requirements: 21
 - Mapped to Phases: 21 (100% mapped)
 - Unmapped: 0
-- Remaining Budget: Exactly 18.0 hours
+- Remaining Budget: Exactly 17.0 hours
 
 ---
 *Requirements audited: 2026-11-14*

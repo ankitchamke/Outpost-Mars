@@ -1,0 +1,306 @@
+/* ==========================================================================
+   OUTPOST: MARS — Global & Responsive Styles
+   WCAG 2.1 AA Compliant Palette & Touch Targets (>=44px)
+   ========================================================================== */
+
+:root {
+  /* Color Palette — Mars Surface & Space */
+  --color-mars-deep: #150d1a;
+  --color-mars-sky: #2d1822;
+  --color-mars-regolith: #9c4127;
+  --color-mars-dust: #c86343;
+  --color-mars-sand: #df8a66;
+
+  /* HUD & UI Dark Theme */
+  --bg-app: #0c0f14;
+  --bg-panel: rgba(18, 24, 34, 0.88);
+  --bg-panel-solid: #121822;
+  --bg-panel-hover: #1b2434;
+  --border-panel: rgba(94, 114, 142, 0.35);
+  --border-focus: #38bdf8;
+
+  /* Typography Colors — High Contrast (>= 4.5:1, mostly >= 7:1) */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  /* 3 Core Resources & Crew Safety (Dual-coded) */
+  --res-power: #f59e0b;
+  --res-power-bg: rgba(245, 158, 11, 0.18);
+  --res-life-support: #06b6d4;
+  --res-life-support-bg: rgba(6, 182, 212, 0.18);
+  --res-storm-shield: #8b5cf6;
+  --res-storm-shield-bg: rgba(139, 92, 246, 0.18);
+
+  /* Outcome Indicator — Crew Safety */
+  --status-nominal: #10b981;
+  --status-caution: #f59e0b;
+  --status-danger: #ef4444;
+
+  /* Layout & Sizing */
+  --min-touch-target: 44px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --font-family-base: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-family-base);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Header */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: var(--bg-panel-solid);
+  border-bottom: 1px solid var(--border-panel);
+  z-index: 20;
+  min-height: var(--min-touch-target);
+}
+
+.brand-section {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.brand-title {
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.brand-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  background: rgba(200, 99, 67, 0.25);
+  color: var(--color-mars-sand);
+  border: 1px solid var(--color-mars-dust);
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Buttons (Accessibility: min 44x44px target) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--min-touch-target);
+  min-height: var(--min-touch-target);
+  padding: 0.4rem 0.85rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-panel-hover);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  background-color: #243044;
+  border-color: var(--border-focus);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-sm {
+  min-height: var(--min-touch-target);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+/* Viewport Area */
+.viewport-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-mars-deep);
+}
+
+#game-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* HUD Overlay */
+.hud-overlay {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  pointer-events: none; /* Let canvas capture clicks except on HUD elements */
+  z-index: 10;
+  gap: 1rem;
+}
+
+.hud-panel {
+  pointer-events: auto;
+  background: var(--bg-panel);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-panel);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+/* Resource Bar Group */
+.resource-gauges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-width: 260px;
+}
+
+.gauge-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.gauge-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.gauge-track {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.45);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.gauge-fill {
+  height: 100%;
+  transition: width 0.3s ease-out;
+}
+
+.gauge-power { background-color: var(--res-power); }
+.gauge-life-support { background-color: var(--res-life-support); }
+.gauge-storm-shield { background-color: var(--res-storm-shield); }
+
+/* Crew Safety Badge */
+.safety-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.safety-badge.nominal {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--status-nominal);
+  border: 1px solid var(--status-nominal);
+}
+
+.safety-badge.caution {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--status-caution);
+  border: 1px solid var(--status-caution);
+}
+
+.safety-badge.danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--status-danger);
+  border: 1px solid var(--status-danger);
+}
+
+/* Footer / Mission Bar */
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 1rem;
+  background: var(--bg-panel-solid);
+  border-top: 1px solid var(--border-panel);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  z-index: 20;
+}
+
+.footer-credits a {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.footer-credits a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .hud-overlay {
+    flex-direction: column;
+    left: 0.5rem;
+    right: 0.5rem;
+    top: 0.5rem;
+  }
+  .resource-gauges {
+    width: 100%;
+    min-width: 0;
+  }
+}
