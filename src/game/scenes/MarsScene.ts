@@ -3,13 +3,13 @@ import { generateAllBuildingTextures } from '../textures/buildings';
 import { BUILDING_INTERACTION_EVENTS } from '../building-events';
 import { TUTORIAL_EVENTS } from '../tutorial-events';
 
-export const WORLD_WIDTH = 1600;
-export const WORLD_HEIGHT = 1200;
+export const WORLD_WIDTH = 2000;
+export const WORLD_HEIGHT = 1500;
 const TERRAIN_BACKGROUND_TEXTURE = 'mars_terrain_background';
 const BUILDING_SCALE_FACTOR = 1.18;
 const HABITAT_DISPLAY_WIDTH = 272 * BUILDING_SCALE_FACTOR;
 const OTHER_BUILDING_DISPLAY_WIDTH = 256 * BUILDING_SCALE_FACTOR;
-const ASTRONAUT_DISPLAY_HEIGHT = 74;
+const ASTRONAUT_DISPLAY_HEIGHT = 60;
 const ASTRONAUT_ANIMATION_TEXTURE = 'astronaut-animation-m5';
 const ASTRONAUT_STATIC_FALLBACK_TEXTURE = 'astronaut-static-fallback';
 // The replacement PNG is 1058x1487. Its 4x5 cells are 250x270 px, starting
@@ -39,18 +39,18 @@ const APPROVED_BUILDING_DISPLAY_WIDTHS: Record<string, number> = {
 };
 const COMPACT_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
   // Landscape mobile overview: a compact single row keeps every building clear of the HUD.
-  greenhouse: { x: 160, y: 550 },
-  mission_control: { x: 480, y: 550 },
-  habitat: { x: 800, y: 550 },
-  solar_farm: { x: 1120, y: 550 },
-  storm_shelter: { x: 1440, y: 550 },
+  greenhouse: { x: 200, y: 700 },
+  mission_control: { x: 600, y: 700 },
+  habitat: { x: 1000, y: 700 },
+  solar_farm: { x: 1400, y: 700 },
+  storm_shelter: { x: 1800, y: 700 },
 };
 const MEDIUM_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
-  mission_control: { x: 480, y: 470 },
-  solar_farm: { x: 1260, y: 470 },
-  greenhouse: { x: 300, y: 700 },
-  habitat: { x: 850, y: 550 },
-  storm_shelter: { x: 1260, y: 790 },
+  mission_control: { x: 620, y: 500 },
+  solar_farm: { x: 1450, y: 520 },
+  greenhouse: { x: 550, y: 1000 },
+  habitat: { x: 1000, y: 750 },
+  storm_shelter: { x: 1420, y: 1000 },
 };
 
 export interface BuildingData {
@@ -91,40 +91,40 @@ export const CANONICAL_BUILDINGS: BuildingData[] = [
     id: 'mission_control',
     name: 'Mission Control',
     texture: 'building_mission_control',
-    x: 460,
-    y: 300,
+    x: 620,
+    y: 500,
     role: 'Operations & Satellite Telemetry',
   },
   {
     id: 'solar_farm',
     name: 'Solar Farm',
     texture: 'building_solar_farm',
-    x: 1260,
-    y: 330,
+    x: 1450,
+    y: 520,
     role: 'Photovoltaic Array & Battery Storage',
   },
   {
     id: 'greenhouse',
     name: 'Greenhouse',
     texture: 'building_greenhouse',
-    x: 320,
-    y: 620,
+    x: 550,
+    y: 1000,
     role: 'Hydroponic Crops & Biomass Cultivation',
   },
   {
     id: 'habitat',
     name: 'Habitat',
     texture: 'building_habitat',
-    x: 800,
-    y: 500,
+    x: 1000,
+    y: 750,
     role: 'Living Quarters & Life Support Hub',
   },
   {
     id: 'storm_shelter',
     name: 'Storm Shelter',
     texture: 'building_storm_shelter',
-    x: 1210,
-    y: 770,
+    x: 1420,
+    y: 1000,
     role: 'Radiation Bunker & Regolith Shield',
   },
 ];
@@ -165,52 +165,92 @@ const CRATER_ASSETS: M5EnvironmentAsset[] = [
   { key: 'environment_crater_small_02', file: 'crater-small-2.png' },
 ];
 
-const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
-  { key: 'environment_m5_rock_formation_01', file: 'm5-rock-formation-01.png' },
-  { key: 'environment_m5_rock_formation_02', file: 'm5-rock-formation-02.png' },
-  { key: 'environment_m5_rock_formation_03', file: 'm5-rock-formation-03.png' },
-  { key: 'environment_m5_rock_formation_04', file: 'm5-rock-formation-04.png' },
-  { key: 'environment_m5_rock_cluster_01', file: 'm5-rock-cluster-01.png' },
-  { key: 'environment_m5_rock_cluster_02', file: 'm5-rock-cluster-02.png' },
-  { key: 'environment_m5_rock_cluster_03', file: 'm5-rock-cluster-03.png' },
-  { key: 'environment_m5_rock_cluster_04', file: 'm5-rock-cluster-04.png' },
-  { key: 'environment_m5_boulder_01', file: 'm5-boulder-01.png' },
-  { key: 'environment_m5_boulder_02', file: 'm5-boulder-02.png' },
-  { key: 'environment_m5_pebble_cluster_01', file: 'm5-pebble-cluster-01.png' },
-  { key: 'environment_m5_pebble_cluster_02', file: 'm5-pebble-cluster-02.png' },
-  { key: 'environment_m5_pebble_cluster_03', file: 'm5-pebble-cluster-03.png' },
-  { key: 'environment_m5_dust_patch_01', file: 'm5-dust-patch-01.png' },
-  { key: 'environment_m5_dust_patch_02', file: 'm5-dust-patch-02.png' },
-  { key: 'environment_m5_dust_patch_03', file: 'm5-dust-patch-03.png' },
+const DERIVED_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_rock_pile_01', file: 'rock-pile-01.png' },
+  { key: 'environment_rock_pile_02', file: 'rock-pile-02.png' },
+  { key: 'environment_rock_pile_03', file: 'rock-pile-03.png' },
+  { key: 'environment_rock_pile_04', file: 'rock-pile-04.png' },
+  { key: 'environment_rock_scatter_01', file: 'rock-scatter-01.png' },
+  { key: 'environment_rock_scatter_02', file: 'rock-scatter-02.png' },
+  { key: 'environment_rock_scatter_03', file: 'rock-scatter-03.png' },
+  { key: 'environment_rock_scatter_04', file: 'rock-scatter-04.png' },
+  { key: 'environment_stone_scatter_01', file: 'stone-scatter-01.png' },
+  { key: 'environment_stone_scatter_02', file: 'stone-scatter-02.png' },
+  { key: 'environment_stone_scatter_03', file: 'stone-scatter-03.png' },
+  { key: 'environment_rock_slab_01', file: 'rock-slab-01.png' },
+  { key: 'environment_rock_slab_02', file: 'rock-slab-02.png' },
+  { key: 'environment_soil_patch_01', file: 'soil-patch-01.png' },
+  { key: 'environment_soil_patch_02', file: 'soil-patch-02.png' },
+  { key: 'environment_soil_patch_03', file: 'soil-patch-03.png' },
+  // NASA Flag from environmental-props
+  { key: 'environment_prop_flag_nasa', file: 'prop-flag-nasa.png' },
+  // Rock formations & ridges from rock-sprite-sheet
+  { key: 'environment_rock_monolith_01', file: 'rock-monolith-01.png' },
+  { key: 'environment_rock_monolith_02', file: 'rock-monolith-02.png' },
+  { key: 'environment_rock_ridge_01', file: 'rock-ridge-01.png' },
+  { key: 'environment_rock_ridge_02', file: 'rock-ridge-02.png' },
+  // Dune ripple formations from dunes-rippled-terrain
+  { key: 'environment_dune_ripple_01', file: 'dune-ripple-01.png' },
+  { key: 'environment_dune_ripple_02', file: 'dune-ripple-02.png' },
+  { key: 'environment_dune_ripple_03', file: 'dune-ripple-03.png' },
 ];
 
-/** Fixed, curated world coordinates keep the colony clear and avoid the approved roads. */
+const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_m5_boulder_01', file: 'm5-boulder-01.png' },
+  { key: 'environment_m5_boulder_02', file: 'm5-boulder-02.png' },
+];
+
+/** Curated world coordinates distribute environmental assets into 4 geological zones:
+ *  1. North Impact Crater Field (Y <= 420)
+ *  2. West Rock Ridges & Outcrops (X <= 400)
+ *  3. East Bedrock Flats & Slabs (X >= 1550)
+ *  4. South Dune Expanse & Regolith Basin (Y >= 1100)
+ */
 const M5_WORLD_DECORATIONS: M5WorldDecoration[] = [
-  { texture: 'environment_crater_large_01', x: 230, y: 230, displayWidth: 155, depth: 2, collision: 'crater' },
-  { texture: 'environment_crater_large_02', x: 1485, y: 230, displayWidth: 157, depth: 2, collision: 'crater' },
-  { texture: 'environment_crater_large_03', x: 800, y: 900, displayWidth: 189, depth: 2, collision: 'crater' },
-  { texture: 'environment_crater_medium_01', x: 700, y: 230, displayWidth: 180, depth: 2 },
-  { texture: 'environment_crater_medium_02', x: 1000, y: 230, displayWidth: 182, depth: 2 },
-  { texture: 'environment_crater_small_01', x: 250, y: 410, displayWidth: 182, depth: 2 },
-  { texture: 'environment_crater_small_02', x: 1490, y: 410, displayWidth: 214, depth: 2 },
-  { texture: 'environment_crater_small_02', x: 220, y: 930, displayWidth: 204, depth: 2 },
-  { texture: 'environment_crater_small_01', x: 1240, y: 930, displayWidth: 182, depth: 2 },
-  { texture: 'environment_m5_rock_formation_01', x: 75, y: 760, displayWidth: 125, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_02', x: 1480, y: 760, displayWidth: 115, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_03', x: 980, y: 800, displayWidth: 140, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_04', x: 350, y: 870, displayWidth: 130, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_cluster_01', x: 80, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_02', x: 550, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_03', x: 970, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_04', x: 1480, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_boulder_01', x: 230, y: 350, displayWidth: 65, depth: 7 },
-  { texture: 'environment_m5_boulder_02', x: 1485, y: 320, displayWidth: 60, depth: 7 },
-  { texture: 'environment_m5_pebble_cluster_01', x: 650, y: 340, displayWidth: 75, depth: 5 },
-  { texture: 'environment_m5_pebble_cluster_02', x: 1050, y: 290, displayWidth: 70, depth: 5 },
-  { texture: 'environment_m5_pebble_cluster_03', x: 650, y: 850, displayWidth: 78, depth: 5 },
-  { texture: 'environment_m5_dust_patch_01', x: 210, y: 810, displayWidth: 120, depth: 3, alpha: 0.78 },
-  { texture: 'environment_m5_dust_patch_02', x: 520, y: 840, displayWidth: 120, depth: 3, alpha: 0.78 },
-  { texture: 'environment_m5_dust_patch_03', x: 700, y: 760, displayWidth: 120, depth: 3, alpha: 0.78 },
+  // North: Impact Crater Field & Perimeter Ridges
+  { texture: 'environment_crater_large_01', x: 300, y: 240, displayWidth: 155, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_large_02', x: 1700, y: 240, displayWidth: 157, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_medium_01', x: 720, y: 220, displayWidth: 180, depth: 2 },
+  { texture: 'environment_crater_medium_02', x: 1280, y: 220, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_01', x: 320, y: 420, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_02', x: 1720, y: 420, displayWidth: 214, depth: 2 },
+  { texture: 'environment_rock_ridge_01', x: 120, y: 120, displayWidth: 180, depth: 6 },
+  { texture: 'environment_rock_ridge_02', x: 1880, y: 120, displayWidth: 180, depth: 6 },
+
+  // West: Rock Ridges & Outcrops
+  { texture: 'environment_m5_boulder_01', x: 260, y: 520, displayWidth: 65, depth: 7 },
+  { texture: 'environment_rock_pile_01', x: 120, y: 720, displayWidth: 125, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_monolith_01', x: 140, y: 380, displayWidth: 160, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_pile_04', x: 180, y: 950, displayWidth: 130, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_scatter_01', x: 140, y: 1150, displayWidth: 115, depth: 6 },
+  { texture: 'environment_crater_small_02', x: 260, y: 1280, displayWidth: 204, depth: 2 },
+
+  // East: Bedrock Flats & Slabs
+  { texture: 'environment_m5_boulder_02', x: 1720, y: 520, displayWidth: 60, depth: 7 },
+  { texture: 'environment_rock_slab_01', x: 1720, y: 720, displayWidth: 135, depth: 4, alpha: 0.88 },
+  { texture: 'environment_rock_monolith_02', x: 1860, y: 880, displayWidth: 155, depth: 7, collision: 'rock' },
+  { texture: 'environment_stone_scatter_02', x: 1650, y: 960, displayWidth: 70, depth: 5 },
+  { texture: 'environment_rock_pile_02', x: 1650, y: 1020, displayWidth: 120, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_scatter_04', x: 1750, y: 1150, displayWidth: 115, depth: 6 },
+
+  // South: Dune Expanse & Regolith Basin
+  { texture: 'environment_soil_patch_01', x: 600, y: 1200, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_soil_patch_02', x: 1000, y: 1140, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_soil_patch_03', x: 1400, y: 1200, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_stone_scatter_01', x: 820, y: 1220, displayWidth: 75, depth: 5 },
+  { texture: 'environment_stone_scatter_03', x: 1180, y: 1220, displayWidth: 80, depth: 5 },
+  { texture: 'environment_rock_pile_03', x: 1140, y: 1080, displayWidth: 135, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_slab_02', x: 680, y: 1350, displayWidth: 140, depth: 4, alpha: 0.88 },
+  { texture: 'environment_rock_scatter_02', x: 460, y: 1350, displayWidth: 115, depth: 6 },
+  { texture: 'environment_rock_scatter_03', x: 1540, y: 1350, displayWidth: 115, depth: 6 },
+  { texture: 'environment_dune_ripple_01', x: 360, y: 1160, displayWidth: 260, depth: 2, alpha: 0.65 },
+  { texture: 'environment_dune_ripple_02', x: 920, y: 1430, displayWidth: 280, depth: 2, alpha: 0.65 },
+  { texture: 'environment_dune_ripple_03', x: 1750, y: 1360, displayWidth: 270, depth: 2, alpha: 0.65 },
+  { texture: 'environment_crater_large_03', x: 1000, y: 1300, displayWidth: 189, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_small_01', x: 1350, y: 1320, displayWidth: 182, depth: 2 },
+
+  // Central Plaza: NASA Flag
+  { texture: 'environment_prop_flag_nasa', x: 720, y: 640, displayWidth: 56, depth: 21 },
 ];
 
 const ENVIRONMENT_DECORATIONS: EnvironmentDecoration[] = [
@@ -253,7 +293,7 @@ const MILESTONE_1_ENABLE_ENVIRONMENT_DECORATIONS = false;
 
 /**
  * OUTPOST: MARS — MarsScene (Phase 03 Asset Integration)
- * Composes the 1600x1200 top-down Martian outpost surface featuring:
+ * Composes the 2000x1500 top-down Martian outpost surface featuring:
  * - Approved PNG artwork for all 5 canonical outpost structures
  * - Approved PNG artwork for the astronaut character in the central plaza
  * - Approved Mars terrain PNG as a single aspect-preserving world background
@@ -331,10 +371,13 @@ export class MarsScene extends Phaser.Scene {
     );
     this.load.image(ASTRONAUT_STATIC_FALLBACK_TEXTURE, `${prefix}characters/astronaut.png`);
 
-    // 6. Load replacement crater assets and reviewed environmental props. The reference sheets and rover
+    // 6. Load replacement crater assets, derived environmental props, and retained props. The reference sheets and rover
     // tracks are not modified or used as environmental props.
     for (const asset of CRATER_ASSETS) {
       this.load.image(asset.key, `${prefix}environment/${asset.file}`);
+    }
+    for (const asset of DERIVED_ENVIRONMENT_ASSETS) {
+      this.load.image(asset.key, `${prefix}environment/derived/${asset.file}`);
     }
     for (const asset of M5_ENVIRONMENT_ASSETS) {
       this.load.image(asset.key, `${prefix}environment/props/${asset.file}`);
@@ -384,9 +427,12 @@ export class MarsScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // 2. Approved Mars surface background (Depth 0)
+    // Visible Martian terrain occupies the top ~75% of the frame (visible center at 37.5% from top).
+    // Using origin (0.5, 0.375) and scaling to cover the visible 75% height ensures 100% full-bleed
+    // coverage across the 2000x1500 world with zero transparent letterboxing for both original and replacement PNGs.
     this.terrainBackground = this.add
       .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, TERRAIN_BACKGROUND_TEXTURE)
-      .setOrigin(0.5, 0.5)
+      .setOrigin(0.5, 0.375)
       .setDepth(0);
 
     // Rover tracks sit above the terrain and below every building and character sprite.
@@ -438,8 +484,8 @@ export class MarsScene extends Phaser.Scene {
 
       if (b.id === 'habitat') {
         plaque.setPosition(
-          position.x + sprite.displayWidth / 2 + plaque.displayWidth / 2 + 8,
-          badgeY
+          position.x,
+          position.y - sprite.displayHeight / 2 - plaque.displayHeight / 2 - 10
         );
       }
 
@@ -681,9 +727,9 @@ export class MarsScene extends Phaser.Scene {
 
     // Compact landscape viewports use a denser composition, not a full-world shrink.
     if (width < 768 || height < 500) {
-      camera.setZoom(0.47);
+      camera.setZoom(0.52);
     } else if (width < 1400 || height < 850) {
-      camera.setZoom(0.9);
+      camera.setZoom(0.85);
     } else {
       camera.setZoom(1.0);
     }
@@ -730,54 +776,78 @@ export class MarsScene extends Phaser.Scene {
         sourceHeight: 198,
         sourceStart: { x: 10, y: 99 },
         sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 160, y: 625 },
-        worldEnd: { x: 1440, y: 625 },
-        straightCrossScale: 0.18,
+        worldStart: { x: 200, y: 790 },
+        worldEnd: { x: 1800, y: 790 },
+        straightCrossScale: 0.15,
       },
     ];
 
     const desktopRoutes: RoverTrackRoute[] = [
-      // Each route uses one straight sprite. The ends sit beneath the building
-      // artwork at the entrance edges, so the paths read as one connected road.
+      // 1. Habitat to Mission Control (Northwest corridor -> MC bottom entrance ramp)
       {
         texture: straight,
         sourceWidth: 617,
         sourceHeight: 198,
         sourceStart: { x: 10, y: 99 },
         sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 480, y: 540 } : { x: 460, y: 375 },
-        worldEnd: this.isMediumViewport() ? { x: 690, y: 535 } : { x: 660, y: 480 },
-        straightCrossScale: 0.24,
+        worldStart: { x: 920, y: 710 },
+        worldEnd: { x: 626, y: 590 },
+        straightCrossScale: 0.20,
       },
+      // 2. Habitat to Solar Farm (Northeast corridor -> SF bottom-west service apron)
       {
         texture: straight,
         sourceWidth: 617,
         sourceHeight: 198,
         sourceStart: { x: 10, y: 99 },
         sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 300, y: 760 } : { x: 320, y: 680 },
-        worldEnd: this.isMediumViewport() ? { x: 690, y: 620 } : { x: 660, y: 565 },
-        straightCrossScale: 0.24,
+        worldStart: { x: 1080, y: 710 },
+        worldEnd: { x: 1400, y: 590 },
+        straightCrossScale: 0.20,
       },
+      // 3. Habitat to Greenhouse (Southwest corridor -> GH front entrance apron)
       {
         texture: straight,
         sourceWidth: 617,
         sourceHeight: 198,
         sourceStart: { x: 10, y: 99 },
         sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 1010, y: 535 } : { x: 940, y: 480 },
-        worldEnd: this.isMediumViewport() ? { x: 1315, y: 515 } : { x: 1315, y: 375 },
-        straightCrossScale: 0.24,
+        worldStart: { x: 920, y: 790 },
+        worldEnd: { x: 590, y: 1040 },
+        straightCrossScale: 0.20,
       },
+      // 4. Habitat to Storm Shelter (Southeast corridor -> SS bunker entrance apron)
       {
         texture: straight,
         sourceWidth: 617,
         sourceHeight: 198,
         sourceStart: { x: 10, y: 99 },
         sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 1010, y: 625 } : { x: 940, y: 565 },
-        worldEnd: this.isMediumViewport() ? { x: 1260, y: 855 } : { x: 1210, y: 830 },
-        straightCrossScale: 0.24,
+        worldStart: { x: 1080, y: 790 },
+        worldEnd: { x: 1380, y: 1040 },
+        straightCrossScale: 0.20,
+      },
+      // 5. Exploration Spur: North Crater Wilderness (clear of MC walls & antennas)
+      {
+        texture: straight,
+        sourceWidth: 617,
+        sourceHeight: 198,
+        sourceStart: { x: 10, y: 99 },
+        sourceEnd: { x: 607, y: 99 },
+        worldStart: { x: 820, y: 640 },
+        worldEnd: { x: 820, y: 240 },
+        straightCrossScale: 0.20,
+      },
+      // 6. Exploration Spur: Southeast Dunes & Bedrock (clear of SS bunker walls)
+      {
+        texture: straight,
+        sourceWidth: 617,
+        sourceHeight: 198,
+        sourceStart: { x: 10, y: 99 },
+        sourceEnd: { x: 607, y: 99 },
+        worldStart: { x: 1460, y: 1080 },
+        worldEnd: { x: 1680, y: 1280 },
+        straightCrossScale: 0.20,
       },
     ];
 
@@ -801,8 +871,8 @@ export class MarsScene extends Phaser.Scene {
         .setOrigin(route.sourceStart.x / route.sourceWidth, route.sourceStart.y / route.sourceHeight)
         .setScale(scaleX, scaleY)
         .setRotation(rotation)
-        .setAlpha(0.72)
-        .setDepth(10);
+        .setAlpha(0.70)
+        .setDepth(1);
       this.roverTrackSprites.push(track);
     }
 
@@ -900,7 +970,7 @@ export class MarsScene extends Phaser.Scene {
     body.setAllowGravity(false);
     body.setDrag(0, 0);
     // Match the visible sprite bounds so the astronaut stays fully on-world
-    // when Arcade Physics clamps it against the 1600x1200 world edges.
+    // when Arcade Physics clamps it against the 2000x1500 world edges.
     body.setSize(
       this.hasAstronautAnimations ? ASTRONAUT_BODY_WIDTH : this.astronaut.width,
       this.hasAstronautAnimations ? ASTRONAUT_BODY_HEIGHT : this.astronaut.height,
@@ -1193,9 +1263,9 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private getInitialCameraTarget(): TrackPoint {
-    if (this.isCompactViewport()) return { x: 800, y: 435 };
-    if (this.isMediumViewport()) return { x: 850, y: 570 };
-    return { x: 800, y: 560 };
+    if (this.isCompactViewport()) return { x: 1000, y: 580 };
+    if (this.isMediumViewport()) return { x: 1000, y: 750 };
+    return { x: 1000, y: 750 };
   }
 
   private getBuildingPosition(building: BuildingData): { x: number; y: number } {
@@ -1282,9 +1352,14 @@ export class MarsScene extends Phaser.Scene {
     const excessHeight = Math.max(0, viewHeight - WORLD_HEIGHT);
     const coverWidth = Math.max(WORLD_WIDTH, viewWidth) + excessWidth + 2;
     const coverHeight = Math.max(WORLD_HEIGHT, viewHeight) + excessHeight + 2;
+    // In both the original (1672x941) and replacement (1448x1086) backgrounds,
+    // visible terrain occupies the top ~75% of the source height. Scaling against
+    // visible height prevents transparent margins across the 2000x1500 world.
+    const visibleRatio = 0.75;
+    const visibleTerrainHeight = background.height * visibleRatio;
     const uniformScale = Math.max(
       coverWidth / background.width,
-      coverHeight / background.height
+      coverHeight / visibleTerrainHeight
     );
 
     background
