@@ -2,11 +2,19 @@ import Phaser from 'phaser';
 import { generateAllBuildingTextures } from '../textures/buildings';
 import { BUILDING_INTERACTION_EVENTS } from '../building-events';
 import { TUTORIAL_EVENTS } from '../tutorial-events';
+import {
+  isTouchDevice,
+  getJoystickPosition,
+  calculateJoystickVector,
+  JOYSTICK_RADIUS,
+  JOYSTICK_HIT_RADIUS,
+} from '../touch-controls';
+import { applyBuildingHitArea } from '../building-hit-areas';
 
 export const WORLD_WIDTH = 2000;
 export const WORLD_HEIGHT = 1500;
 const TERRAIN_BACKGROUND_TEXTURE = 'mars_terrain_background';
-const BUILDING_SCALE_FACTOR = 1.18;
+const BUILDING_SCALE_FACTOR = 1.33;
 const HABITAT_DISPLAY_WIDTH = 272 * BUILDING_SCALE_FACTOR;
 const OTHER_BUILDING_DISPLAY_WIDTH = 256 * BUILDING_SCALE_FACTOR;
 const ASTRONAUT_DISPLAY_HEIGHT = 60;
@@ -65,18 +73,6 @@ export interface BuildingData {
 interface TrackPoint {
   x: number;
   y: number;
-}
-
-interface RoverTrackRoute {
-  texture: string;
-  sourceWidth: number;
-  sourceHeight: number;
-  sourceStart: TrackPoint;
-  sourceEnd: TrackPoint;
-  worldStart: TrackPoint;
-  worldEnd: TrackPoint;
-  /** Fixed world-space thickness multiplier on the straight sprite's cross-track axis. */
-  straightCrossScale?: number;
 }
 
 interface MovementKeys {
@@ -182,8 +178,16 @@ const DERIVED_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
   { key: 'environment_soil_patch_01', file: 'soil-patch-01.png' },
   { key: 'environment_soil_patch_02', file: 'soil-patch-02.png' },
   { key: 'environment_soil_patch_03', file: 'soil-patch-03.png' },
-  // NASA Flag from environmental-props
+  // Curated Environmental Props from environmental-props
   { key: 'environment_prop_flag_nasa', file: 'prop-flag-nasa.png' },
+  { key: 'environment_prop_comm_antenna', file: 'prop-comm-antenna.png' },
+  { key: 'environment_prop_sensor_dish', file: 'prop-sensor-dish.png' },
+  { key: 'environment_prop_floodlight', file: 'prop-floodlight.png' },
+  { key: 'environment_prop_power_storage', file: 'prop-power-storage.png' },
+  { key: 'environment_prop_water_tanks', file: 'prop-water-tanks.png' },
+  { key: 'environment_prop_cargo_crates', file: 'prop-cargo-crates.png' },
+  { key: 'environment_prop_hazard_barrier', file: 'prop-hazard-barrier.png' },
+  { key: 'environment_prop_beacon', file: 'prop-beacon.png' },
   // Rock formations & ridges from rock-sprite-sheet
   { key: 'environment_rock_monolith_01', file: 'rock-monolith-01.png' },
   { key: 'environment_rock_monolith_02', file: 'rock-monolith-02.png' },
@@ -196,8 +200,8 @@ const DERIVED_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
 ];
 
 const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
-  { key: 'environment_m5_boulder_01', file: 'm5-boulder-01.png' },
-  { key: 'environment_m5_boulder_02', file: 'm5-boulder-02.png' },
+  { key: 'environment_m5_boulder_01', file: 'boulder-01.png' },
+  { key: 'environment_m5_boulder_02', file: 'boulder-02.png' },
 ];
 
 /** Curated world coordinates distribute environmental assets into 4 geological zones:
@@ -249,8 +253,17 @@ const M5_WORLD_DECORATIONS: M5WorldDecoration[] = [
   { texture: 'environment_crater_large_03', x: 1000, y: 1300, displayWidth: 189, depth: 2, collision: 'crater' },
   { texture: 'environment_crater_small_01', x: 1350, y: 1320, displayWidth: 182, depth: 2 },
 
-  // Central Plaza: NASA Flag
-  { texture: 'environment_prop_flag_nasa', x: 720, y: 640, displayWidth: 56, depth: 21 },
+  // Central Plaza: OUTPOST: MARS Colony Flag & Outpost Infrastructure Props
+  { texture: 'environment_prop_flag_nasa', x: 740, y: 680, displayWidth: 56, depth: 21 },
+  { texture: 'environment_prop_comm_antenna', x: 820, y: 440, displayWidth: 46, depth: 21 },
+  { texture: 'environment_prop_sensor_dish', x: 440, y: 340, displayWidth: 44, depth: 21 },
+  { texture: 'environment_prop_floodlight', x: 420, y: 580, displayWidth: 38, depth: 21 },
+  { texture: 'environment_prop_power_storage', x: 1240, y: 480, displayWidth: 58, depth: 21 },
+  { texture: 'environment_prop_floodlight', x: 1650, y: 580, displayWidth: 38, depth: 21 },
+  { texture: 'environment_prop_water_tanks', x: 340, y: 960, displayWidth: 50, depth: 21 },
+  { texture: 'environment_prop_cargo_crates', x: 1220, y: 840, displayWidth: 58, depth: 21 },
+  { texture: 'environment_prop_beacon', x: 860, y: 220, displayWidth: 38, depth: 8 },
+  { texture: 'environment_prop_hazard_barrier', x: 840, y: 1320, displayWidth: 62, depth: 8 },
 ];
 
 const ENVIRONMENT_DECORATIONS: EnvironmentDecoration[] = [
@@ -330,7 +343,9 @@ export class MarsScene extends Phaser.Scene {
   private joystickCenter = new Phaser.Math.Vector2();
   private joystickVector = new Phaser.Math.Vector2();
   private joystickPointerId: number | null = null;
-  private readonly joystickRadius = 34;
+  private readonly joystickRadius = JOYSTICK_RADIUS;
+  private readonly joystickHitRadius = JOYSTICK_HIT_RADIUS;
+  private touchInputActive = false;
 
   constructor() {
     super({ key: 'MarsScene' });
@@ -338,10 +353,10 @@ export class MarsScene extends Phaser.Scene {
 
   preload(): void {
     // 1. Load the approved Mars surface background as the base world layer.
-    this.load.image(TERRAIN_BACKGROUND_TEXTURE, 'assets/environment/mars-terrain-background.png');
+    this.load.image(TERRAIN_BACKGROUND_TEXTURE, 'assets/environment/terrain/mars-terrain-background.png');
 
     // 2. Load separately derived track pieces. Original extracted candidates stay untouched.
-    const trackPrefix = 'assets/environment/tracks/derived/';
+    const trackPrefix = 'assets/environment/tracks/';
     this.load.image('rover_track_straight_approved', `${trackPrefix}track-straight.png`);
     this.load.image('rover_track_curve_right_approved', `${trackPrefix}track-curve-right.png`);
     this.load.image('rover_track_curve_left_approved', `${trackPrefix}track-curve-left.png`);
@@ -371,43 +386,20 @@ export class MarsScene extends Phaser.Scene {
     );
     this.load.image(ASTRONAUT_STATIC_FALLBACK_TEXTURE, `${prefix}characters/astronaut.png`);
 
-    // 6. Load replacement crater assets, derived environmental props, and retained props. The reference sheets and rover
-    // tracks are not modified or used as environmental props.
+    // 6. Load replacement crater assets, derived environmental props, rocks, and terrain assets.
     for (const asset of CRATER_ASSETS) {
-      this.load.image(asset.key, `${prefix}environment/${asset.file}`);
+      this.load.image(asset.key, `${prefix}environment/craters/${asset.file}`);
     }
     for (const asset of DERIVED_ENVIRONMENT_ASSETS) {
-      this.load.image(asset.key, `${prefix}environment/derived/${asset.file}`);
+      const subfolder = asset.file.startsWith('prop-')
+        ? 'props'
+        : asset.file.startsWith('soil-') || asset.file.startsWith('dune-')
+          ? 'terrain'
+          : 'rocks';
+      this.load.image(asset.key, `${prefix}environment/${subfolder}/${asset.file}`);
     }
     for (const asset of M5_ENVIRONMENT_ASSETS) {
       this.load.image(asset.key, `${prefix}environment/props/${asset.file}`);
-    }
-
-    if (MILESTONE_1_ENABLE_ENVIRONMENT_DECORATIONS) {
-      // Retain the prepared loading map for a later, reviewed environment pass.
-      this.load.image('crater_large_1', `${prefix}environment/crater-large-1.png`);
-      this.load.image('crater_large_2', `${prefix}environment/crater-large-2.png`);
-      this.load.image('crater_large_3', `${prefix}environment/crater-large-3.png`);
-      this.load.image('crater_medium_1', `${prefix}environment/crater-medium-1.png`);
-      this.load.image('crater_medium_2', `${prefix}environment/crater-medium-2.png`);
-      this.load.image('crater_small_1', `${prefix}environment/crater-small-1.png`);
-      this.load.image('crater_small_2', `${prefix}environment/crater-small-2.png`);
-
-      this.load.image('rock_formation_1', `${prefix}environment/rock-formation-1.png`);
-      this.load.image('rock_formation_2', `${prefix}environment/rock-formation-2.png`);
-      this.load.image('rock_formation_3', `${prefix}environment/rock-formation-3.png`);
-      this.load.image('rock_cluster_1', `${prefix}environment/rock-cluster-1.png`);
-      this.load.image('rock_cluster_2', `${prefix}environment/rock-cluster-2.png`);
-      this.load.image('boulder_1', `${prefix}environment/boulder-1.png`);
-      this.load.image('boulder_2', `${prefix}environment/boulder-2.png`);
-
-      this.load.image('rover_track_curve', `${prefix}environment/rover-track-curve.png`);
-      this.load.image('rover_track_straight', `${prefix}environment/rover-track-straight.png`);
-
-      this.load.image('prop_nasa_flag', `${prefix}environment/prop-nasa-flag.png`);
-      this.load.image('prop_beacon', `${prefix}environment/prop-beacon.png`);
-      this.load.image('prop_crates', `${prefix}environment/prop-crates.png`);
-      this.load.image('prop_water_tanks', `${prefix}environment/prop-water-tanks.png`);
     }
 
     // 7. Generate atmospheric dust particle texture (3x3 soft mote)
@@ -469,6 +461,12 @@ export class MarsScene extends Phaser.Scene {
       }
 
       sprite.setDepth(20);
+      applyBuildingHitArea(sprite, b.id);
+      sprite.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+        if (this.isBuildingPanelOpen) return;
+        if (this.isPointerOverJoystick(pointer)) return;
+        this.openBuilding(b);
+      });
       this.buildings.set(b.id, sprite);
 
       // Building Label Plaque (High-contrast, accessible)
@@ -540,10 +538,8 @@ export class MarsScene extends Phaser.Scene {
     this.configureKeyboardMovement();
     this.game.canvas.tabIndex = 0;
     this.game.canvas.setAttribute('aria-label', 'OUTPOST: MARS colony; use WASD or arrow keys to explore');
-    this.input.on('pointerdown', this.focusGameCanvas, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.off('pointerdown', this.focusGameCanvas, this);
-    });
+    this.setupDomPointerListeners();
+    this.input.on('pointerdown', this.onPointerDownGeneral, this);
     this.game.events.on(
       BUILDING_INTERACTION_EVENTS.requestInteract,
       this.openNearbyBuildingPanel,
@@ -554,20 +550,18 @@ export class MarsScene extends Phaser.Scene {
       this.closeBuildingPanel,
       this
     );
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.removeBuildingInteractionListeners, this);
     this.game.events.on(
       TUTORIAL_EVENTS.highlightBuilding,
       this.setTutorialHighlightBuilding,
       this
     );
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off(TUTORIAL_EVENTS.highlightBuilding, this.setTutorialHighlightBuilding, this);
-    });
     this.syncVirtualJoystick();
     this.input.on('pointerdown', this.handleJoystickPointerDown, this);
     this.input.on('pointermove', this.handleJoystickPointerMove, this);
     this.input.on('pointerup', this.handleJoystickPointerUp, this);
     this.input.on('pointerupoutside', this.handleJoystickPointerUp, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupScene, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.cleanupScene, this);
 
     console.info('[OUTPOST: MARS] Approved sprite texture dimensions', {
       buildings: Array.from(this.buildings.entries()).map(([id, sprite]) => ({
@@ -758,143 +752,219 @@ export class MarsScene extends Phaser.Scene {
   }
 
   /**
-   * Rebuild only the small track layer when the viewport switches between the
-   * full colony map and the compact landscape overview.
+   * Renders the continuous, natural compacted Martian dirt road network.
+   * Features gentle curves, consistent ~52px roadbed width, compacted aprons
+   * beneath building entrances, and parallel rover tire impressions at depth 1.
    */
   private renderRoverTrackNetwork(): void {
     for (const track of this.roverTrackSprites) track.destroy();
     this.roverTrackSprites = [];
 
-    const compact = this.isCompactViewport();
-    const straight = 'rover_track_straight_approved';
+    const textureKey = 'martian_road_network';
+    let roadCanvas = this.textures.get(textureKey) as Phaser.Textures.CanvasTexture | null;
+    if (!roadCanvas || !this.textures.exists(textureKey)) {
+      roadCanvas = this.textures.createCanvas(textureKey, WORLD_WIDTH, WORLD_HEIGHT);
+    }
 
-    const compactRoutes: RoverTrackRoute[] = [
-      // The compact layout shares one narrow, continuous access road below the row.
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 200, y: 790 },
-        worldEnd: { x: 1800, y: 790 },
-        straightCrossScale: 0.15,
-      },
-    ];
+    if (roadCanvas) {
+      const ctx = roadCanvas.getContext();
+      if (ctx) {
+        ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        const compact = this.isCompactViewport();
+        if (compact) {
+          this.drawCompactRoads(ctx);
+        } else {
+          this.drawDesktopRoads(ctx);
+        }
+        roadCanvas.refresh();
+      }
 
-    const desktopRoutes: RoverTrackRoute[] = [
-      // 1. Habitat to Mission Control (Northwest corridor -> MC bottom entrance ramp)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 920, y: 710 },
-        worldEnd: { x: 626, y: 590 },
-        straightCrossScale: 0.20,
-      },
-      // 2. Habitat to Solar Farm (Northeast corridor -> SF bottom-west service apron)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 1080, y: 710 },
-        worldEnd: { x: 1400, y: 590 },
-        straightCrossScale: 0.20,
-      },
-      // 3. Habitat to Greenhouse (Southwest corridor -> GH front entrance apron)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 920, y: 790 },
-        worldEnd: { x: 590, y: 1040 },
-        straightCrossScale: 0.20,
-      },
-      // 4. Habitat to Storm Shelter (Southeast corridor -> SS bunker entrance apron)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 1080, y: 790 },
-        worldEnd: { x: 1380, y: 1040 },
-        straightCrossScale: 0.20,
-      },
-      // 5. Exploration Spur: North Crater Wilderness (clear of MC walls & antennas)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 820, y: 640 },
-        worldEnd: { x: 820, y: 240 },
-        straightCrossScale: 0.20,
-      },
-      // 6. Exploration Spur: Southeast Dunes & Bedrock (clear of SS bunker walls)
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 1460, y: 1080 },
-        worldEnd: { x: 1680, y: 1280 },
-        straightCrossScale: 0.20,
-      },
-    ];
-
-    const routes = compact ? compactRoutes : desktopRoutes;
-    for (const route of routes) {
-      if (!this.textures.exists(route.texture)) continue;
-
-      const sourceDx = route.sourceEnd.x - route.sourceStart.x;
-      const sourceDy = route.sourceEnd.y - route.sourceStart.y;
-      const worldDx = route.worldEnd.x - route.worldStart.x;
-      const worldDy = route.worldEnd.y - route.worldStart.y;
-      const sourceLength = Math.hypot(sourceDx, sourceDy);
-      const worldLength = Math.hypot(worldDx, worldDy);
-      const scale = worldLength / sourceLength;
-      const rotation = Math.atan2(worldDy, worldDx) - Math.atan2(sourceDy, sourceDx);
-      const scaleX = scale;
-      const scaleY = route.straightCrossScale ?? scale;
-
-      const track = this.add
-        .image(route.worldStart.x, route.worldStart.y, route.texture)
-        .setOrigin(route.sourceStart.x / route.sourceWidth, route.sourceStart.y / route.sourceHeight)
-        .setScale(scaleX, scaleY)
-        .setRotation(rotation)
-        .setAlpha(0.70)
+      const roadImage = this.add
+        .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, textureKey)
+        .setOrigin(0.5)
         .setDepth(1);
-      this.roverTrackSprites.push(track);
+      this.roverTrackSprites.push(roadImage);
+    }
+  }
+
+  private drawDesktopRoads(ctx: CanvasRenderingContext2D): void {
+    const routes: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }[] = [
+      // 1. Central Plaza Spine (Habitat wings to junctions)
+      { p0: { x: 760, y: 750 }, p1: { x: 880, y: 750 }, p2: { x: 1120, y: 750 }, p3: { x: 1240, y: 750 } },
+      // 2. Habitat to Mission Control (Northwest corridor -> MC entrance ramp)
+      { p0: { x: 760, y: 750 }, p1: { x: 700, y: 730 }, p2: { x: 640, y: 660 }, p3: { x: 620, y: 580 } },
+      // 3. Habitat to Greenhouse (Southwest corridor -> GH front apron)
+      { p0: { x: 760, y: 750 }, p1: { x: 700, y: 780 }, p2: { x: 620, y: 880 }, p3: { x: 550, y: 920 } },
+      // 4. Habitat to Solar Farm (Northeast corridor -> SF service apron)
+      { p0: { x: 1240, y: 750 }, p1: { x: 1300, y: 720 }, p2: { x: 1380, y: 660 }, p3: { x: 1450, y: 600 } },
+      // 5. Habitat to Storm Shelter (Southeast corridor -> SS bunker entrance)
+      { p0: { x: 1240, y: 750 }, p1: { x: 1300, y: 780 }, p2: { x: 1380, y: 880 }, p3: { x: 1420, y: 920 } },
+      // 6. North Crater Wilderness Route (radiating past Colony flag to north ridge)
+      { p0: { x: 760, y: 680 }, p1: { x: 780, y: 550 }, p2: { x: 810, y: 380 }, p3: { x: 820, y: 200 } },
+      // 7. Southeast Dunes Wilderness Route (radiating past Storm Shelter to southeast dunes)
+      { p0: { x: 1420, y: 940 }, p1: { x: 1480, y: 1040 }, p2: { x: 1580, y: 1180 }, p3: { x: 1720, y: 1300 } },
+    ];
+
+    const traceRoute = (seg: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }) => {
+      ctx.beginPath();
+      ctx.moveTo(seg.p0.x, seg.p0.y);
+      if (typeof ctx.bezierCurveTo === 'function') {
+        ctx.bezierCurveTo(seg.p1.x, seg.p1.y, seg.p2.x, seg.p2.y, seg.p3.x, seg.p3.y);
+      } else {
+        ctx.lineTo(seg.p3.x, seg.p3.y);
+      }
+    };
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Pass 1: Outer softened regolith shoulder
+    ctx.lineWidth = 56;
+    ctx.strokeStyle = 'rgba(108, 44, 28, 0.42)';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
     }
 
-    if (this.roverTrackSprites.length !== routes.length) {
-      console.warn('[OUTPOST: MARS] Some rover-track textures did not load', {
-        expected: routes.length,
-        rendered: this.roverTrackSprites.length,
-      });
+    // Pass 2: Compacted Martian roadbed
+    ctx.lineWidth = 44;
+    ctx.strokeStyle = 'rgba(126, 54, 36, 0.88)';
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
     }
 
-    console.info(
-      '[OUTPOST: MARS] Runtime rover-track routes ' +
-        JSON.stringify(
-          this.roverTrackSprites.map((track) => ({
-            key: track.texture.key,
-            source: { width: track.width, height: track.height },
-            world: { width: track.displayWidth, height: track.displayHeight },
-            position: { x: track.x, y: track.y },
-            depth: track.depth,
-          }))
-        )
-    );
+    // Pass 3: Center worn dirt surface
+    ctx.lineWidth = 28;
+    ctx.strokeStyle = 'rgba(146, 68, 47, 0.72)';
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
+    }
+
+    // Pass 4 & 5: Parallel dual tire ruts with dashed track impressions
+    this.drawTireRuts(ctx, routes, 13);
+
+    // Compacted entrance aprons and plaza junctions
+    const aprons = [
+      { x: 1000, y: 750, r: 52 },
+      { x: 620, y: 580, r: 36 },
+      { x: 1450, y: 600, r: 36 },
+      { x: 550, y: 920, r: 36 },
+      { x: 1420, y: 920, r: 36 },
+      { x: 760, y: 750, r: 40 },
+      { x: 1240, y: 750, r: 40 },
+    ];
+
+    for (const a of aprons) {
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r + 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(108, 44, 28, 0.35)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 54, 36, 0.85)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r * 0.65, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(146, 68, 47, 0.65)';
+      ctx.fill();
+    }
+  }
+
+  private drawCompactRoads(ctx: CanvasRenderingContext2D): void {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+
+    // Shoulder
+    ctx.lineWidth = 50;
+    ctx.strokeStyle = 'rgba(108, 44, 28, 0.42)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Roadbed
+    ctx.lineWidth = 38;
+    ctx.strokeStyle = 'rgba(126, 54, 36, 0.88)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Worn path
+    ctx.lineWidth = 24;
+    ctx.strokeStyle = 'rgba(146, 68, 47, 0.72)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Tire ruts
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([7, 5]);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(58, 20, 12, 0.65)';
+    ctx.beginPath();
+    ctx.moveTo(160, 749);
+    ctx.lineTo(1840, 749);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(160, 771);
+    ctx.lineTo(1840, 771);
+    ctx.stroke();
+  }
+
+  private drawTireRuts(
+    ctx: CanvasRenderingContext2D,
+    routes: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }[],
+    offset: number
+  ): void {
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(58, 20, 12, 0.65)';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([7, 5]);
+
+    for (const r of routes) {
+      const steps = 60;
+      const leftPts: TrackPoint[] = [];
+      const rightPts: TrackPoint[] = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const mt = 1 - t;
+        const x = mt * mt * mt * r.p0.x + 3 * mt * mt * t * r.p1.x + 3 * mt * t * t * r.p2.x + t * t * t * r.p3.x;
+        const y = mt * mt * mt * r.p0.y + 3 * mt * mt * t * r.p1.y + 3 * mt * t * t * r.p2.y + t * t * t * r.p3.y;
+
+        const dx = 3 * mt * mt * (r.p1.x - r.p0.x) + 6 * mt * t * (r.p2.x - r.p1.x) + 3 * t * t * (r.p3.x - r.p2.x);
+        const dy = 3 * mt * mt * (r.p1.y - r.p0.y) + 6 * mt * t * (r.p2.y - r.p1.y) + 3 * t * t * (r.p3.y - r.p2.y);
+        const len = Math.hypot(dx, dy);
+
+        if (len > 0) {
+          const nx = -dy / len;
+          const ny = dx / len;
+          leftPts.push({ x: x - nx * offset, y: y - ny * offset });
+          rightPts.push({ x: x + nx * offset, y: y + ny * offset });
+        }
+      }
+
+      if (leftPts.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(leftPts[0].x, leftPts[0].y);
+        for (let i = 1; i < leftPts.length; i++) ctx.lineTo(leftPts[i].x, leftPts[i].y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(rightPts[0].x, rightPts[0].y);
+        for (let i = 1; i < rightPts.length; i++) ctx.lineTo(rightPts[i].x, rightPts[i].y);
+        ctx.stroke();
+      }
+    }
+
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
   }
 
   update(): void {
@@ -1050,19 +1120,21 @@ export class MarsScene extends Phaser.Scene {
       .setAlpha(0.72 + Math.sin(this.time.now / 200) * 0.2);
   }
 
-  private openNearbyBuildingPanel(): void {
-    if (this.isBuildingPanelOpen || !this.nearbyBuilding) return;
+  public openBuilding(building: BuildingData): void {
+    if (this.isBuildingPanelOpen) return;
 
-    const building = this.nearbyBuilding;
     this.isBuildingPanelOpen = true;
     this.nearbyBuilding = undefined;
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.nearby, null);
-    this.joystickVector.set(0, 0);
-    this.joystickPointerId = null;
-    this.joystickThumb?.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    this.resetJoystick();
     (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, building);
   }
+
+  private openNearbyBuildingPanel = (): void => {
+    if (this.isBuildingPanelOpen || !this.nearbyBuilding) return;
+    this.openBuilding(this.nearbyBuilding);
+  };
 
   private closeBuildingPanel(): void {
     if (!this.isBuildingPanelOpen) return;
@@ -1165,19 +1237,40 @@ export class MarsScene extends Phaser.Scene {
     };
   }
 
+  private isPointerTouch(pointer: Phaser.Input.Pointer): boolean {
+    if (pointer.wasTouch) return true;
+    const raw = pointer.event as PointerEvent | undefined;
+    return raw?.pointerType === 'touch';
+  }
+
+  private onPointerDownGeneral(pointer: Phaser.Input.Pointer): void {
+    this.focusGameCanvas();
+    if (this.isPointerTouch(pointer) && !this.touchInputActive) {
+      this.touchInputActive = true;
+      this.syncVirtualJoystick();
+    }
+  }
+
+  private isPointerOverJoystick(pointer: Phaser.Input.Pointer): boolean {
+    if (!this.joystickBase) return false;
+    return (
+      Phaser.Math.Distance.Between(
+        pointer.x,
+        pointer.y,
+        this.joystickCenter.x,
+        this.joystickCenter.y
+      ) <= this.joystickHitRadius
+    );
+  }
+
   private syncVirtualJoystick(): void {
-    if (!this.isCompactViewport()) {
-      this.joystickBase?.destroy();
-      this.joystickThumb?.destroy();
-      this.joystickBase = undefined;
-      this.joystickThumb = undefined;
-      this.joystickPointerId = null;
-      this.joystickVector.set(0, 0);
+    const isTouch = this.touchInputActive || isTouchDevice();
+    if (!isTouch) {
+      this.destroyVirtualJoystick();
       return;
     }
 
-    const x = Math.max(46, this.scale.width - 50);
-    const y = Math.max(46, this.scale.height - 50);
+    const { x, y } = getJoystickPosition(this.scale.width, this.scale.height);
     this.joystickCenter.set(x, y);
 
     if (!this.joystickBase) {
@@ -1192,20 +1285,25 @@ export class MarsScene extends Phaser.Scene {
         .setDepth(61);
     } else {
       this.joystickBase.setPosition(x, y);
-      this.joystickThumb?.setPosition(x, y);
+      if (this.joystickPointerId === null) {
+        this.joystickThumb?.setPosition(x, y);
+      }
     }
   }
 
   private handleJoystickPointerDown(pointer: Phaser.Input.Pointer): void {
+    if (this.isPointerTouch(pointer) && !this.touchInputActive) {
+      this.touchInputActive = true;
+      this.syncVirtualJoystick();
+    }
+
     if (this.isBuildingPanelOpen || !this.joystickBase || this.joystickPointerId !== null) return;
-    if (
-      Phaser.Math.Distance.Between(pointer.x, pointer.y, this.joystickCenter.x, this.joystickCenter.y) >
-      this.joystickRadius + 18
-    ) {
+    if (!this.isPointerOverJoystick(pointer)) {
       return;
     }
 
     this.joystickPointerId = pointer.id;
+    this.capturePointer(pointer);
     this.updateJoystickFromPointer(pointer);
   }
 
@@ -1216,19 +1314,131 @@ export class MarsScene extends Phaser.Scene {
 
   private handleJoystickPointerUp(pointer: Phaser.Input.Pointer): void {
     if (pointer.id !== this.joystickPointerId) return;
-    this.joystickPointerId = null;
-    this.joystickVector.set(0, 0);
-    this.joystickThumb?.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    this.releasePointer(pointer.id);
+    this.resetJoystick();
   }
 
   private updateJoystickFromPointer(pointer: Phaser.Input.Pointer): void {
     const dx = pointer.x - this.joystickCenter.x;
     const dy = pointer.y - this.joystickCenter.y;
-    this.joystickVector.set(dx / this.joystickRadius, dy / this.joystickRadius).limit(1);
+    const vector = calculateJoystickVector(dx, dy, this.joystickRadius);
+    this.joystickVector.set(vector.x, vector.y);
     this.joystickThumb?.setPosition(
       this.joystickCenter.x + this.joystickVector.x * this.joystickRadius,
       this.joystickCenter.y + this.joystickVector.y * this.joystickRadius
     );
+  }
+
+  private capturePointer(pointer: Phaser.Input.Pointer): void {
+    const rawEvent = pointer.event as PointerEvent | undefined;
+    if (rawEvent && typeof rawEvent.pointerId === 'number' && this.game.canvas.setPointerCapture) {
+      try {
+        this.game.canvas.setPointerCapture(rawEvent.pointerId);
+      } catch {
+        // Safe fallback in test or headless environments
+      }
+    }
+  }
+
+  private releasePointer(pointerId: number): void {
+    if (this.game.canvas.releasePointerCapture) {
+      try {
+        if (this.game.canvas.hasPointerCapture?.(pointerId)) {
+          this.game.canvas.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
+  private setupDomPointerListeners(): void {
+    const canvas = this.game.canvas;
+    canvas.addEventListener('pointercancel', this.handleDomPointerCancel);
+    canvas.addEventListener('lostpointercapture', this.handleDomPointerCancel);
+    window.addEventListener('pointercancel', this.handleDomPointerCancel);
+    window.addEventListener('pointerup', this.handleWindowPointerUp);
+    window.addEventListener('blur', this.handleWindowBlur);
+  }
+
+  private removeDomPointerListeners(): void {
+    const canvas = this.game.canvas;
+    canvas.removeEventListener('pointercancel', this.handleDomPointerCancel);
+    canvas.removeEventListener('lostpointercapture', this.handleDomPointerCancel);
+    window.removeEventListener('pointercancel', this.handleDomPointerCancel);
+    window.removeEventListener('pointerup', this.handleWindowPointerUp);
+    window.removeEventListener('blur', this.handleWindowBlur);
+  }
+
+  private handleDomPointerCancel = (event: PointerEvent): void => {
+    if (this.joystickPointerId === event.pointerId || event.type === 'pointercancel') {
+      this.resetJoystick();
+    }
+  };
+
+  private handleWindowPointerUp = (event: PointerEvent): void => {
+    if (this.joystickPointerId === event.pointerId) {
+      this.resetJoystick();
+    }
+  };
+
+  private handleWindowBlur = (): void => {
+    this.resetJoystick();
+  };
+
+  public resetJoystick(): void {
+    if (this.joystickPointerId !== null) {
+      this.releasePointer(this.joystickPointerId);
+      this.joystickPointerId = null;
+    }
+    this.joystickVector.set(0, 0);
+    if (this.joystickThumb) {
+      this.joystickThumb.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    }
+  }
+
+  private destroyVirtualJoystick(): void {
+    this.resetJoystick();
+    this.joystickBase?.destroy();
+    this.joystickThumb?.destroy();
+    this.joystickBase = undefined;
+    this.joystickThumb = undefined;
+  }
+
+  private cleanupScene(): void {
+    this.destroyVirtualJoystick();
+    this.removeDomPointerListeners();
+    this.input.off('pointerdown', this.onPointerDownGeneral, this);
+    this.input.off('pointerdown', this.handleJoystickPointerDown, this);
+    this.input.off('pointermove', this.handleJoystickPointerMove, this);
+    this.input.off('pointerup', this.handleJoystickPointerUp, this);
+    this.input.off('pointerupoutside', this.handleJoystickPointerUp, this);
+    this.scale.off('resize', this.handleResize, this);
+    this.removeBuildingInteractionListeners();
+  }
+
+  public getJoystickBase(): Phaser.GameObjects.Arc | undefined {
+    return this.joystickBase;
+  }
+
+  public getJoystickThumb(): Phaser.GameObjects.Arc | undefined {
+    return this.joystickThumb;
+  }
+
+  public getJoystickCenter(): Phaser.Math.Vector2 {
+    return this.joystickCenter;
+  }
+
+  public getJoystickVector(): Phaser.Math.Vector2 {
+    return this.joystickVector;
+  }
+
+  public getJoystickPointerId(): number | null {
+    return this.joystickPointerId;
+  }
+
+  public isTouchActive(): boolean {
+    return this.touchInputActive || isTouchDevice();
   }
 
   /** Prepared proximity query for the next building-interaction milestone. */

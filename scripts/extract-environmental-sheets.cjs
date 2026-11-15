@@ -131,33 +131,33 @@ function decodePNG(filePath) {
 }
 
 const SHEETS = [
-  { file: 'rock-piles.png', prefix: 'rock-pile', expectedCount: 5 },
-  { file: 'Rock-Scatter.png', prefix: 'rock-scatter', expectedCount: 5 },
-  { file: 'Stone-Scatter.png', prefix: 'stone-scatter', expectedCount: 6 },
-  { file: 'rock slabs.png', prefix: 'rock-slab', expectedCount: 5 },
-  { file: 'soil-texture.png', prefix: 'soil-patch', expectedCount: 5 },
+  { file: 'rock-piles.png', prefix: 'rock-pile', expectedCount: 5, targetFolder: 'rocks' },
+  { file: 'rock-scatter.png', prefix: 'rock-scatter', expectedCount: 5, targetFolder: 'rocks' },
+  { file: 'stone-scatter.png', prefix: 'stone-scatter', expectedCount: 6, targetFolder: 'rocks' },
+  { file: 'rock-slabs.png', prefix: 'rock-slab', expectedCount: 5, targetFolder: 'rocks' },
+  { file: 'soil-texture.png', prefix: 'soil-patch', expectedCount: 5, targetFolder: 'terrain' },
 ];
 
 function extractSheets() {
   const rootDir = path.resolve(__dirname, '..');
   const envDir = path.join(rootDir, 'public', 'assets', 'environment');
-  const outDir = path.join(envDir, 'derived');
-
-  if (!fs.existsSync(outDir)) {
-    fs.mkdirSync(outDir, { recursive: true });
-  }
+  const sheetsDir = path.join(envDir, 'sprite-sheets');
 
   console.log('[Extractor] OUTPOST: MARS Environmental Sheet Extractor starting...');
-  console.log(`[Extractor] Source directory: ${envDir}`);
-  console.log(`[Extractor] Destination directory: ${outDir}`);
+  console.log(`[Extractor] Source directory: ${sheetsDir}`);
 
   let totalExtracted = 0;
   const manifest = [];
 
   for (const sheetConfig of SHEETS) {
-    const sheetPath = path.join(envDir, sheetConfig.file);
+    const sheetPath = path.join(sheetsDir, sheetConfig.file);
     if (!fs.existsSync(sheetPath)) {
       throw new Error(`[Extractor] Source sheet not found: ${sheetPath}`);
+    }
+
+    const outDir = path.join(envDir, sheetConfig.targetFolder);
+    if (!fs.existsSync(outDir)) {
+      fs.mkdirSync(outDir, { recursive: true });
     }
 
     console.log(`\n------------------------------------------------------------`);
@@ -280,10 +280,10 @@ function extractSheets() {
   }
 
   console.log(`\n============================================================`);
-  console.log(`[Extractor] SUCCESS: Extracted ${totalExtracted} assets into ${outDir}`);
+  console.log(`[Extractor] SUCCESS: Extracted ${totalExtracted} assets`);
 
-  // Write manifest JSON next to derived assets for reference & audit
-  const manifestPath = path.join(outDir, 'manifest.json');
+  // Write manifest JSON next to sprite sheets for reference & audit
+  const manifestPath = path.join(sheetsDir, 'manifest.json');
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2));
   console.log(`[Extractor] Manifest written to ${manifestPath}`);
 

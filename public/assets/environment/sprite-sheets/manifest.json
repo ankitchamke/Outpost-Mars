@@ -2,7 +2,7 @@
   {
     "sheet": "rock-piles.png",
     "fileName": "rock-pile-01.png",
-    "path": "public/assets/environment/derived/rock-pile-01.png",
+    "path": "public/assets/environment/rocks/rock-pile-01.png",
     "width": 290,
     "height": 191,
     "aspectRatio": 1.52,
@@ -19,7 +19,7 @@
   {
     "sheet": "rock-piles.png",
     "fileName": "rock-pile-02.png",
-    "path": "public/assets/environment/derived/rock-pile-02.png",
+    "path": "public/assets/environment/rocks/rock-pile-02.png",
     "width": 350,
     "height": 210,
     "aspectRatio": 1.67,
@@ -36,7 +36,7 @@
   {
     "sheet": "rock-piles.png",
     "fileName": "rock-pile-03.png",
-    "path": "public/assets/environment/derived/rock-pile-03.png",
+    "path": "public/assets/environment/rocks/rock-pile-03.png",
     "width": 406,
     "height": 238,
     "aspectRatio": 1.71,
@@ -53,7 +53,7 @@
   {
     "sheet": "rock-piles.png",
     "fileName": "rock-pile-04.png",
-    "path": "public/assets/environment/derived/rock-pile-04.png",
+    "path": "public/assets/environment/rocks/rock-pile-04.png",
     "width": 463,
     "height": 275,
     "aspectRatio": 1.68,
@@ -70,7 +70,7 @@
   {
     "sheet": "rock-piles.png",
     "fileName": "rock-pile-05.png",
-    "path": "public/assets/environment/derived/rock-pile-05.png",
+    "path": "public/assets/environment/rocks/rock-pile-05.png",
     "width": 526,
     "height": 328,
     "aspectRatio": 1.6,
@@ -85,9 +85,9 @@
     "softPixels": 10269
   },
   {
-    "sheet": "Rock-Scatter.png",
+    "sheet": "rock-scatter.png",
     "fileName": "rock-scatter-01.png",
-    "path": "public/assets/environment/derived/rock-scatter-01.png",
+    "path": "public/assets/environment/rocks/rock-scatter-01.png",
     "width": 415,
     "height": 262,
     "aspectRatio": 1.58,
@@ -102,9 +102,9 @@
     "softPixels": 23411
   },
   {
-    "sheet": "Rock-Scatter.png",
+    "sheet": "rock-scatter.png",
     "fileName": "rock-scatter-02.png",
-    "path": "public/assets/environment/derived/rock-scatter-02.png",
+    "path": "public/assets/environment/rocks/rock-scatter-02.png",
     "width": 385,
     "height": 271,
     "aspectRatio": 1.42,
@@ -119,9 +119,9 @@
     "softPixels": 20094
   },
   {
-    "sheet": "Rock-Scatter.png",
+    "sheet": "rock-scatter.png",
     "fileName": "rock-scatter-03.png",
-    "path": "public/assets/environment/derived/rock-scatter-03.png",
+    "path": "public/assets/environment/rocks/rock-scatter-03.png",
     "width": 389,
     "height": 258,
     "aspectRatio": 1.51,
@@ -136,9 +136,9 @@
     "softPixels": 15437
   },
   {
-    "sheet": "Rock-Scatter.png",
+    "sheet": "rock-scatter.png",
     "fileName": "rock-scatter-04.png",
-    "path": "public/assets/environment/derived/rock-scatter-04.png",
+    "path": "public/assets/environment/rocks/rock-scatter-04.png",
     "width": 402,
     "height": 279,
     "aspectRatio": 1.44,
@@ -153,9 +153,9 @@
     "softPixels": 14156
   },
   {
-    "sheet": "Rock-Scatter.png",
+    "sheet": "rock-scatter.png",
     "fileName": "rock-scatter-05.png",
-    "path": "public/assets/environment/derived/rock-scatter-05.png",
+    "path": "public/assets/environment/rocks/rock-scatter-05.png",
     "width": 452,
     "height": 310,
     "aspectRatio": 1.46,
@@ -170,9 +170,9 @@
     "softPixels": 15368
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-01.png",
-    "path": "public/assets/environment/derived/stone-scatter-01.png",
+    "path": "public/assets/environment/rocks/stone-scatter-01.png",
     "width": 197,
     "height": 102,
     "aspectRatio": 1.93,
@@ -187,9 +187,9 @@
     "softPixels": 2599
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-02.png",
-    "path": "public/assets/environment/derived/stone-scatter-02.png",
+    "path": "public/assets/environment/rocks/stone-scatter-02.png",
     "width": 242,
     "height": 129,
     "aspectRatio": 1.88,
@@ -204,9 +204,9 @@
     "softPixels": 2841
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-03.png",
-    "path": "public/assets/environment/derived/stone-scatter-03.png",
+    "path": "public/assets/environment/rocks/stone-scatter-03.png",
     "width": 271,
     "height": 192,
     "aspectRatio": 1.41,
@@ -221,9 +221,9 @@
     "softPixels": 4069
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-04.png",
-    "path": "public/assets/environment/derived/stone-scatter-04.png",
+    "path": "public/assets/environment/rocks/stone-scatter-04.png",
     "width": 335,
     "height": 228,
     "aspectRatio": 1.47,
@@ -238,9 +238,9 @@
     "softPixels": 5054
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-05.png",
-    "path": "public/assets/environment/derived/stone-scatter-05.png",
+    "path": "public/assets/environment/rocks/stone-scatter-05.png",
     "width": 392,
     "height": 246,
     "aspectRatio": 1.59,
@@ -255,9 +255,9 @@
     "softPixels": 5565
   },
   {
-    "sheet": "Stone-Scatter.png",
+    "sheet": "stone-scatter.png",
     "fileName": "stone-scatter-06.png",
-    "path": "public/assets/environment/derived/stone-scatter-06.png",
+    "path": "public/assets/environment/rocks/stone-scatter-06.png",
     "width": 419,
     "height": 310,
     "aspectRatio": 1.35,
@@ -272,9 +272,9 @@
     "softPixels": 7609
   },
   {
-    "sheet": "rock slabs.png",
+    "sheet": "rock-slabs.png",
     "fileName": "rock-slab-01.png",
-    "path": "public/assets/environment/derived/rock-slab-01.png",
+    "path": "public/assets/environment/rocks/rock-slab-01.png",
     "width": 416,
     "height": 266,
     "aspectRatio": 1.56,
@@ -289,9 +289,9 @@
     "softPixels": 9277
   },
   {
-    "sheet": "rock slabs.png",
+    "sheet": "rock-slabs.png",
     "fileName": "rock-slab-02.png",
-    "path": "public/assets/environment/derived/rock-slab-02.png",
+    "path": "public/assets/environment/rocks/rock-slab-02.png",
     "width": 448,
     "height": 243,
     "aspectRatio": 1.84,
@@ -306,9 +306,9 @@
     "softPixels": 8765
   },
   {
-    "sheet": "rock slabs.png",
+    "sheet": "rock-slabs.png",
     "fileName": "rock-slab-03.png",
-    "path": "public/assets/environment/derived/rock-slab-03.png",
+    "path": "public/assets/environment/rocks/rock-slab-03.png",
     "width": 374,
     "height": 216,
     "aspectRatio": 1.73,
@@ -323,9 +323,9 @@
     "softPixels": 6343
   },
   {
-    "sheet": "rock slabs.png",
+    "sheet": "rock-slabs.png",
     "fileName": "rock-slab-04.png",
-    "path": "public/assets/environment/derived/rock-slab-04.png",
+    "path": "public/assets/environment/rocks/rock-slab-04.png",
     "width": 334,
     "height": 246,
     "aspectRatio": 1.36,
@@ -340,9 +340,9 @@
     "softPixels": 6935
   },
   {
-    "sheet": "rock slabs.png",
+    "sheet": "rock-slabs.png",
     "fileName": "rock-slab-05.png",
-    "path": "public/assets/environment/derived/rock-slab-05.png",
+    "path": "public/assets/environment/rocks/rock-slab-05.png",
     "width": 438,
     "height": 267,
     "aspectRatio": 1.64,
@@ -359,7 +359,7 @@
   {
     "sheet": "soil-texture.png",
     "fileName": "soil-patch-01.png",
-    "path": "public/assets/environment/derived/soil-patch-01.png",
+    "path": "public/assets/environment/terrain/soil-patch-01.png",
     "width": 435,
     "height": 260,
     "aspectRatio": 1.67,
@@ -376,7 +376,7 @@
   {
     "sheet": "soil-texture.png",
     "fileName": "soil-patch-02.png",
-    "path": "public/assets/environment/derived/soil-patch-02.png",
+    "path": "public/assets/environment/terrain/soil-patch-02.png",
     "width": 429,
     "height": 254,
     "aspectRatio": 1.69,
@@ -393,7 +393,7 @@
   {
     "sheet": "soil-texture.png",
     "fileName": "soil-patch-03.png",
-    "path": "public/assets/environment/derived/soil-patch-03.png",
+    "path": "public/assets/environment/terrain/soil-patch-03.png",
     "width": 399,
     "height": 256,
     "aspectRatio": 1.56,
@@ -410,7 +410,7 @@
   {
     "sheet": "soil-texture.png",
     "fileName": "soil-patch-04.png",
-    "path": "public/assets/environment/derived/soil-patch-04.png",
+    "path": "public/assets/environment/terrain/soil-patch-04.png",
     "width": 401,
     "height": 262,
     "aspectRatio": 1.53,
@@ -427,7 +427,7 @@
   {
     "sheet": "soil-texture.png",
     "fileName": "soil-patch-05.png",
-    "path": "public/assets/environment/derived/soil-patch-05.png",
+    "path": "public/assets/environment/terrain/soil-patch-05.png",
     "width": 430,
     "height": 272,
     "aspectRatio": 1.58,

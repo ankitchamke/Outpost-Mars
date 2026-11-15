@@ -1,7 +1,7 @@
 /**
  * OUTPOST: MARS — Extended Environmental Sheet Extractor
  * Extracts:
- * - NASA Flag from public/assets/environment/environmental-props.png
+ * - OUTPOST: MARS Colony Flag from public/assets/environment/environmental-props.png
  * - Rock formations & ridges from public/assets/environment/rock-sprite-sheet.png
  * - Ripple dune formations from public/assets/environment/dunes-rippled-terrain.png
  * Destination: public/assets/environment/derived/
@@ -160,18 +160,46 @@ function extractBoundingBox(raw, sheetW, sheetH, x0, x1, y0, y1, pad = 2) {
   return { w, h, buf: out };
 }
 
-const outDir = path.resolve('public/assets/environment/derived');
-if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
+const sheetsDir = path.resolve('public/assets/environment/sprite-sheets');
+const propsDir = path.resolve('public/assets/environment/props');
+const rocksDir = path.resolve('public/assets/environment/rocks');
+const terrainDir = path.resolve('public/assets/environment/terrain');
 
-console.log('[Extractor] Extracting NASA flag from environmental-props.png...');
-const props = decodePNG('public/assets/environment/environmental-props.png');
-// Prop 10: NASA Flag on flagpole planted in Martian rocks (X: 1926-2146, Y: 185-520)
-const flag = extractBoundingBox(props.raw, props.width, props.height, 1920, 2150, 180, 530, 2);
-fs.writeFileSync(path.join(outDir, 'prop-flag-nasa.png'), encodePNG(flag.w, flag.h, flag.buf));
-console.log(`  -> prop-flag-nasa.png (${flag.w}x${flag.h})`);
+[propsDir, rocksDir, terrainDir].forEach(d => {
+  if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true });
+});
+
+console.log('[Extractor] Extracting props from environmental-props.png...');
+const props = decodePNG(path.join(sheetsDir, 'environmental-props.png'));
+const propSpecs = [
+  // Prop 10: OUTPOST: MARS Colony Flag on flagpole planted in Martian rocks
+  { name: 'prop-flag-nasa.png', box: [1920, 2150, 180, 530] },
+  // Prop 4: Multi-tier communication antenna / relay mast
+  { name: 'prop-comm-antenna.png', box: [547, 714, 214, 524] },
+  // Prop 3: Telemetry sensor dish terminal
+  { name: 'prop-sensor-dish.png', box: [370, 541, 289, 524] },
+  // Prop 2: Dual floodlight lighting structure
+  { name: 'prop-floodlight.png', box: [206, 362, 253, 520] },
+  // Prop 8: Solar power storage battery unit
+  { name: 'prop-power-storage.png', box: [1394, 1617, 303, 517] },
+  // Prop 7: Pressurized water storage tanks
+  { name: 'prop-water-tanks.png', box: [1182, 1387, 231, 524] },
+  // Prop 5: Modular cargo crates
+  { name: 'prop-cargo-crates.png', box: [721, 1004, 281, 516] },
+  // Prop 9: Hazard warning barrier
+  { name: 'prop-hazard-barrier.png', box: [1620, 1920, 320, 515] },
+  // Prop 1: Single beacon light
+  { name: 'prop-beacon.png', box: [22, 196, 205, 523] },
+];
+
+for (const p of propSpecs) {
+  const item = extractBoundingBox(props.raw, props.width, props.height, p.box[0], p.box[1], p.box[2], p.box[3], 2);
+  fs.writeFileSync(path.join(propsDir, p.name), encodePNG(item.w, item.h, item.buf));
+  console.log(`  -> ${p.name} (${item.w}x${item.h})`);
+}
 
 console.log('[Extractor] Extracting rock formations from rock-sprite-sheet.png...');
-const rocks = decodePNG('public/assets/environment/rock-sprite-sheet.png');
+const rocks = decodePNG(path.join(sheetsDir, 'rock-sprite-sheet.png'));
 const rockSpecs = [
   { name: 'rock-monolith-01.png', box: [23, 382, 68, 350] },
   { name: 'rock-monolith-02.png', box: [761, 1116, 96, 350] },
@@ -181,12 +209,12 @@ const rockSpecs = [
 
 for (const s of rockSpecs) {
   const item = extractBoundingBox(rocks.raw, rocks.width, rocks.height, s.box[0], s.box[1], s.box[2], s.box[3], 2);
-  fs.writeFileSync(path.join(outDir, s.name), encodePNG(item.w, item.h, item.buf));
+  fs.writeFileSync(path.join(rocksDir, s.name), encodePNG(item.w, item.h, item.buf));
   console.log(`  -> ${s.name} (${item.w}x${item.h})`);
 }
 
 console.log('[Extractor] Extracting dune formations from dunes-rippled-terrain.png...');
-const dunes = decodePNG('public/assets/environment/dunes-rippled-terrain.png');
+const dunes = decodePNG(path.join(sheetsDir, 'dunes-rippled-terrain.png'));
 const duneSpecs = [
   { name: 'dune-ripple-01.png', box: [16, 484, 281, 452] },
   { name: 'dune-ripple-02.png', box: [851, 1270, 275, 456] },
@@ -195,7 +223,7 @@ const duneSpecs = [
 
 for (const s of duneSpecs) {
   const item = extractBoundingBox(dunes.raw, dunes.width, dunes.height, s.box[0], s.box[1], s.box[2], s.box[3], 2);
-  fs.writeFileSync(path.join(outDir, s.name), encodePNG(item.w, item.h, item.buf));
+  fs.writeFileSync(path.join(terrainDir, s.name), encodePNG(item.w, item.h, item.buf));
   console.log(`  -> ${s.name} (${item.w}x${item.h})`);
 }
 
