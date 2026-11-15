@@ -1,0 +1,775 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-11-14T12:46:41.989Z",
+  "source": "NASA DONKI",
+  "cmes": [
+    {
+      "classification": "DERIVED",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME",
+        "datasetId": "2024-05-10T21:28:00-CME-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "SOHO: LASCO/C2, SOHO: LASCO/C3, STEREO A: SECCHI/COR2",
+        "location": "Heliosphere",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Coronagraph shock speed measurement and WSA-ENLIL heliospheric magnetohydrodynamic propagation model",
+        "limitations": "DONKI records solar events and modeled interplanetary shock transit; does NOT measure Mars surface radiation dose."
+      },
+      "activityId": "2024-05-10T21:28:00-CME-001",
+      "startTime": "2024-05-10T21:28Z",
+      "sourceLocation": "S35E01",
+      "activeRegionNum": null,
+      "note": "A narrow faint CME to the south with an uncertain source. It might be associated with some eruptive activities occurring along a very long filament centered loosely around S35E01 to the east of AR 3664 which finally erupts after 21Z: the area close to filament center shows eruptive  activity/dimming/restructuring around 16Z, 18Z and after 20Z.",
+      "instruments": [
+        {
+          "displayName": "SOHO: LASCO/C2"
+        },
+        {
+          "displayName": "SOHO: LASCO/C3"
+        },
+        {
+          "displayName": "STEREO A: SECCHI/COR2"
+        }
+      ],
+      "analyses": [
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-11T02:27Z",
+          "latitude": -42,
+          "longitude": 2,
+          "halfAngle": 18,
+          "speed": 717,
+          "speedUnit": "km/s",
+          "type": "C",
+          "featureCode": "LE",
+          "note": "Analysis is based on a good fit of the narrow CME front in two coronagraphs and is loosely supported by the location of the gradually erupting filament, however this source is tenuous because the final eruption of the filament seems to happen after the start of the CME at 2024-05-10T21:28Z.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-12T15:46Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-13T07:34Z",
+              "estimatedDurationHours": 42.7,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-14T19:24Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-13T23:50Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-13T08:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T05:49Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-12T21:22Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            },
+            {
+              "modelCompletionTime": "2024-05-13T00:35Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-13T12:23Z",
+              "estimatedDurationHours": 42.2,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-15T04:37Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-14T06:18Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T07:59Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-13T01:07Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "classification": "DERIVED",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME",
+        "datasetId": "2024-05-11T01:36:00-CME-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "SOHO: LASCO/C2, SOHO: LASCO/C3, STEREO A: SECCHI/COR2",
+        "location": "Heliosphere",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Coronagraph shock speed measurement and WSA-ENLIL heliospheric magnetohydrodynamic propagation model",
+        "limitations": "DONKI records solar events and modeled interplanetary shock transit; does NOT measure Mars surface radiation dose."
+      },
+      "activityId": "2024-05-11T01:36:00-CME-001",
+      "startTime": "2024-05-11T01:36Z",
+      "sourceLocation": "S17W47",
+      "activeRegionNum": 13664,
+      "note": "Ear-shaped bright partial halo CME with a very complex shape brighter bulk and a fainter somewhat asymmetric full halo shock. The CME is associated with the X5.8 flare and a significant eruption (massive dimming) and EUV wave seen in SDO 193.",
+      "instruments": [
+        {
+          "displayName": "SOHO: LASCO/C2"
+        },
+        {
+          "displayName": "SOHO: LASCO/C3"
+        },
+        {
+          "displayName": "STEREO A: SECCHI/COR2"
+        }
+      ],
+      "analyses": [
+        {
+          "isMostAccurate": false,
+          "time21_5": "2024-05-11T04:15Z",
+          "latitude": -1,
+          "longitude": 47,
+          "halfAngle": 49,
+          "speed": 1372,
+          "speedUnit": "km/s",
+          "type": "O",
+          "featureCode": "LE",
+          "note": "A very preliminary analysis based on a decent but imperfect fit with two coronagraphs and on the location of the associated flare. The shape of this front is so complex that it is difficult to get an ideal fit. The CME half-width is a guess. This analysis needs to be reevaluated."
+        },
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-11T04:22Z",
+          "latitude": 0,
+          "longitude": 51,
+          "halfAngle": 51,
+          "speed": 1263,
+          "speedUnit": "km/s",
+          "type": "O",
+          "featureCode": "LE",
+          "note": "Updated bulk parameters. The CME bulk appears to have an earlobe shape to it with a smoother loop towards the north and a messy front to the south. It is possible these fronts could be interpreted as two separate CMEs overlapping each other, however they travel together in white-light and difference imagery.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-11T13:57Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-13T04:59Z",
+              "estimatedDurationHours": 27.7,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-14T18:37Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-13T17:42Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-13T04:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T05:42Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-12T20:25Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            },
+            {
+              "modelCompletionTime": "2024-05-12T15:46Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-13T07:34Z",
+              "estimatedDurationHours": 42.7,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-14T19:24Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-13T23:50Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-13T08:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T05:49Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-12T21:22Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            },
+            {
+              "modelCompletionTime": "2024-05-13T00:35Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-13T12:23Z",
+              "estimatedDurationHours": 42.2,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-15T04:37Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-14T06:18Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T07:59Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-13T01:07Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-11T03:24Z",
+          "latitude": -2,
+          "longitude": 15,
+          "halfAngle": 48,
+          "speed": 1820,
+          "speedUnit": "km/s",
+          "type": "O",
+          "featureCode": "SH",
+          "note": "This is a SHOCK measurement based on the best fit of shock features in SOHO LASCO C3 and STEREO A COR2. Due to the asymmetric shape of the shock front, this measurement leaves out a little bit of the north/northwestern portion of the shock front.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-11T17:58Z",
+              "au": 2,
+              "estimatedShockArrivalTime": "2024-05-12T11:13Z",
+              "estimatedDurationHours": 24.9,
+              "impactList": [
+                {
+                  "location": "Lucy",
+                  "arrivalTime": "2024-05-13T20:37Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-12T14:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "STEREO A",
+                  "arrivalTime": "2024-05-12T08:15Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-11T01:10:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-11T02:10:00-SEP-001"
+        },
+        {
+          "activityId": "2024-05-11T04:07:00-SEP-001"
+        }
+      ]
+    },
+    {
+      "classification": "DERIVED",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME",
+        "datasetId": "2024-05-12T03:48:00-CME-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "SOHO: LASCO/C2, SOHO: LASCO/C3, STEREO A: SECCHI/COR2",
+        "location": "Heliosphere",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Coronagraph shock speed measurement and WSA-ENLIL heliospheric magnetohydrodynamic propagation model",
+        "limitations": "DONKI records solar events and modeled interplanetary shock transit; does NOT measure Mars surface radiation dose."
+      },
+      "activityId": "2024-05-12T03:48:00-CME-001",
+      "startTime": "2024-05-12T03:48Z",
+      "sourceLocation": "N/A",
+      "activeRegionNum": null,
+      "note": "This wide flux rope CME is seen to the SW in all three coronagraphs. The source is field line movement and ejecta from well beyond the SW limb: field line movement visible starting around 2024-05-12T02:49Z in SDO AIA 193; some ejecta seen from beyond the SW limb in SDO AIA 304 starting around 02:20Z; ejecta, filamentary material, and moving field lines visible at 03:33Z in SDO AIA 171.",
+      "instruments": [
+        {
+          "displayName": "SOHO: LASCO/C2"
+        },
+        {
+          "displayName": "SOHO: LASCO/C3"
+        },
+        {
+          "displayName": "STEREO A: SECCHI/COR2"
+        }
+      ],
+      "analyses": [
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-12T10:09Z",
+          "latitude": -39,
+          "longitude": 137,
+          "halfAngle": 47,
+          "speed": 602,
+          "speedUnit": "km/s",
+          "type": "C",
+          "featureCode": "LE",
+          "note": "Measurement using farsided source parameters based on source signatures in UV imagery, as well as best 3D fit between coronagraphs.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-12T13:14Z",
+              "au": 2,
+              "estimatedShockArrivalTime": null,
+              "estimatedDurationHours": null,
+              "impactList": [
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-15T22:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-14T20:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-14T06:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Solar Orbiter",
+                  "arrivalTime": "2024-05-14T14:00Z",
+                  "isGlancingBlow": true,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "classification": "DERIVED",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/CME",
+        "datasetId": "2024-05-14T17:00:00-CME-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "SOHO: LASCO/C2, SOHO: LASCO/C3, STEREO A: SECCHI/COR2",
+        "location": "Heliosphere",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Coronagraph shock speed measurement and WSA-ENLIL heliospheric magnetohydrodynamic propagation model",
+        "limitations": "DONKI records solar events and modeled interplanetary shock transit; does NOT measure Mars surface radiation dose."
+      },
+      "activityId": "2024-05-14T17:00:00-CME-001",
+      "startTime": "2024-05-14T17:00Z",
+      "sourceLocation": "S19W96",
+      "activeRegionNum": 13664,
+      "note": "Bright CME from behind the west limb, the first in a series of two closely following CMEs. Its source is the occulted X8.7 flare from AR 3664, just over the limb. Coronal signatures include a massive EUV wave and field line movement/restructuring of magnetic field behind the limb across wide range of latitudes (mass seen departing) beginning ~2024-05-14T16:49Z, field line movement seen across every wavelength. Very fast opening of the field lines likely associated with this CME is best seen in AIA 335 starting at 16:50Z.",
+      "instruments": [
+        {
+          "displayName": "SOHO: LASCO/C2"
+        },
+        {
+          "displayName": "SOHO: LASCO/C3"
+        },
+        {
+          "displayName": "STEREO A: SECCHI/COR2"
+        }
+      ],
+      "analyses": [
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-14T18:36Z",
+          "latitude": 3,
+          "longitude": 96,
+          "halfAngle": 37,
+          "speed": 2119,
+          "speedUnit": "km/s",
+          "type": "R",
+          "featureCode": "LE",
+          "note": "Analysis based on the fit in two coronagraph and on the longitude of the associated significant flare. We do not see the flare source since it is behind the limb so the exact location of the eruption could be somewhat different from the calculated location of the active region behind the limb.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-14T21:51Z",
+              "au": 2,
+              "estimatedShockArrivalTime": null,
+              "estimatedDurationHours": null,
+              "impactList": [
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-16T20:47Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-16T03:06Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-15T17:33Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            },
+            {
+              "modelCompletionTime": "2024-05-14T23:59Z",
+              "au": 2,
+              "estimatedShockArrivalTime": null,
+              "estimatedDurationHours": null,
+              "impactList": [
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-17T02:11Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-16T06:40Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-15T22:24Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "isMostAccurate": true,
+          "time21_5": "2024-05-14T18:27Z",
+          "latitude": 14,
+          "longitude": 134,
+          "halfAngle": 42,
+          "speed": 2225,
+          "speedUnit": "km/s",
+          "type": "R",
+          "featureCode": "SH",
+          "note": "Analysis based on the fit of the faint front in coronagraph and is tentative.",
+          "enlilList": [
+            {
+              "modelCompletionTime": "2024-05-15T00:18Z",
+              "au": 2,
+              "estimatedShockArrivalTime": null,
+              "estimatedDurationHours": null,
+              "impactList": [
+                {
+                  "location": "Mars",
+                  "arrivalTime": "2024-05-16T19:08Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "OSIRIS-APEX",
+                  "arrivalTime": "2024-05-15T23:21Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Parker Solar Probe",
+                  "arrivalTime": "2024-05-15T19:25Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                },
+                {
+                  "location": "Solar Orbiter",
+                  "arrivalTime": "2024-05-15T15:56Z",
+                  "isGlancingBlow": false,
+                  "isMinorImpact": false
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-14T16:46:00-FLR-001"
+        }
+      ]
+    }
+  ],
+  "solarFlares": [
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR",
+        "datasetId": "2024-05-10T06:27:00-FLR-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "GOES-P: EXIS 1.0-8.0",
+        "location": "Solar Corona",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Geostationary Operational Environmental Satellite (GOES) X-ray Sensor 1-8 Angstrom irradiance",
+        "limitations": "Measures X-ray flux in Earth orbit (1 AU); does not record Martian surface radiation."
+      },
+      "flareId": "2024-05-10T06:27:00-FLR-001",
+      "beginTime": "2024-05-10T06:27Z",
+      "peakTime": "2024-05-10T06:54Z",
+      "endTime": "2024-05-10T07:06Z",
+      "classType": "X3.9",
+      "fluxUnit": "class",
+      "sourceLocation": "S18W37",
+      "activeRegionNum": 13664,
+      "instruments": [
+        {
+          "displayName": "GOES-P: EXIS 1.0-8.0"
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-10T07:12:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-10T12:59:00-SEP-001"
+        },
+        {
+          "activityId": "2024-05-10T13:02:00-SEP-001"
+        },
+        {
+          "activityId": "2024-05-10T13:35:00-SEP-001"
+        },
+        {
+          "activityId": "2024-05-10T14:50:00-SEP-001"
+        }
+      ]
+    },
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR",
+        "datasetId": "2024-05-11T01:10:00-FLR-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "GOES-P: EXIS 1.0-8.0",
+        "location": "Solar Corona",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Geostationary Operational Environmental Satellite (GOES) X-ray Sensor 1-8 Angstrom irradiance",
+        "limitations": "Measures X-ray flux in Earth orbit (1 AU); does not record Martian surface radiation."
+      },
+      "flareId": "2024-05-11T01:10:00-FLR-001",
+      "beginTime": "2024-05-11T01:10Z",
+      "peakTime": "2024-05-11T01:23Z",
+      "endTime": "2024-05-11T01:39Z",
+      "classType": "X5.8",
+      "fluxUnit": "class",
+      "sourceLocation": "S17W47",
+      "activeRegionNum": 13664,
+      "instruments": [
+        {
+          "displayName": "GOES-P: EXIS 1.0-8.0"
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-11T01:36:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-11T02:10:00-SEP-001"
+        },
+        {
+          "activityId": "2024-05-11T04:07:00-SEP-001"
+        }
+      ]
+    },
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/FLR",
+        "datasetId": "2024-05-14T16:46:00-FLR-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "GOES-P: EXIS 1.0-8.0",
+        "location": "Solar Corona",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Geostationary Operational Environmental Satellite (GOES) X-ray Sensor 1-8 Angstrom irradiance",
+        "limitations": "Measures X-ray flux in Earth orbit (1 AU); does not record Martian surface radiation."
+      },
+      "flareId": "2024-05-14T16:46:00-FLR-001",
+      "beginTime": "2024-05-14T16:46Z",
+      "peakTime": "2024-05-14T16:51Z",
+      "endTime": "2024-05-14T17:02Z",
+      "classType": "X8.7",
+      "fluxUnit": "class",
+      "sourceLocation": "S19W90",
+      "activeRegionNum": 13664,
+      "instruments": [
+        {
+          "displayName": "GOES-P: EXIS 1.0-8.0"
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-14T17:00:00-CME-001"
+        }
+      ]
+    }
+  ],
+  "sepEvents": [
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/SEP",
+        "datasetId": "2024-05-10T12:59:00-SEP-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "SOHO: COSTEP 15.8-39.8 MeV",
+        "location": "Geostationary Orbit / L1",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Solid-state silicon telescope proton flux channel integration",
+        "limitations": "Measured at 1 AU; particle flux diminishes and scatters across interplanetary transit to Mars (1.52 AU)."
+      },
+      "sepId": "2024-05-10T12:59:00-SEP-001",
+      "eventTime": "2024-05-10T12:59Z",
+      "energyChannel": "15.8-39.8 MeV",
+      "instruments": [
+        {
+          "displayName": "SOHO: COSTEP 15.8-39.8 MeV"
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-09T08:45:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-09T17:23:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-10T06:27:00-FLR-001"
+        }
+      ]
+    },
+    {
+      "classification": "REAL",
+      "provenance": {
+        "sourceUrl": "https://ccmc.gsfc.nasa.gov/DONKI/WS/get/SEP",
+        "datasetId": "2024-05-10T13:35:00-SEP-001",
+        "retrievalDate": "2026-11-14",
+        "instrument": "GOES-P: SEISS >10 MeV",
+        "location": "Geostationary Orbit / L1",
+        "timeContext": "Solar Cycle 25 (May 2024 Extreme Storm)",
+        "methodology": "Solid-state silicon telescope proton flux channel integration",
+        "limitations": "Measured at 1 AU; particle flux diminishes and scatters across interplanetary transit to Mars (1.52 AU)."
+      },
+      "sepId": "2024-05-10T13:35:00-SEP-001",
+      "eventTime": "2024-05-10T13:35Z",
+      "energyChannel": ">10 MeV",
+      "instruments": [
+        {
+          "displayName": "GOES-P: SEISS >10 MeV"
+        }
+      ],
+      "linkedEvents": [
+        {
+          "activityId": "2024-05-08T04:20:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-08T04:37:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-08T05:36:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-08T11:26:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-08T12:24:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-08T21:08:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-08T22:05:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-08T22:24:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-09T08:45:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-09T09:24:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-09T17:23:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-09T18:23:00-CME-001"
+        },
+        {
+          "activityId": "2024-05-10T06:27:00-FLR-001"
+        },
+        {
+          "activityId": "2024-05-10T07:12:00-CME-001"
+        }
+      ]
+    }
+  ]
+}
