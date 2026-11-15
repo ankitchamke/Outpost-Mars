@@ -9,7 +9,11 @@ import {
   JOYSTICK_RADIUS,
   JOYSTICK_HIT_RADIUS,
 } from '../touch-controls';
-import { applyBuildingHitArea } from '../building-hit-areas';
+import {
+  applyBuildingHitArea,
+  resolveNearbyBuilding,
+  INTERACTION_MAX_DISTANCE,
+} from '../building-hit-areas';
 
 export const WORLD_WIDTH = 2000;
 export const WORLD_HEIGHT = 1500;
@@ -462,11 +466,8 @@ export class MarsScene extends Phaser.Scene {
 
       sprite.setDepth(20);
       applyBuildingHitArea(sprite, b.id);
-      sprite.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-        if (this.isBuildingPanelOpen) return;
-        if (this.isPointerOverJoystick(pointer)) return;
-        this.openBuilding(b);
-      });
+      // Direct pointerdown click-to-open removed: buildings can strictly only be opened
+      // when the astronaut is physically near the structure and the player presses E.
       this.buildings.set(b.id, sprite);
 
       // Building Label Plaque (High-contrast, accessible)
@@ -1120,15 +1121,21 @@ export class MarsScene extends Phaser.Scene {
       .setAlpha(0.72 + Math.sin(this.time.now / 200) * 0.2);
   }
 
-  public openBuilding(building: BuildingData): void {
+  public openBuilding(building?: BuildingData): void {
     if (this.isBuildingPanelOpen) return;
+
+    // Strict Proximity Validation:
+    // Only allow opening if the astronaut is physically within the interaction radius
+    const nearby = this.getNearbyBuilding();
+    if (!nearby) return;
+    if (building && building.id !== nearby.id) return;
 
     this.isBuildingPanelOpen = true;
     this.nearbyBuilding = undefined;
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.nearby, null);
     this.resetJoystick();
     (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
-    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, building);
+    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, nearby);
   }
 
   private openNearbyBuildingPanel = (): void => {
@@ -1441,26 +1448,37 @@ export class MarsScene extends Phaser.Scene {
     return this.touchInputActive || isTouchDevice();
   }
 
-  /** Prepared proximity query for the next building-interaction milestone. */
-  public getNearbyBuilding(maxDistance = 80): BuildingData | undefined {
-    let nearestBuilding: BuildingData | undefined;
-    let nearestDistance = maxDistance;
+  /**
+   * Authoritative proximity query: finds the single nearby building within maxDistance.
+   * Resolves deterministically if multiple buildings are in range.
+   */
+  public getNearbyBuilding(maxDistance = INTERACTION_MAX_DISTANCE): BuildingData | undefined {
+    const list: Array<{
+      building: BuildingData;
+      bounds: { left: number; right: number; top: number; bottom: number };
+    }> = [];
 
     for (const building of CANONICAL_BUILDINGS) {
       const sprite = this.buildings.get(building.id);
       if (!sprite) continue;
 
       const bounds = sprite.getBounds();
-      const dx = Math.max(bounds.left - this.astronaut.x, 0, this.astronaut.x - bounds.right);
-      const dy = Math.max(bounds.top - this.astronaut.y, 0, this.astronaut.y - bounds.bottom);
-      const distance = Math.hypot(dx, dy);
-      if (distance <= nearestDistance) {
-        nearestBuilding = building;
-        nearestDistance = distance;
-      }
+      list.push({
+        building,
+        bounds: {
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom,
+        },
+      });
     }
 
-    return nearestBuilding;
+    return resolveNearbyBuilding(
+      list,
+      { x: this.astronaut.x, y: this.astronaut.y },
+      maxDistance
+    );
   }
 
   private isCompactViewport(): boolean {

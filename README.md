@@ -18,7 +18,7 @@
 
 <br/>
 
-<img src="public/assets/environment/mars-terrain-background.png" alt="OUTPOST: MARS Surface Viewport — Jezero Crater Colony Overview" width="900" style="max-width: 100%; border-radius: 8px; border: 1px solid #782d21; box-shadow: 0 8px 24px rgba(0,0,0,0.6);" />
+<img src="public/assets/environment/hero-mars-outpost.png" alt="OUTPOST: MARS Surface Viewport — Jezero Crater Colony Overview" width="900" style="max-width: 100%; border-radius: 8px; border: 1px solid #782d21; box-shadow: 0 8px 24px rgba(0,0,0,0.6);" />
 
 <p><em>Jezero Crater Outpost — High-resolution 1600 &times; 1200 top-down Martian surface exploration viewport.</em></p>
 

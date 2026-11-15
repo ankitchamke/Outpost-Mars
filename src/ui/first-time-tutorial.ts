@@ -1,4 +1,5 @@
 import type { BuildingData } from '../game/scenes/MarsScene';
+import { audioManager } from '../audio/audio-manager';
 
 export type TutorialStep =
   | 'hidden'
@@ -142,6 +143,7 @@ export class FirstTimeTutorialUI {
   }
 
   private start(): void {
+    audioManager.playSfx('tutorialNav');
     this.step = 'movement';
     this.movementComplete = false;
     this.render();
@@ -153,12 +155,14 @@ export class FirstTimeTutorialUI {
 
     const currentIndex = GUIDED_STEPS.indexOf(this.step);
     if (currentIndex < 0 || currentIndex >= GUIDED_STEPS.length - 1) return;
+    audioManager.playSfx('tutorialNav');
     this.step = GUIDED_STEPS[currentIndex + 1];
     this.render();
     this.handlers.onFocusGame();
   }
 
   private finish(): void {
+    audioManager.playSfx('tutorialNav');
     this.step = 'hidden';
     this.container.hidden = true;
     this.container.innerHTML = '';
@@ -177,6 +181,7 @@ export class FirstTimeTutorialUI {
           <span class="tutorial-kicker">FIRST-TIME FLIGHT BRIEFING</span>
           <h1 id="tutorial-title">OUTPOST: MARS</h1>
           <p>Your mission: Build knowledge, explore Mars and keep your crew safe.</p>
+          <p class="tutorial-desktop-notice">OUTPOST: MARS is designed for desktop and laptop screens. For the best experience, use Google Chrome with a keyboard.</p>
           <div class="tutorial-actions">
             <button class="tutorial-primary" type="button" data-tutorial-start>Start Mission</button>
             <button class="tutorial-secondary" type="button" data-tutorial-skip>Skip Tutorial</button>

@@ -50,6 +50,10 @@ export interface GameState {
   tutorialCompleted?: boolean;
   /** Optional migration-safe completion log for offline science activities. */
   completedScienceChallenges?: string[];
+  /** Recorded space-weather mission event decision ('shelter' | 'power'). */
+  spaceWeatherDecision?: 'shelter' | 'power';
+  /** Whether the space-weather event alert has been triggered/presented. */
+  spaceWeatherEventTriggered?: boolean;
   createdAt: number;
   lastSavedAt: number;
 }
