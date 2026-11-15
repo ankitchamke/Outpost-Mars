@@ -9,7 +9,7 @@ export function createInitialGameState(): GameState {
   return {
     sol: 1,
     missionId: 'mission-01',
-    missionName: 'Touchdown & Life Support',
+    missionName: 'Five-Sol Colony Survival',
     crewCount: 4,
     crewSafety: 'nominal',
     resources: {
@@ -40,6 +40,11 @@ export function createInitialGameState(): GameState {
       { id: 'life_support', name: 'Atmospheric & Water Recycling', status: 'active', powerDrawKw: 18 },
       { id: 'storm_shelter', name: 'Regolith Storm Shelter', status: 'idle', powerDrawKw: 5 },
     ],
+    exploredBuildings: [],
+    missionObjectivesCompleted: [],
+    missionComplete: false,
+    tutorialCompleted: false,
+    completedScienceChallenges: [],
     createdAt: now,
     lastSavedAt: now,
   };

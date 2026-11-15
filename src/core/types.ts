@@ -41,6 +41,15 @@ export interface GameState {
   };
   lifeSupportDetails: LifeSupportSubValues;
   modules: BaseModule[];
+  /** Optional for compatibility with mission saves created before exploration tracking. */
+  exploredBuildings?: string[];
+  /** Optional migration-safe progress for the five-Sol survival mission. */
+  missionObjectivesCompleted?: string[];
+  missionComplete?: boolean;
+  /** Missing on older saves; migrated as completed to avoid interrupting returning players. */
+  tutorialCompleted?: boolean;
+  /** Optional migration-safe completion log for offline science activities. */
+  completedScienceChallenges?: string[];
   createdAt: number;
   lastSavedAt: number;
 }
