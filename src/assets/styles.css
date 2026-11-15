@@ -1550,6 +1550,22 @@ html, body {
   animation: promptHighlightPulse 1.35s infinite alternate ease-in-out;
 }
 
+/* Discovery Field Prompt */
+.building-interaction-prompt.is-discovery-prompt {
+  border-color: rgba(56, 189, 248, 0.75);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.28);
+}
+
+.building-interaction-prompt.is-discovery-prompt .interaction-keycap kbd {
+  background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+  border-color: #e0f2fe;
+  border-bottom: 3px solid #0369a1;
+}
+
+.building-interaction-prompt.is-discovery-prompt .interaction-kicker-text {
+  color: #38bdf8;
+}
+
 @keyframes promptHighlightPulse {
   0% { transform: scale(1); }
   100% { transform: scale(1.03); }
@@ -2727,6 +2743,213 @@ html, body {
   padding: 0.25rem 0.5rem;
   border-radius: var(--radius-sm);
   border: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+/* ==========================================================================
+   Interactive Mars Discovery Field Guide Modal
+   ========================================================================== */
+.discovery-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 75;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(4, 8, 16, 0.78);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+.discovery-dialog-overlay[hidden] {
+  display: none !important;
+}
+
+.discovery-backdrop {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.discovery-card {
+  position: relative;
+  width: min(520px, calc(100vw - 2rem));
+  max-height: calc(100vh - 80px);
+  overflow-y: auto;
+  color: var(--text-primary);
+  background: linear-gradient(170deg, rgba(13, 23, 42, 0.96) 0%, rgba(9, 15, 28, 0.98) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  border-top: 3px solid #38bdf8;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75), 0 0 24px rgba(56, 189, 248, 0.2);
+  z-index: 1;
+}
+
+.discovery-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.discovery-icon {
+  font-size: 1.85rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.discovery-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.discovery-kicker {
+  display: block;
+  font-family: var(--font-family-display);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #38bdf8;
+}
+
+.discovery-title-block h2 {
+  font-family: var(--font-family-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0.15rem 0 0;
+  line-height: 1.2;
+}
+
+.discovery-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: var(--radius-xs);
+  transition: color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+
+.discovery-close-btn:hover,
+.discovery-close-btn:focus-visible {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+
+.discovery-body {
+  padding: 1.15rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.discovery-explanation {
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+.discovery-fact-box,
+.discovery-science-box,
+.discovery-provenance-box {
+  border-radius: var(--radius-md);
+  padding: 0.75rem 0.95rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.discovery-box-tag {
+  font-family: var(--font-family-mono);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.discovery-fact-box {
+  background: rgba(14, 116, 144, 0.18);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+}
+
+.discovery-fact-box .discovery-box-tag {
+  color: #22d3ee;
+}
+
+.discovery-fact-box p {
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.discovery-science-box {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.discovery-science-box .discovery-box-tag {
+  color: #94a3b8;
+}
+
+.discovery-science-box p {
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #cbd5e1;
+  margin: 0;
+}
+
+.discovery-provenance-box {
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+}
+
+.discovery-provenance-box .discovery-box-tag {
+  color: #7dd3fc;
+}
+
+.discovery-provenance-box p {
+  font-family: var(--font-family-mono);
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: #bae6fd;
+  margin: 0;
+}
+
+.discovery-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1.25rem 0.95rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.discovery-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-family-mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #86efac;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs);
+}
+
+.discovery-close-hint {
+  font-size: 0.76rem;
+  color: var(--text-muted);
 }
 
 /* ==========================================================================

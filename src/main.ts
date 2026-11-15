@@ -6,8 +6,10 @@ import { GameState } from './core/types';
 import { normalizeCompletedScienceChallenges } from './core/science-challenges';
 import { createOutpostGame } from './game';
 import { BUILDING_INTERACTION_EVENTS } from './game/building-events';
+import { DISCOVERY_EVENTS } from './game/discovery-events';
 import { TUTORIAL_EVENTS } from './game/tutorial-events';
 import type { BuildingData } from './game/scenes/MarsScene';
+import type { MarsDiscovery } from './data/discoveries';
 import { FirstTimeTutorialUI, MissionResetChoiceUI } from './ui/first-time-tutorial';
 import { OutpostHud } from './ui/hud';
 import { ScienceChallengesUI } from './ui/science-challenges';
@@ -15,6 +17,7 @@ import {
   BuildingInteractionUI,
   normalizeExploredState,
 } from './ui/building-interactions';
+import { DiscoveryDialogUI } from './ui/discovery-dialog';
 import { SpaceWeatherDialogUI } from './ui/space-weather-dialog';
 import { createDefaultOfflineLoader } from './data/loader';
 import { audioManager } from './audio/audio-manager';
@@ -206,6 +209,21 @@ function initApp(): void {
     });
   }
 
+  let discoveryUi: DiscoveryDialogUI | null = null;
+  const discoveryContainer = document.getElementById('discovery-dialog-container');
+  if (discoveryContainer) {
+    discoveryUi = new DiscoveryDialogUI(discoveryContainer, {
+      onClose: () => {
+        gameInstance?.events.emit(DISCOVERY_EVENTS.panelClose);
+        focusGame();
+      },
+      onDiscoveryLogged: () => {
+        audioManager.playSfx('taskComplete');
+        showHudToast('Field Discovery Logged', 'Planetary science observation recorded in field journal.', 'success');
+      },
+    });
+  }
+
   const focusGame = (): void => {
     gameInstance?.canvas.focus({ preventScroll: true });
   };
@@ -252,9 +270,16 @@ function initApp(): void {
   if (promptContainer && objectivesContainer && panelContainer && feedbackContainer) {
     interactionUi = new BuildingInteractionUI(promptContainer, objectivesContainer, panelContainer, feedbackContainer, {
       onInteract: () => gameInstance?.events.emit(BUILDING_INTERACTION_EVENTS.requestInteract),
+      onInteractDiscovery: () => gameInstance?.events.emit(DISCOVERY_EVENTS.requestInspect),
       onClose: () => gameInstance?.events.emit(BUILDING_INTERACTION_EVENTS.requestClose),
-      onOpenScienceConsole: () => scienceUi?.openConsole(currentState),
-      onOpenSpaceWeatherEvent: () => spaceWeatherUi?.open(currentState),
+      onOpenScienceConsole: () => {
+        discoveryUi?.close();
+        scienceUi?.openConsole(currentState);
+      },
+      onOpenSpaceWeatherEvent: () => {
+        discoveryUi?.close();
+        spaceWeatherUi?.open(currentState);
+      },
     });
     interactionUi.renderObjectives(currentState);
   }
@@ -325,6 +350,7 @@ function initApp(): void {
 
   helpButton?.addEventListener('click', () => {
     audioManager.playSfx('help');
+    discoveryUi?.close();
     if (tutorialUi?.isVisible()) {
       tutorialUi.hideWithoutCompleting();
       syncNavActiveStates();
@@ -352,6 +378,7 @@ function initApp(): void {
       }
     );
     gameInstance.events.on(BUILDING_INTERACTION_EVENTS.panelOpen, (building: BuildingData) => {
+      discoveryUi?.close();
       audioManager.playSfx('buildingInspect');
       const outcome = completeBuildingMissionTask(currentState, building.id);
       const explored = outcome.state.exploredBuildings ?? [];
@@ -386,6 +413,25 @@ function initApp(): void {
       tutorialUi?.markBuildingInteracted();
     });
     gameInstance.events.on(BUILDING_INTERACTION_EVENTS.panelClose, () => interactionUi?.close());
+    gameInstance.events.on(
+      DISCOVERY_EVENTS.nearby,
+      (discovery: MarsDiscovery | null) => {
+        interactionUi?.setNearbyDiscovery(discovery);
+      }
+    );
+    gameInstance.events.on(
+      DISCOVERY_EVENTS.panelOpen,
+      (discovery: MarsDiscovery) => {
+        audioManager.playSfx('buildingInspect');
+        discoveryUi?.open(discovery);
+      }
+    );
+    gameInstance.events.on(
+      DISCOVERY_EVENTS.panelClose,
+      () => {
+        discoveryUi?.close();
+      }
+    );
 
     if (currentState.sol === 4 && !currentState.spaceWeatherEventTriggered && !currentState.spaceWeatherDecision) {
       window.setTimeout(() => {
@@ -422,6 +468,7 @@ function initApp(): void {
   }
 
   scienceLogButton?.addEventListener('click', () => {
+    discoveryUi?.close();
     audioManager.playSfx('scienceLog');
     if (scienceUi?.isOpen()) {
       scienceUi.close();
@@ -432,6 +479,7 @@ function initApp(): void {
   });
 
   resetButton?.addEventListener('click', () => {
+    discoveryUi?.close();
     audioManager.playSfx('resetWarning');
     resetChoiceUi?.show(resetButton ?? undefined);
   });

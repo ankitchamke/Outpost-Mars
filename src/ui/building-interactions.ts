@@ -7,6 +7,7 @@ import {
 } from '../core/mission';
 import { calculateMissionDebrief, escapeHtml } from '../core/space-weather-event';
 import type { CuriosityRadSnapshot } from '../data/types';
+import type { MarsDiscovery } from '../data/discoveries';
 import type { BuildingData } from '../game/scenes/MarsScene';
 
 export const BUILDING_LESSONS = [
@@ -21,6 +22,7 @@ export type ExploredBuildingId = (typeof BUILDING_LESSONS)[number]['id'];
 
 export interface BuildingInteractionHandlers {
   onInteract: () => void;
+  onInteractDiscovery?: () => void;
   onClose: () => void;
   onOpenScienceConsole: () => void;
   onOpenSpaceWeatherEvent?: () => void;
@@ -32,6 +34,8 @@ export class BuildingInteractionUI {
   private lastState?: GameState;
   private isObjectivesCollapsed = false;
   private hasCompletionFlash = false;
+  private currentNearbyBuilding: BuildingData | null = null;
+  private currentNearbyDiscovery: MarsDiscovery | null = null;
 
   constructor(
     private readonly promptContainer: HTMLElement,
@@ -92,7 +96,11 @@ export class BuildingInteractionUI {
         !this.promptContainer.hidden
       ) {
         event.preventDefault();
-        this.handlers.onInteract();
+        if (this.currentNearbyBuilding) {
+          this.handlers.onInteract();
+        } else if (this.currentNearbyDiscovery) {
+          this.handlers.onInteractDiscovery?.();
+        }
       }
     });
   }
@@ -237,24 +245,64 @@ export class BuildingInteractionUI {
   }
 
   public setNearbyBuilding(building: BuildingData | null, tutorialHighlight = false): void {
+    this.currentNearbyBuilding = building;
     if (!building) {
-      this.promptContainer.hidden = true;
-      this.promptContainer.innerHTML = '';
+      if (this.currentNearbyDiscovery) {
+        this.renderDiscoveryPrompt(this.currentNearbyDiscovery);
+      } else {
+        this.promptContainer.hidden = true;
+        this.promptContainer.innerHTML = '';
+      }
       return;
     }
 
     this.promptContainer.hidden = false;
     this.promptContainer.innerHTML = `
-      <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="status" aria-label="Nearby structure: ${building.name}. Press E to inspect.">
+      <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="status" aria-label="Nearby structure: ${escapeHtml(building.name)}. Press E to inspect.">
         <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
         <div class="interaction-prompt-content">
           <div class="interaction-prompt-kicker">
             <span class="interaction-kicker-text">STRUCTURE PROXIMITY</span>
             ${tutorialHighlight ? '<span class="interaction-tutorial-label">NEAREST</span>' : ''}
           </div>
-          <strong class="interaction-building-name">${building.name}</strong>
+          <strong class="interaction-building-name">${escapeHtml(building.name)}</strong>
           <span class="interaction-hints">
             <span class="interaction-desktop-hint">Press <kbd>E</kbd> to inspect</span>
+          </span>
+        </div>
+        <span class="interaction-prompt-arrow" aria-hidden="true">➔</span>
+      </div>
+    `;
+  }
+
+  public setNearbyDiscovery(discovery: MarsDiscovery | null): void {
+    this.currentNearbyDiscovery = discovery;
+    if (this.currentNearbyBuilding) {
+      // Building proximity always takes priority over field discoveries
+      return;
+    }
+
+    if (!discovery) {
+      this.promptContainer.hidden = true;
+      this.promptContainer.innerHTML = '';
+      return;
+    }
+
+    this.renderDiscoveryPrompt(discovery);
+  }
+
+  private renderDiscoveryPrompt(discovery: MarsDiscovery): void {
+    this.promptContainer.hidden = false;
+    this.promptContainer.innerHTML = `
+      <div class="building-interaction-prompt is-discovery-prompt" role="status" aria-label="Field discovery: ${escapeHtml(discovery.name)}. Press E to discover.">
+        <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
+        <div class="interaction-prompt-content">
+          <div class="interaction-prompt-kicker">
+            <span class="interaction-kicker-text">FIELD DISCOVERY · ${escapeHtml(discovery.category.toUpperCase())}</span>
+          </div>
+          <strong class="interaction-building-name">${discovery.icon} ${escapeHtml(discovery.name)}</strong>
+          <span class="interaction-hints">
+            <span class="interaction-desktop-hint">Press <kbd>E</kbd> to discover</span>
           </span>
         </div>
         <span class="interaction-prompt-arrow" aria-hidden="true">➔</span>

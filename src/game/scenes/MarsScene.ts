@@ -1,7 +1,9 @@
 import Phaser from 'phaser';
 import { generateAllBuildingTextures } from '../textures/buildings';
 import { BUILDING_INTERACTION_EVENTS } from '../building-events';
+import { DISCOVERY_EVENTS } from '../discovery-events';
 import { TUTORIAL_EVENTS } from '../tutorial-events';
+import { MARS_DISCOVERIES, type MarsDiscovery } from '../../data/discoveries';
 import {
   isTouchDevice,
   getJoystickPosition,
@@ -330,6 +332,8 @@ export class MarsScene extends Phaser.Scene {
   private escapeKey?: Phaser.Input.Keyboard.Key;
   private nearbyBuilding?: BuildingData;
   private isBuildingPanelOpen = false;
+  private nearbyDiscovery?: MarsDiscovery;
+  private isDiscoveryPanelOpen = false;
   private hasPositionedAstronaut = false;
   private isFollowingAstronaut = false;
   private wasMovingLastFrame = false;
@@ -549,6 +553,16 @@ export class MarsScene extends Phaser.Scene {
     this.game.events.on(
       BUILDING_INTERACTION_EVENTS.requestClose,
       this.closeBuildingPanel,
+      this
+    );
+    this.game.events.on(
+      DISCOVERY_EVENTS.requestInspect,
+      this.openNearbyDiscovery,
+      this
+    );
+    this.game.events.on(
+      DISCOVERY_EVENTS.panelClose,
+      this.handleDiscoveryPanelClosed,
       this
     );
     this.game.events.on(
@@ -974,19 +988,32 @@ export class MarsScene extends Phaser.Scene {
 
     if (this.isBuildingPanelOpen && this.escapeKey && Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
       this.closeBuildingPanel();
+    } else if (this.isDiscoveryPanelOpen && this.escapeKey && Phaser.Input.Keyboard.JustDown(this.escapeKey)) {
+      this.closeDiscoveryPanel();
     } else if (
       !this.isBuildingPanelOpen &&
+      !this.isDiscoveryPanelOpen &&
       this.nearbyBuilding &&
       this.interactKey &&
       Phaser.Input.Keyboard.JustDown(this.interactKey)
     ) {
       this.openNearbyBuildingPanel();
+    } else if (
+      !this.isBuildingPanelOpen &&
+      !this.isDiscoveryPanelOpen &&
+      !this.nearbyBuilding &&
+      this.nearbyDiscovery &&
+      this.interactKey &&
+      Phaser.Input.Keyboard.JustDown(this.interactKey)
+    ) {
+      this.openNearbyDiscovery();
     }
 
-    let velocityX = this.isBuildingPanelOpen ? 0 : this.joystickVector.x;
-    let velocityY = this.isBuildingPanelOpen ? 0 : this.joystickVector.y;
+    const canMove = !this.isBuildingPanelOpen && !this.isDiscoveryPanelOpen;
+    let velocityX = canMove ? this.joystickVector.x : 0;
+    let velocityY = canMove ? this.joystickVector.y : 0;
 
-    if (!this.isBuildingPanelOpen && !this.isUiControlFocused()) {
+    if (canMove && !this.isUiControlFocused()) {
       const left = !!this.cursorKeys?.left.isDown || !!this.wasdKeys?.left.isDown;
       const right = !!this.cursorKeys?.right.isDown || !!this.wasdKeys?.right.isDown;
       const up = !!this.cursorKeys?.up.isDown || !!this.wasdKeys?.up.isDown;
@@ -1032,6 +1059,7 @@ export class MarsScene extends Phaser.Scene {
 
     this.positionAstronautStatusLabel();
     this.refreshNearbyBuilding();
+    this.refreshNearbyDiscovery();
   }
 
   private enableAstronautPhysics(): void {
@@ -1077,7 +1105,7 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private refreshNearbyBuilding(): void {
-    if (this.isBuildingPanelOpen) return;
+    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen) return;
 
     const nearby = this.getNearbyBuilding();
     if (nearby?.id === this.nearbyBuilding?.id) return;
@@ -1123,6 +1151,9 @@ export class MarsScene extends Phaser.Scene {
 
   public openBuilding(building?: BuildingData): void {
     if (this.isBuildingPanelOpen) return;
+    if (this.isDiscoveryPanelOpen) {
+      this.closeDiscoveryPanel();
+    }
 
     // Strict Proximity Validation:
     // Only allow opening if the astronaut is physically within the interaction radius
@@ -1149,7 +1180,72 @@ export class MarsScene extends Phaser.Scene {
     this.isBuildingPanelOpen = false;
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelClose);
     this.refreshNearbyBuilding();
+    this.refreshNearbyDiscovery();
   }
+
+  public getNearbyDiscovery(): MarsDiscovery | undefined {
+    if (!this.astronaut) return undefined;
+    const ax = this.astronaut.x;
+    const ay = this.astronaut.y;
+
+    let closest: MarsDiscovery | undefined;
+    let closestDistSq = Infinity;
+
+    for (const d of MARS_DISCOVERIES) {
+      const distSq = (d.x - ax) ** 2 + (d.y - ay) ** 2;
+      const radiusSq = d.radius ** 2;
+      if (distSq <= radiusSq && distSq < closestDistSq) {
+        closest = d;
+        closestDistSq = distSq;
+      }
+    }
+    return closest;
+  }
+
+  private refreshNearbyDiscovery(): void {
+    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen || this.nearbyBuilding) {
+      if (this.nearbyDiscovery) {
+        this.nearbyDiscovery = undefined;
+        this.game.events.emit(DISCOVERY_EVENTS.nearby, null);
+      }
+      return;
+    }
+
+    const nearby = this.getNearbyDiscovery();
+    if (nearby?.id === this.nearbyDiscovery?.id) return;
+
+    this.nearbyDiscovery = nearby;
+    this.game.events.emit(DISCOVERY_EVENTS.nearby, nearby ?? null);
+  }
+
+  public openNearbyDiscovery = (): void => {
+    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen) return;
+
+    const nearby = this.getNearbyDiscovery();
+    if (!nearby) return;
+
+    this.isDiscoveryPanelOpen = true;
+    this.nearbyDiscovery = undefined;
+    this.game.events.emit(DISCOVERY_EVENTS.nearby, null);
+    this.resetJoystick();
+    (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
+    this.game.events.emit(DISCOVERY_EVENTS.panelOpen, nearby);
+  };
+
+  public closeDiscoveryPanel(): void {
+    if (!this.isDiscoveryPanelOpen) return;
+
+    this.isDiscoveryPanelOpen = false;
+    this.game.events.emit(DISCOVERY_EVENTS.panelClose);
+    this.refreshNearbyBuilding();
+    this.refreshNearbyDiscovery();
+  }
+
+  private handleDiscoveryPanelClosed = (): void => {
+    this.isDiscoveryPanelOpen = false;
+    this.refreshNearbyBuilding();
+    this.refreshNearbyDiscovery();
+  };
 
   private removeBuildingInteractionListeners(): void {
     this.game.events.off(
@@ -1160,6 +1256,16 @@ export class MarsScene extends Phaser.Scene {
     this.game.events.off(
       BUILDING_INTERACTION_EVENTS.requestClose,
       this.closeBuildingPanel,
+      this
+    );
+    this.game.events.off(
+      DISCOVERY_EVENTS.requestInspect,
+      this.openNearbyDiscovery,
+      this
+    );
+    this.game.events.off(
+      DISCOVERY_EVENTS.panelClose,
+      this.handleDiscoveryPanelClosed,
       this
     );
   }
@@ -1304,7 +1410,7 @@ export class MarsScene extends Phaser.Scene {
       this.syncVirtualJoystick();
     }
 
-    if (this.isBuildingPanelOpen || !this.joystickBase || this.joystickPointerId !== null) return;
+    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen || !this.joystickBase || this.joystickPointerId !== null) return;
     if (!this.isPointerOverJoystick(pointer)) {
       return;
     }
@@ -1315,7 +1421,7 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private handleJoystickPointerMove(pointer: Phaser.Input.Pointer): void {
-    if (this.isBuildingPanelOpen || pointer.id !== this.joystickPointerId) return;
+    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen || pointer.id !== this.joystickPointerId) return;
     this.updateJoystickFromPointer(pointer);
   }
 
