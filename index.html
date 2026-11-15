@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="OUTPOST: MARS — A NASA Space Apps 2D Mars outpost mission trainer for young explorers." />
     <meta name="theme-color" content="#121822" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='46' fill='%239c4127'/><circle cx='48' cy='48' r='44' fill='%23c86343'/><ellipse cx='65' cy='35' rx='14' ry='8' fill='%23833428' transform='rotate(-20 65 35)'/><circle cx='35' cy='65' r='12' fill='%23833428'/><circle cx='55' cy='75' r='6' fill='%23833428'/><path d='M10 50 Q50 40 90 50' stroke='%23df8a66' stroke-width='3' fill='none' opacity='0.6'/></svg>" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <link rel="alternate icon" type="image/x-icon" href="./favicon.ico" />
     <title>OUTPOST: MARS</title>
   </head>
   <body>
@@ -15,11 +16,11 @@
           <span class="brand-title">OUTPOST: MARS</span>
           <span class="brand-badge">Jezero Crater</span>
         </div>
-        <div class="header-controls">
-          <button id="btn-help" class="btn btn-sm" aria-label="Open the first-time tutorial">Help</button>
-          <button id="btn-science-log" class="btn btn-sm" aria-label="Open the NASA science challenges and Science Log">Science Log</button>
+        <div class="header-controls" role="toolbar" aria-label="Mission quick controls">
+          <button id="btn-help" class="btn btn-sm" aria-label="Toggle first-time tutorial guide" aria-pressed="false">Help</button>
+          <button id="btn-science-log" class="btn btn-sm" aria-label="Toggle NASA science challenges and Science Log" aria-pressed="false">Science Log</button>
           <button id="btn-save-state" class="btn btn-sm" aria-label="Save current mission state">Save</button>
-          <button id="btn-reset-state" class="btn btn-sm" aria-label="Reset mission state">Reset</button>
+          <button id="btn-reset-state" class="btn btn-sm btn-destructive" aria-label="Reset mission state">Reset</button>
         </div>
       </header>
 

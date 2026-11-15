@@ -23,6 +23,7 @@ type SolarChoice = 'shelter' | 'power';
 
 interface ScienceChallengeHandlers {
   onStateChange: (outcome: ScienceChallengeOutcome) => void;
+  onVisibilityChange?: (isOpen: boolean) => void;
 }
 
 export class ScienceChallengesUI {
@@ -54,12 +55,17 @@ export class ScienceChallengesUI {
     document.addEventListener('keydown', (event) => this.handleKeyDown(event), true);
   }
 
+  public isOpen(): boolean {
+    return this.mode !== 'closed';
+  }
+
   public openConsole(state: GameState): void {
     this.captureReturnFocus();
     this.state = state;
     this.mode = 'hub';
     this.render();
     this.focus('[data-science-close]');
+    this.handlers.onVisibilityChange?.(true);
   }
 
   public openLog(state: GameState): void {
@@ -72,11 +78,15 @@ export class ScienceChallengesUI {
   }
 
   public close(): void {
+    const wasOpen = this.mode !== 'closed';
     this.mode = 'closed';
     this.container.hidden = true;
     this.container.innerHTML = '';
     if (this.returnFocus?.isConnected) this.returnFocus.focus({ preventScroll: true });
     this.returnFocus = undefined;
+    if (wasOpen) {
+      this.handlers.onVisibilityChange?.(false);
+    }
   }
 
   private captureReturnFocus(): void {
@@ -93,6 +103,30 @@ export class ScienceChallengesUI {
       this.close();
       return;
     }
+
+    if (event.key === 'Tab') {
+      const focusables = this.container.querySelectorAll<HTMLElement>(
+        'button:not([disabled]):not([hidden]), [href], input:not([disabled]):not([hidden]), select:not([disabled]):not([hidden]), textarea:not([disabled]):not([hidden]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (focusables.length > 0) {
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey) {
+          if (document.activeElement === first || !this.container.contains(document.activeElement)) {
+            event.preventDefault();
+            last.focus();
+            return;
+          }
+        } else {
+          if (document.activeElement === last || !this.container.contains(document.activeElement)) {
+            event.preventDefault();
+            first.focus();
+            return;
+          }
+        }
+      }
+    }
+
     const key = event.key.toLowerCase();
     if (['w', 'a', 's', 'd', 'e', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(key)) {
       event.stopPropagation();

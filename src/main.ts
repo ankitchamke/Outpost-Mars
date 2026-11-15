@@ -87,6 +87,21 @@ function initApp(): void {
     gameInstance?.canvas.focus({ preventScroll: true });
   };
 
+  const syncNavActiveStates = (): void => {
+    const isScienceOpen = scienceUi?.isOpen() ?? false;
+    const isHelpOpen = tutorialUi?.isVisible() ?? false;
+
+    if (scienceLogButton) {
+      scienceLogButton.classList.toggle('is-active', isScienceOpen);
+      scienceLogButton.setAttribute('aria-pressed', isScienceOpen ? 'true' : 'false');
+    }
+
+    if (helpButton) {
+      helpButton.classList.toggle('is-active', isHelpOpen);
+      helpButton.setAttribute('aria-pressed', isHelpOpen ? 'true' : 'false');
+    }
+  };
+
   const syncTutorialHighlights = (): void => {
     viewportContainer?.classList.toggle('has-active-tutorial', tutorialUi?.isVisible() ?? false);
     const highlightBuilding = tutorialUi?.shouldHighlightNearestBuilding() ?? false;
@@ -124,6 +139,9 @@ function initApp(): void {
         hud?.update(currentState);
         interactionUi?.renderObjectives(currentState);
       },
+      onVisibilityChange: () => {
+        syncNavActiveStates();
+      },
     });
   }
 
@@ -135,9 +153,13 @@ function initApp(): void {
         saveGameState(currentState);
         updateMissionStatusFooter();
         gameInstance?.events.emit(BUILDING_INTERACTION_EVENTS.requestClose);
+        syncNavActiveStates();
       },
       onFocusGame: focusGame,
-      onViewChange: syncTutorialHighlights,
+      onViewChange: () => {
+        syncTutorialHighlights();
+        syncNavActiveStates();
+      },
     });
     if (!savedState || currentState.tutorialCompleted === false) tutorialUi.showWelcome();
   }
@@ -156,7 +178,8 @@ function initApp(): void {
     scienceUi?.close();
     tutorialUi?.hideWithoutCompleting();
     gameInstance?.events.emit(BUILDING_INTERACTION_EVENTS.requestClose);
-    if (replayTutorial) tutorialUi?.showWelcome();
+    syncNavActiveStates();
+    if (replayTutorial) tutorialUi?.showWelcome(helpButton ?? undefined);
     else focusGame();
   };
 
@@ -165,9 +188,16 @@ function initApp(): void {
   }
 
   helpButton?.addEventListener('click', () => {
-    currentState = { ...currentState, tutorialCompleted: false };
-    saveGameState(currentState);
-    tutorialUi?.showWelcome();
+    if (tutorialUi?.isVisible()) {
+      tutorialUi.hideWithoutCompleting();
+      syncNavActiveStates();
+      focusGame();
+    } else {
+      currentState = { ...currentState, tutorialCompleted: false };
+      saveGameState(currentState);
+      tutorialUi?.showWelcome(helpButton ?? undefined);
+      syncNavActiveStates();
+    }
   });
 
   window.requestAnimationFrame(() => {
@@ -216,9 +246,37 @@ function initApp(): void {
     });
   }
 
-  scienceLogButton?.addEventListener('click', () => scienceUi?.openLog(currentState));
+  scienceLogButton?.addEventListener('click', () => {
+    if (scienceUi?.isOpen()) {
+      scienceUi.close();
+    } else {
+      scienceUi?.openLog(currentState);
+    }
+    syncNavActiveStates();
+  });
 
-  resetButton?.addEventListener('click', () => resetChoiceUi?.show());
+  resetButton?.addEventListener('click', () => resetChoiceUi?.show(resetButton ?? undefined));
+
+  // Contain background focus when a blocking modal is open
+  document.addEventListener('focusin', (event) => {
+    const target = event.target as Node;
+    if (scienceUi?.isOpen() && scienceContainer && !scienceContainer.contains(target)) {
+      event.stopImmediatePropagation();
+      scienceContainer.querySelector<HTMLElement>('[data-science-close]')?.focus({ preventScroll: true });
+    } else if (resetChoiceContainer && !resetChoiceContainer.hidden && !resetChoiceContainer.contains(target)) {
+      event.stopImmediatePropagation();
+      resetChoiceContainer.querySelector<HTMLElement>('[data-reset-choice="replay"]')?.focus({ preventScroll: true });
+    } else if (
+      tutorialUi?.isVisible() &&
+      tutorialContainer?.classList.contains('is-welcome') &&
+      !tutorialContainer.contains(target)
+    ) {
+      event.stopImmediatePropagation();
+      tutorialContainer.querySelector<HTMLElement>('[data-tutorial-start]')?.focus({ preventScroll: true });
+    }
+  });
+
+  syncNavActiveStates();
 
   console.info('[OUTPOST: MARS] Phase 03 M1 Viewport loaded successfully.');
 }

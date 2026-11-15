@@ -29,6 +29,7 @@ export class FirstTimeTutorialUI {
   private step: TutorialStep = 'hidden';
   private movementComplete = false;
   private nearestBuilding: BuildingData | null = null;
+  private returnFocus?: HTMLElement;
 
   constructor(
     private readonly container: HTMLElement,
@@ -50,9 +51,41 @@ export class FirstTimeTutorialUI {
         this.finish();
       }
     });
+
+    document.addEventListener('keydown', (event) => {
+      if (this.step !== 'welcome') return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.hideWithoutCompleting();
+        if (this.returnFocus?.isConnected) this.returnFocus.focus({ preventScroll: true });
+        this.returnFocus = undefined;
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusables = this.container.querySelectorAll<HTMLElement>(
+          'button:not([disabled]):not([hidden]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (event.shiftKey) {
+            if (document.activeElement === first || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
   }
 
-  public showWelcome(): void {
+  public showWelcome(triggerElement?: HTMLElement): void {
+    this.returnFocus = triggerElement ?? (document.activeElement instanceof HTMLElement ? document.activeElement : undefined);
     this.step = 'welcome';
     this.movementComplete = false;
     this.render();
@@ -229,6 +262,8 @@ export class FirstTimeTutorialUI {
 }
 
 export class MissionResetChoiceUI {
+  private returnFocus?: HTMLElement;
+
   constructor(
     private readonly container: HTMLElement,
     private readonly onReset: (replayTutorial: boolean) => void
@@ -240,9 +275,39 @@ export class MissionResetChoiceUI {
       else if (choice === 'skip') this.choose(false);
       else if (target.closest('[data-reset-cancel]')) this.hide();
     });
+
+    document.addEventListener('keydown', (event) => {
+      if (this.container.hidden) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.hide();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusables = this.container.querySelectorAll<HTMLElement>(
+          'button:not([disabled]):not([hidden]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (event.shiftKey) {
+            if (document.activeElement === first || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
   }
 
-  public show(): void {
+  public show(triggerElement?: HTMLElement): void {
+    this.returnFocus = triggerElement ?? (document.activeElement instanceof HTMLElement ? document.activeElement : undefined);
     this.container.hidden = false;
     this.container.innerHTML = `
       <section class="reset-choice-card" role="dialog" aria-modal="true" aria-labelledby="reset-choice-title">
@@ -262,6 +327,10 @@ export class MissionResetChoiceUI {
   public hide(): void {
     this.container.hidden = true;
     this.container.innerHTML = '';
+    if (this.returnFocus?.isConnected) {
+      this.returnFocus.focus({ preventScroll: true });
+    }
+    this.returnFocus = undefined;
   }
 
   private choose(replayTutorial: boolean): void {

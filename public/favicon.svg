@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <radialGradient id="marsGlow" cx="38%" cy="34%" r="62%">
+      <stop offset="0%" stop-color="#df8a66"/>
+      <stop offset="55%" stop-color="#c86343"/>
+      <stop offset="100%" stop-color="#9c4127"/>
+    </radialGradient>
+  </defs>
+  <!-- Mars Planet Body -->
+  <circle cx="50" cy="50" r="46" fill="#9c4127"/>
+  <circle cx="48" cy="48" r="44" fill="url(#marsGlow)"/>
+  <!-- Primary Surface Craters -->
+  <ellipse cx="65" cy="35" rx="14" ry="8" fill="#833428" transform="rotate(-20 65 35)"/>
+  <circle cx="35" cy="64" r="12" fill="#833428"/>
+  <circle cx="56" cy="74" r="6" fill="#833428"/>
+  <circle cx="28" cy="38" r="4.5" fill="#833428" opacity="0.9"/>
+  <!-- Atmospheric Curvature Arc -->
+  <path d="M10 50 Q50 40 90 50" stroke="#df8a66" stroke-width="3" fill="none" opacity="0.75" stroke-linecap="round"/>
+</svg>
