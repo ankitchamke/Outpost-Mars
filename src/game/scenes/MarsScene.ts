@@ -155,16 +155,17 @@ interface M5WorldDecoration {
   collision?: 'rock' | 'crater';
 }
 
+const CRATER_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_crater_large_01', file: 'crater-large-01.png' },
+  { key: 'environment_crater_large_02', file: 'crater-large-02.png' },
+  { key: 'environment_crater_large_03', file: 'crater-large-3.png' },
+  { key: 'environment_crater_medium_01', file: 'crater-medium-1.png' },
+  { key: 'environment_crater_medium_02', file: 'crater-medium-2.png' },
+  { key: 'environment_crater_small_01', file: 'crater-small-1.png' },
+  { key: 'environment_crater_small_02', file: 'crater-small-2.png' },
+];
+
 const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
-  { key: 'environment_m5_crater_large_01', file: 'm5-crater-large-01.png' },
-  { key: 'environment_m5_crater_large_02', file: 'm5-crater-large-02.png' },
-  { key: 'environment_m5_crater_large_03', file: 'm5-crater-large-03.png' },
-  { key: 'environment_m5_crater_medium_01', file: 'm5-crater-medium-01.png' },
-  { key: 'environment_m5_crater_medium_02', file: 'm5-crater-medium-02.png' },
-  { key: 'environment_m5_crater_small_02', file: 'm5-crater-small-02.png' },
-  { key: 'environment_m5_crater_small_03', file: 'm5-crater-small-03.png' },
-  { key: 'environment_m5_crater_small_04', file: 'm5-crater-small-04.png' },
-  { key: 'environment_m5_crater_small_05', file: 'm5-crater-small-05.png' },
   { key: 'environment_m5_rock_formation_01', file: 'm5-rock-formation-01.png' },
   { key: 'environment_m5_rock_formation_02', file: 'm5-rock-formation-02.png' },
   { key: 'environment_m5_rock_formation_03', file: 'm5-rock-formation-03.png' },
@@ -185,15 +186,15 @@ const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
 
 /** Fixed, curated world coordinates keep the colony clear and avoid the approved roads. */
 const M5_WORLD_DECORATIONS: M5WorldDecoration[] = [
-  { texture: 'environment_m5_crater_large_01', x: 230, y: 230, displayWidth: 140, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_large_02', x: 1485, y: 230, displayWidth: 130, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_large_03', x: 800, y: 900, displayWidth: 180, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_medium_01', x: 700, y: 230, displayWidth: 120, depth: 2 },
-  { texture: 'environment_m5_crater_medium_02', x: 1000, y: 230, displayWidth: 120, depth: 2 },
-  { texture: 'environment_m5_crater_small_02', x: 250, y: 410, displayWidth: 105, depth: 2 },
-  { texture: 'environment_m5_crater_small_03', x: 1490, y: 410, displayWidth: 105, depth: 2 },
-  { texture: 'environment_m5_crater_small_04', x: 220, y: 930, displayWidth: 100, depth: 2 },
-  { texture: 'environment_m5_crater_small_05', x: 1240, y: 930, displayWidth: 105, depth: 2 },
+  { texture: 'environment_crater_large_01', x: 230, y: 230, displayWidth: 155, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_large_02', x: 1485, y: 230, displayWidth: 157, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_large_03', x: 800, y: 900, displayWidth: 189, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_medium_01', x: 700, y: 230, displayWidth: 180, depth: 2 },
+  { texture: 'environment_crater_medium_02', x: 1000, y: 230, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_01', x: 250, y: 410, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_02', x: 1490, y: 410, displayWidth: 214, depth: 2 },
+  { texture: 'environment_crater_small_02', x: 220, y: 930, displayWidth: 204, depth: 2 },
+  { texture: 'environment_crater_small_01', x: 1240, y: 930, displayWidth: 182, depth: 2 },
   { texture: 'environment_m5_rock_formation_01', x: 75, y: 760, displayWidth: 125, depth: 7, collision: 'rock' },
   { texture: 'environment_m5_rock_formation_02', x: 1480, y: 760, displayWidth: 115, depth: 7, collision: 'rock' },
   { texture: 'environment_m5_rock_formation_03', x: 980, y: 800, displayWidth: 140, depth: 7, collision: 'rock' },
@@ -330,8 +331,11 @@ export class MarsScene extends Phaser.Scene {
     );
     this.load.image(ASTRONAUT_STATIC_FALLBACK_TEXTURE, `${prefix}characters/astronaut.png`);
 
-    // 6. Load reviewed environmental crops. The reference sheets and rover
+    // 6. Load replacement crater assets and reviewed environmental props. The reference sheets and rover
     // tracks are not modified or used as environmental props.
+    for (const asset of CRATER_ASSETS) {
+      this.load.image(asset.key, `${prefix}environment/${asset.file}`);
+    }
     for (const asset of M5_ENVIRONMENT_ASSETS) {
       this.load.image(asset.key, `${prefix}environment/props/${asset.file}`);
     }
@@ -1053,9 +1057,9 @@ export class MarsScene extends Phaser.Scene {
       if (!sprite) continue;
 
       const isCrater = decoration.collision === 'crater';
-      const width = sprite.displayWidth * (isCrater ? 0.44 : 0.46);
-      const height = sprite.displayHeight * (isCrater ? 0.3 : 0.32);
-      const centerY = sprite.y + sprite.displayHeight * (isCrater ? 0.08 : 0.18);
+      const width = isCrater ? sprite.displayWidth * 0.4 : sprite.displayWidth * 0.46;
+      const height = isCrater ? sprite.displayHeight * 0.2 : sprite.displayHeight * 0.32;
+      const centerY = sprite.y + sprite.displayHeight * (isCrater ? 0.04 : 0.18);
       const obstacle = this.add
         .rectangle(sprite.x, centerY, width, height, 0x000000, 0)
         .setVisible(false);
