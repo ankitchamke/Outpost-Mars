@@ -5,6 +5,7 @@ import {
   getResourceName,
   type MissionInteractionOutcome,
 } from '../core/mission';
+import { calculateMissionDebrief, escapeHtml } from '../core/space-weather-event';
 import type { CuriosityRadSnapshot } from '../data/types';
 import type { BuildingData } from '../game/scenes/MarsScene';
 
@@ -22,11 +23,15 @@ export interface BuildingInteractionHandlers {
   onInteract: () => void;
   onClose: () => void;
   onOpenScienceConsole: () => void;
+  onOpenSpaceWeatherEvent?: () => void;
 }
 
 export class BuildingInteractionUI {
   private focusedBeforePanel?: HTMLElement;
   private feedbackTimer?: number;
+  private lastState?: GameState;
+  private isObjectivesCollapsed = false;
+  private hasCompletionFlash = false;
 
   constructor(
     private readonly promptContainer: HTMLElement,
@@ -35,15 +40,23 @@ export class BuildingInteractionUI {
     private readonly feedbackContainer: HTMLElement,
     private readonly handlers: BuildingInteractionHandlers
   ) {
-    this.promptContainer.addEventListener('click', (event) => {
-      if ((event.target as HTMLElement).closest('[data-building-interact]')) {
-        this.handlers.onInteract();
+    this.objectivesContainer.addEventListener('click', (event) => {
+      const toggle = (event.target as HTMLElement).closest('[data-objective-toggle]');
+      if (toggle) {
+        event.preventDefault();
+        this.isObjectivesCollapsed = !this.isObjectivesCollapsed;
+        if (this.lastState) {
+          this.renderObjectives(this.lastState);
+        }
       }
     });
     this.panelContainer.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       if (target.closest('[data-science-console]')) {
         this.handlers.onOpenScienceConsole();
+      } else if (target.closest('[data-space-weather-open]')) {
+        this.handlers.onClose();
+        this.handlers.onOpenSpaceWeatherEvent?.();
       } else if (target.closest('[data-building-close]')) {
         this.handlers.onClose();
       }
@@ -54,6 +67,8 @@ export class BuildingInteractionUI {
       }
     });
     document.addEventListener('keydown', (event) => {
+      if (event.repeat) return;
+
       if (event.key === 'Escape' && !this.panelContainer.hidden) {
         event.preventDefault();
         this.handlers.onClose();
@@ -61,15 +76,20 @@ export class BuildingInteractionUI {
       }
 
       const activeElement = document.activeElement;
-      const gameHasFocus =
-        activeElement === document.body ||
-        activeElement === document.documentElement ||
-        activeElement === document.querySelector('#game-container canvas');
+      const tagName = activeElement?.tagName?.toUpperCase();
+      const isInput =
+        tagName === 'INPUT' ||
+        tagName === 'TEXTAREA' ||
+        tagName === 'SELECT' ||
+        (typeof HTMLInputElement !== 'undefined' && activeElement instanceof HTMLInputElement) ||
+        (typeof HTMLTextAreaElement !== 'undefined' && activeElement instanceof HTMLTextAreaElement) ||
+        (typeof HTMLSelectElement !== 'undefined' && activeElement instanceof HTMLSelectElement);
+      if (isInput) return;
+
       if (
         event.key.toLowerCase() === 'e' &&
         this.panelContainer.hidden &&
-        !this.promptContainer.hidden &&
-        (gameHasFocus || this.promptContainer.contains(activeElement))
+        !this.promptContainer.hidden
       ) {
         event.preventDefault();
         this.handlers.onInteract();
@@ -77,7 +97,18 @@ export class BuildingInteractionUI {
     });
   }
 
+  public triggerCompletionFlash(): void {
+    this.hasCompletionFlash = true;
+    if (this.lastState) this.renderObjectives(this.lastState);
+    window.setTimeout(() => {
+      this.hasCompletionFlash = false;
+      const card = this.objectivesContainer.querySelector('.mission-log');
+      card?.classList.remove('has-completion-flash');
+    }, 2200);
+  }
+
   public renderObjectives(state: GameState): void {
+    this.lastState = state;
     const exploredBuildingIds = state.exploredBuildings ?? [];
     const explored = new Set(exploredBuildingIds);
     const completedTasks = new Set(state.missionObjectivesCompleted ?? []);
@@ -86,39 +117,91 @@ export class BuildingInteractionUI {
     const objective = getCurrentMissionObjective(state);
     const lowResource = getCriticalResourceHint(state);
     this.objectivesContainer.hidden = false;
+
+    // Collapsed State: Sleek compact HUD bar
+    if (this.isObjectivesCollapsed) {
+      this.objectivesContainer.innerHTML = `
+        <section class="mission-log is-collapsed ${this.hasCompletionFlash ? 'has-completion-flash' : ''}" aria-label="Five-Sol mission objectives (Minimized)">
+          <div class="mission-log-collapsed-content">
+            <span class="sol-badge">${state.missionComplete ? 'COMPLETE' : `SOL ${state.sol}/5`}</span>
+            <div class="collapsed-text-group">
+              <strong class="collapsed-title">${objective ? objective.title : 'Mission Complete'}</strong>
+              <span class="collapsed-meta">${taskCount}/5 Tasks &bull; ${buildingCount}/5 Sites</span>
+            </div>
+            <button class="btn-objective-toggle" type="button" data-objective-toggle aria-label="Expand mission objectives card" title="Expand mission objectives">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              <span>Expand</span>
+            </button>
+          </div>
+        </section>
+      `;
+      return;
+    }
+
+    // Expanded State: Structured NASA HUD Card with Connected Stepper
+    const progressPercent = (taskCount / FIVE_SOL_OBJECTIVES.length) * 100;
     this.objectivesContainer.innerHTML = `
-      <section class="mission-log" aria-label="Five-Sol mission objectives">
-        <div class="field-log-heading">
-          <span class="field-log-kicker">COLONY SURVIVAL · MISSION COMMANDER</span>
-          <strong aria-live="polite">${state.missionComplete ? 'COMPLETE' : `SOL ${state.sol}`}<span>${state.missionComplete ? '' : ' / 5'}</span></strong>
+      <section class="mission-log ${this.hasCompletionFlash ? 'has-completion-flash' : ''}" aria-label="Five-Sol mission objectives">
+        <div class="mission-log-header">
+          <div class="sol-badge-group">
+            <span class="sol-badge" aria-live="polite">${state.missionComplete ? 'MISSION COMPLETE' : `SOL ${state.sol} OF 5`}</span>
+            <span class="mission-task-fraction">${taskCount} / 5 Tasks Complete</span>
+          </div>
+          <button class="btn-objective-toggle" type="button" data-objective-toggle aria-label="Minimize mission objectives card" title="Minimize mission objectives">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
+            <span>Hide</span>
+          </button>
         </div>
+
         ${objective ? `
           <div class="mission-log-current">
-            <span class="mission-log-label">TODAY’S OBJECTIVE</span>
-            <strong>${objective.title}</strong>
-            <span>${objective.action}</span>
+            <span class="mission-log-kicker">TODAY'S MISSION DIRECTIVE</span>
+            <h3 class="mission-log-title">${objective.title}</h3>
+            <p class="mission-log-action">${objective.action}</p>
           </div>
-        ` : '<div class="mission-log-current is-complete"><strong>Five-Sol mission complete</strong><span>Review the final report in Mission Control.</span></div>'}
-        <div class="field-log-heading mission-count-heading"><span class="mission-log-label">TASKS · SITES ${buildingCount}/5</span><strong>${taskCount}<span> / 5 complete</span></strong></div>
-        <div class="field-log-progress" role="progressbar" aria-label="Five-Sol mission progress" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${taskCount}">
-          <span style="width:${(taskCount / FIVE_SOL_OBJECTIVES.length) * 100}%"></span>
+        ` : `
+          <div class="mission-log-current is-complete">
+            <span class="mission-log-kicker">MISSION OBJECTIVES ACCOMPLISHED</span>
+            <h3 class="mission-log-title">Five-Sol Surface Survival Successful</h3>
+            <p class="mission-log-action">All systems verified. Review the full mission summary at Mission Control.</p>
+          </div>
+        `}
+
+        <div class="mission-stepper-wrap" aria-label="Five-Sol task progression">
+          <div class="field-log-progress" role="progressbar" aria-label="Five-Sol mission progress" aria-valuemin="0" aria-valuemax="5" aria-valuenow="${taskCount}">
+            <span style="width: ${progressPercent}%"></span>
+          </div>
+          <ol class="mission-sol-list" aria-label="Sol task checklist">
+            ${FIVE_SOL_OBJECTIVES.map((solObjective) => {
+              const isComplete = completedTasks.has(solObjective.id);
+              const isCurrent = !state.missionComplete && objective?.id === solObjective.id;
+              const stateClass = isComplete ? 'is-complete' : isCurrent ? 'is-current' : 'is-locked';
+              const shortName = BUILDING_LESSONS.find((building) => building.id === solObjective.buildingId)?.shortName ?? 'Base';
+              return `
+                <li class="${stateClass}" aria-label="Sol ${solObjective.sol}: ${solObjective.title}, ${isComplete ? 'complete' : isCurrent ? 'current' : 'locked'}" title="Sol ${solObjective.sol}: ${solObjective.title}">
+                  <span class="mission-sol-step" aria-hidden="true">${isComplete ? '✓' : solObjective.sol}</span>
+                  <small class="mission-sol-step-label">${shortName}</small>
+                </li>
+              `;
+            }).join('')}
+          </ol>
         </div>
-        <ol class="mission-sol-list" aria-label="Sol task checklist">
-          ${FIVE_SOL_OBJECTIVES.map((solObjective) => {
-            const isComplete = completedTasks.has(solObjective.id);
-            const isCurrent = !state.missionComplete && objective?.id === solObjective.id;
-            const stateClass = isComplete ? 'is-complete' : isCurrent ? 'is-current' : '';
-            const shortName = BUILDING_LESSONS.find((building) => building.id === solObjective.buildingId)?.shortName ?? 'Base';
-            return `<li class="${stateClass}" aria-label="Sol ${solObjective.sol}: ${solObjective.title}, ${isComplete ? 'complete' : isCurrent ? 'current' : 'remaining'}" title="Sol ${solObjective.sol}: ${solObjective.title}"><span class="mission-sol-step" aria-hidden="true">${isComplete ? '✓' : solObjective.sol}</span><small>${shortName}</small></li>`;
-          }).join('')}
-        </ol>
-        ${lowResource ? `<div class="mission-resource-warning" role="status"><strong>${lowResource.title}</strong><span>${lowResource.message}</span></div>` : ''}
+
+        <div class="mission-log-foot">
+          <span>OUTPOST EXPLORATION: <strong>${buildingCount}/5 SITES VISITED</strong></span>
+        </div>
+
+        ${lowResource ? `<div class="mission-resource-warning" role="status"><strong>⚠️ ${lowResource.title}</strong><span>${lowResource.message}</span></div>` : ''}
       </section>
     `;
   }
 
   public showMissionFeedback(outcome: MissionInteractionOutcome): void {
     if (!outcome.completedObjective && !outcome.recoveredResource) return;
+
+    if (outcome.completedObjective) {
+      this.triggerCompletionFlash();
+    }
 
     const title = outcome.completedObjective
       ? `SOL ${outcome.completedObjective.sol} TASK COMPLETE`
@@ -162,10 +245,20 @@ export class BuildingInteractionUI {
 
     this.promptContainer.hidden = false;
     this.promptContainer.innerHTML = `
-      <button class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" type="button" data-building-interact aria-label="Interact with ${building.name}">
-        <span class="interaction-prompt-icon" aria-hidden="true">＋</span>
-        <span class="interaction-prompt-copy">${tutorialHighlight ? '<em class="interaction-tutorial-label">NEAREST BUILDING</em>' : ''}<strong>${building.name}</strong><span class="interaction-desktop-hint">Press <kbd>E</kbd> to interact</span><span class="interaction-mobile-hint">Tap to explore</span></span>
-      </button>
+      <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="status" aria-label="Nearby structure: ${building.name}. Press E to inspect.">
+        <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
+        <div class="interaction-prompt-content">
+          <div class="interaction-prompt-kicker">
+            <span class="interaction-kicker-text">STRUCTURE PROXIMITY</span>
+            ${tutorialHighlight ? '<span class="interaction-tutorial-label">NEAREST</span>' : ''}
+          </div>
+          <strong class="interaction-building-name">${building.name}</strong>
+          <span class="interaction-hints">
+            <span class="interaction-desktop-hint">Press <kbd>E</kbd> to inspect</span>
+          </span>
+        </div>
+        <span class="interaction-prompt-arrow" aria-hidden="true">➔</span>
+      </div>
     `;
   }
 
@@ -247,6 +340,30 @@ function renderBuildingPanel(
   const learningTag = isHabitat || isShelter ? 'GENERAL SCIENCE · OFFLINE NASA REFERENCE' : 'GENERAL SCIENCE';
   const lifeSupport = state.lifeSupportDetails;
   const currentObjective = getCurrentMissionObjective(state);
+
+  const spaceWeatherCallout = lesson.id === 'storm_shelter'
+    ? state.spaceWeatherDecision
+      ? `<aside class="space-weather-shelter-callout is-decided">
+          <div class="callout-heading">
+            <span class="callout-tag">NASA DONKI · SPACE WEATHER DRILL</span>
+            <span class="callout-status">DECISION RECORDED</span>
+          </div>
+          <strong>Strategy: ${state.spaceWeatherDecision === 'shelter' ? 'Fortify Storm Shelter' : 'Conserve Colony Power'}</strong>
+          <p>${state.spaceWeatherDecision === 'shelter' ? 'Bulkheads sealed and magnetic coils energized for active radiation defense.' : 'Power conserved for life support while accepting lower shield readiness.'}</p>
+        </aside>`
+      : state.sol >= 4
+        ? `<aside class="space-weather-shelter-callout is-alert">
+            <div class="callout-heading">
+              <span class="callout-tag">⚠️ NASA DONKI ADVISORY · MAY 11, 2024</span>
+              <span class="callout-status is-alert">DECISION REQUIRED</span>
+            </div>
+            <strong>Historical X5.8 Solar Flare Advisory</strong>
+            <p>A simulated solar particle storm approaches Jezero Crater. The colony needs your tactical defense decision.</p>
+            <button class="btn btn-sm btn-primary" type="button" data-space-weather-open>Review Space Weather Advisory</button>
+          </aside>`
+        : ''
+    : '';
+
   const referenceCard = isHabitat
     ? `<aside class="learning-reference"><span>OFFLINE NASA BVAD PLANNING REFERENCE</span><strong>${lifeSupport.oxygenKgPerDay.toFixed(2)} kg O₂ · ${lifeSupport.waterLitersPerDay.toFixed(1)} L water</strong><p>Per person, per day. Planning values—not a measurement from Mars.</p></aside>`
     : isShelter && gcr
@@ -281,6 +398,7 @@ function renderBuildingPanel(
         ${taskCallout}
         <ul class="building-lesson-facts">${commonFacts[lesson.id].map((fact) => `<li>${fact}</li>`).join('')}</ul>
         ${referenceCard}
+        ${spaceWeatherCallout}
         ${scienceConsole}
         ${missionSummary}
       </div>
@@ -293,25 +411,108 @@ function renderBuildingPanel(
 }
 
 function renderMissionSummary(state: GameState): string {
+  const debrief = calculateMissionDebrief(state);
   const discovered = new Set(state.exploredBuildings ?? []);
   const resources = Object.entries(state.resources) as [ResourceKey, GameState['resources'][ResourceKey]][];
   const crewStatus = state.crewSafety === 'nominal' ? 'SAFE · NOMINAL' : state.crewSafety.toUpperCase();
+  const medalIcon = debrief.overallRank === 'gold' ? '🥇' : debrief.overallRank === 'silver' ? '🥈' : '🥉';
   const learning = BUILDING_LESSONS
     .filter((building) => discovered.has(building.id))
     .map((building) => `<span>${building.icon} ${building.name}</span>`)
     .join('');
 
   return `
-    <section class="mission-summary-card" aria-label="Five-Sol mission summary">
-      <div class="mission-summary-heading"><span>FIVE-SOL SURVIVAL MISSION</span><strong>MISSION COMPLETE</strong></div>
-      <p class="mission-summary-crew">CREW STATUS · ${crewStatus}</p>
-      <p class="mission-summary-label">FINAL COLONY RESERVES</p>
-      <div class="mission-summary-resources">${resources.map(([key, resource]) => `<span>${getResourceName(key)}<strong>${resource.current} / ${resource.max} ${resource.unit}</strong></span>`).join('')}</div>
-      <p class="mission-summary-label">TASKS COMPLETED · ${state.missionObjectivesCompleted?.length ?? 0}/5</p>
+    <section class="mission-summary-card mission-debrief-card" aria-label="Five-Sol mission debrief">
+      <!-- Debrief Header -->
+      <div class="mission-summary-heading">
+        <span class="debrief-eyebrow">FIVE-SOL MISSION DEBRIEF</span>
+        <strong class="debrief-rank-title">${medalIcon} ${escapeHtml(debrief.overallRankTitle)}</strong>
+        <span class="debrief-score-badge">Performance Score: ${debrief.averageScore}/100</span>
+      </div>
+
+      <div class="debrief-overview-row">
+        <div class="debrief-stat-chip">
+          <small>CREW STATUS</small>
+          <strong>${crewStatus}</strong>
+        </div>
+        <div class="debrief-stat-chip">
+          <small>SOLS SURVIVED</small>
+          <strong>5 / 5 SOLS</strong>
+        </div>
+        <div class="debrief-stat-chip">
+          <small>COLONY SITES</small>
+          <strong>${discovered.size} / 5 VISITED</strong>
+        </div>
+      </div>
+
+      <!-- 3 Understandable Evaluation Categories -->
+      <div class="debrief-categories-grid">
+        <!-- Category 1: Science Investigation -->
+        <article class="debrief-category-box tier-${debrief.categories.science.tier}">
+          <div class="debrief-category-header">
+            <div class="debrief-cat-title">
+              <span class="debrief-cat-icon">${debrief.categories.science.icon}</span>
+              <h4>${debrief.categories.science.title}</h4>
+            </div>
+            <span class="debrief-tier-pill is-${debrief.categories.science.tier}">${debrief.categories.science.tier.toUpperCase()} · ${debrief.categories.science.score}/100</span>
+          </div>
+          <p class="debrief-cat-summary">${debrief.categories.science.summary}</p>
+          <ul class="debrief-evidence-list">
+            ${debrief.categories.science.bulletPoints.map((bp) => `<li>${escapeHtml(bp)}</li>`).join('')}
+          </ul>
+        </article>
+
+        <!-- Category 2: Colony Safety -->
+        <article class="debrief-category-box tier-${debrief.categories.safety.tier}">
+          <div class="debrief-category-header">
+            <div class="debrief-cat-title">
+              <span class="debrief-cat-icon">${debrief.categories.safety.icon}</span>
+              <h4>${debrief.categories.safety.title}</h4>
+            </div>
+            <span class="debrief-tier-pill is-${debrief.categories.safety.tier}">${debrief.categories.safety.tier.toUpperCase()} · ${debrief.categories.safety.score}/100</span>
+          </div>
+          <p class="debrief-cat-summary">${debrief.categories.safety.summary}</p>
+          <ul class="debrief-evidence-list">
+            ${debrief.categories.safety.bulletPoints.map((bp) => `<li>${escapeHtml(bp)}</li>`).join('')}
+          </ul>
+        </article>
+
+        <!-- Category 3: Resource Sustainability -->
+        <article class="debrief-category-box tier-${debrief.categories.sustainability.tier}">
+          <div class="debrief-category-header">
+            <div class="debrief-cat-title">
+              <span class="debrief-cat-icon">${debrief.categories.sustainability.icon}</span>
+              <h4>${debrief.categories.sustainability.title}</h4>
+            </div>
+            <span class="debrief-tier-pill is-${debrief.categories.sustainability.tier}">${debrief.categories.sustainability.tier.toUpperCase()} · ${debrief.categories.sustainability.score}/100</span>
+          </div>
+          <p class="debrief-cat-summary">${debrief.categories.sustainability.summary}</p>
+          <ul class="debrief-evidence-list">
+            ${debrief.categories.sustainability.bulletPoints.map((bp) => `<li>${escapeHtml(bp)}</li>`).join('')}
+          </ul>
+        </article>
+      </div>
+
+      <!-- Final Colony Reserves -->
+      <div class="debrief-reserves-section">
+        <p class="mission-summary-label">FINAL COLONY RESERVES</p>
+        <div class="mission-summary-resources">
+          ${resources.map(([key, resource]) => `<span><span>${getResourceName(key)}</span><strong>${resource.current} / ${resource.max} ${resource.unit}</strong></span>`).join('')}
+        </div>
+      </div>
+
+      <!-- Tasks Completed -->
+      <p class="mission-summary-label">FIVE-SOL OBJECTIVES</p>
       <ol class="mission-summary-tasks">${FIVE_SOL_OBJECTIVES.map((objective) => `<li>✓ Sol ${objective.sol} · ${objective.title}</li>`).join('')}</ol>
+
       <p class="mission-summary-label">CONCEPTS DISCOVERED</p>
       <div class="mission-summary-learning">${learning || '<span>No building guides discovered yet.</span>'}</div>
-      <p class="mission-summary-note">Resource changes are part of the simplified mission simulation. NASA reference facts are labeled in the field guides.</p>
+
+      <!-- Educational NASA Context Note -->
+      <div class="debrief-educational-card">
+        <span class="debrief-edu-badge">NASA SCIENTIFIC PROVENANCE</span>
+        <p>${escapeHtml(debrief.nasaContextNote)}</p>
+      </div>
     </section>
   `;
 }

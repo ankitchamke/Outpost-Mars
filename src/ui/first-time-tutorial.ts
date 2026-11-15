@@ -1,4 +1,5 @@
 import type { BuildingData } from '../game/scenes/MarsScene';
+import { audioManager } from '../audio/audio-manager';
 
 export type TutorialStep =
   | 'hidden'
@@ -29,6 +30,7 @@ export class FirstTimeTutorialUI {
   private step: TutorialStep = 'hidden';
   private movementComplete = false;
   private nearestBuilding: BuildingData | null = null;
+  private returnFocus?: HTMLElement;
 
   constructor(
     private readonly container: HTMLElement,
@@ -50,9 +52,41 @@ export class FirstTimeTutorialUI {
         this.finish();
       }
     });
+
+    document.addEventListener('keydown', (event) => {
+      if (this.step !== 'welcome') return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.hideWithoutCompleting();
+        if (this.returnFocus?.isConnected) this.returnFocus.focus({ preventScroll: true });
+        this.returnFocus = undefined;
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusables = this.container.querySelectorAll<HTMLElement>(
+          'button:not([disabled]):not([hidden]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (event.shiftKey) {
+            if (document.activeElement === first || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
   }
 
-  public showWelcome(): void {
+  public showWelcome(triggerElement?: HTMLElement): void {
+    this.returnFocus = triggerElement ?? (document.activeElement instanceof HTMLElement ? document.activeElement : undefined);
     this.step = 'welcome';
     this.movementComplete = false;
     this.render();
@@ -109,6 +143,7 @@ export class FirstTimeTutorialUI {
   }
 
   private start(): void {
+    audioManager.playSfx('tutorialNav');
     this.step = 'movement';
     this.movementComplete = false;
     this.render();
@@ -120,12 +155,14 @@ export class FirstTimeTutorialUI {
 
     const currentIndex = GUIDED_STEPS.indexOf(this.step);
     if (currentIndex < 0 || currentIndex >= GUIDED_STEPS.length - 1) return;
+    audioManager.playSfx('tutorialNav');
     this.step = GUIDED_STEPS[currentIndex + 1];
     this.render();
     this.handlers.onFocusGame();
   }
 
   private finish(): void {
+    audioManager.playSfx('tutorialNav');
     this.step = 'hidden';
     this.container.hidden = true;
     this.container.innerHTML = '';
@@ -144,6 +181,7 @@ export class FirstTimeTutorialUI {
           <span class="tutorial-kicker">FIRST-TIME FLIGHT BRIEFING</span>
           <h1 id="tutorial-title">OUTPOST: MARS</h1>
           <p>Your mission: Build knowledge, explore Mars and keep your crew safe.</p>
+          <p class="tutorial-desktop-notice">OUTPOST: MARS is designed for desktop and laptop screens. For the best experience, use Google Chrome with a keyboard.</p>
           <div class="tutorial-actions">
             <button class="tutorial-primary" type="button" data-tutorial-start>Start Mission</button>
             <button class="tutorial-secondary" type="button" data-tutorial-skip>Skip Tutorial</button>
@@ -229,6 +267,8 @@ export class FirstTimeTutorialUI {
 }
 
 export class MissionResetChoiceUI {
+  private returnFocus?: HTMLElement;
+
   constructor(
     private readonly container: HTMLElement,
     private readonly onReset: (replayTutorial: boolean) => void
@@ -240,9 +280,39 @@ export class MissionResetChoiceUI {
       else if (choice === 'skip') this.choose(false);
       else if (target.closest('[data-reset-cancel]')) this.hide();
     });
+
+    document.addEventListener('keydown', (event) => {
+      if (this.container.hidden) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        this.hide();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusables = this.container.querySelectorAll<HTMLElement>(
+          'button:not([disabled]):not([hidden]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (event.shiftKey) {
+            if (document.activeElement === first || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (document.activeElement === last || !this.container.contains(document.activeElement)) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      }
+    });
   }
 
-  public show(): void {
+  public show(triggerElement?: HTMLElement): void {
+    this.returnFocus = triggerElement ?? (document.activeElement instanceof HTMLElement ? document.activeElement : undefined);
     this.container.hidden = false;
     this.container.innerHTML = `
       <section class="reset-choice-card" role="dialog" aria-modal="true" aria-labelledby="reset-choice-title">
@@ -262,6 +332,10 @@ export class MissionResetChoiceUI {
   public hide(): void {
     this.container.hidden = true;
     this.container.innerHTML = '';
+    if (this.returnFocus?.isConnected) {
+      this.returnFocus.focus({ preventScroll: true });
+    }
+    this.returnFocus = undefined;
   }
 
   private choose(replayTutorial: boolean): void {

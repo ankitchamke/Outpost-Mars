@@ -129,10 +129,10 @@ describe('Phaser 3 Foundation & Viewport Configuration (Phase 03 M1)', () => {
 });
 
 describe('Mars World & Environment Composition (Phase 03 M2)', () => {
-  it('defines 1600x1200 world boundaries', async () => {
+  it('defines 2000x1500 world boundaries', async () => {
     const { WORLD_WIDTH, WORLD_HEIGHT } = await import('../src/game/scenes/MarsScene');
-    expect(WORLD_WIDTH).toBe(1600);
-    expect(WORLD_HEIGHT).toBe(1200);
+    expect(WORLD_WIDTH).toBe(2000);
+    expect(WORLD_HEIGHT).toBe(1500);
   });
 
   it('places exactly the five canonical buildings in the Mars outpost', async () => {
@@ -147,7 +147,7 @@ describe('Mars World & Environment Composition (Phase 03 M2)', () => {
     expect(names).toContain('Storm Shelter');
     expect(names).toContain('Mission Control');
 
-    // Ensure all 5 buildings are placed well within the 1600x1200 boundary
+    // Ensure all 5 buildings are placed well within the 2000x1500 boundary
     for (const building of CANONICAL_BUILDINGS) {
       expect(building.x).toBeGreaterThan(100);
       expect(building.x).toBeLessThan(WORLD_WIDTH - 100);

@@ -28,15 +28,15 @@ class SeededRandom {
 }
 
 /**
- * Generates a rich, deterministic 1600x1200 Martian terrain texture for OUTPOST: MARS.
+ * Generates a rich, deterministic 2000x1500 Martian terrain texture for OUTPOST: MARS.
  * Includes shaded craters with illuminated rims, basalt boulders with cast shadows,
  * wind-swept sand drifts, and interconnected rover service trails.
  */
 export function generateTerrainTexture(
   scene: Phaser.Scene,
   key: string = 'mars_terrain',
-  width: number = 1600,
-  height: number = 1200
+  width: number = 2000,
+  height: number = 1500
 ): void {
   if (scene.textures.exists(key)) {
     return;

@@ -120,6 +120,11 @@ export function normalizeFiveSolMissionState(state: GameState): GameState {
     sol: missionComplete ? 5 : sol,
     missionObjectivesCompleted: completedObjectives,
     missionComplete,
+    spaceWeatherDecision:
+      state.spaceWeatherDecision === 'shelter' || state.spaceWeatherDecision === 'power'
+        ? state.spaceWeatherDecision
+        : undefined,
+    spaceWeatherEventTriggered: Boolean(state.spaceWeatherEventTriggered),
   };
   normalized.crewSafety = assessCrewSafety(normalized);
   return normalized;

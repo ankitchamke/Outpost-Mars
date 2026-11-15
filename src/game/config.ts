@@ -21,6 +21,10 @@ export function getGameConfig(parent: HTMLElement | string): Phaser.Types.Core.G
         height: 240,
       },
     },
+    input: {
+      activePointers: 3,
+      touch: true,
+    },
     render: {
       pixelArt: true,
       antialias: false,

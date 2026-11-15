@@ -2,14 +2,26 @@ import Phaser from 'phaser';
 import { generateAllBuildingTextures } from '../textures/buildings';
 import { BUILDING_INTERACTION_EVENTS } from '../building-events';
 import { TUTORIAL_EVENTS } from '../tutorial-events';
+import {
+  isTouchDevice,
+  getJoystickPosition,
+  calculateJoystickVector,
+  JOYSTICK_RADIUS,
+  JOYSTICK_HIT_RADIUS,
+} from '../touch-controls';
+import {
+  applyBuildingHitArea,
+  resolveNearbyBuilding,
+  INTERACTION_MAX_DISTANCE,
+} from '../building-hit-areas';
 
-export const WORLD_WIDTH = 1600;
-export const WORLD_HEIGHT = 1200;
+export const WORLD_WIDTH = 2000;
+export const WORLD_HEIGHT = 1500;
 const TERRAIN_BACKGROUND_TEXTURE = 'mars_terrain_background';
-const BUILDING_SCALE_FACTOR = 1.18;
+const BUILDING_SCALE_FACTOR = 1.33;
 const HABITAT_DISPLAY_WIDTH = 272 * BUILDING_SCALE_FACTOR;
 const OTHER_BUILDING_DISPLAY_WIDTH = 256 * BUILDING_SCALE_FACTOR;
-const ASTRONAUT_DISPLAY_HEIGHT = 74;
+const ASTRONAUT_DISPLAY_HEIGHT = 60;
 const ASTRONAUT_ANIMATION_TEXTURE = 'astronaut-animation-m5';
 const ASTRONAUT_STATIC_FALLBACK_TEXTURE = 'astronaut-static-fallback';
 // The replacement PNG is 1058x1487. Its 4x5 cells are 250x270 px, starting
@@ -39,18 +51,18 @@ const APPROVED_BUILDING_DISPLAY_WIDTHS: Record<string, number> = {
 };
 const COMPACT_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
   // Landscape mobile overview: a compact single row keeps every building clear of the HUD.
-  greenhouse: { x: 160, y: 550 },
-  mission_control: { x: 480, y: 550 },
-  habitat: { x: 800, y: 550 },
-  solar_farm: { x: 1120, y: 550 },
-  storm_shelter: { x: 1440, y: 550 },
+  greenhouse: { x: 200, y: 700 },
+  mission_control: { x: 600, y: 700 },
+  habitat: { x: 1000, y: 700 },
+  solar_farm: { x: 1400, y: 700 },
+  storm_shelter: { x: 1800, y: 700 },
 };
 const MEDIUM_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
-  mission_control: { x: 480, y: 470 },
-  solar_farm: { x: 1260, y: 470 },
-  greenhouse: { x: 300, y: 700 },
-  habitat: { x: 850, y: 550 },
-  storm_shelter: { x: 1260, y: 790 },
+  mission_control: { x: 620, y: 500 },
+  solar_farm: { x: 1450, y: 520 },
+  greenhouse: { x: 550, y: 1000 },
+  habitat: { x: 1000, y: 750 },
+  storm_shelter: { x: 1420, y: 1000 },
 };
 
 export interface BuildingData {
@@ -67,18 +79,6 @@ interface TrackPoint {
   y: number;
 }
 
-interface RoverTrackRoute {
-  texture: string;
-  sourceWidth: number;
-  sourceHeight: number;
-  sourceStart: TrackPoint;
-  sourceEnd: TrackPoint;
-  worldStart: TrackPoint;
-  worldEnd: TrackPoint;
-  /** Fixed world-space thickness multiplier on the straight sprite's cross-track axis. */
-  straightCrossScale?: number;
-}
-
 interface MovementKeys {
   up: Phaser.Input.Keyboard.Key;
   down: Phaser.Input.Keyboard.Key;
@@ -91,40 +91,40 @@ export const CANONICAL_BUILDINGS: BuildingData[] = [
     id: 'mission_control',
     name: 'Mission Control',
     texture: 'building_mission_control',
-    x: 460,
-    y: 300,
+    x: 620,
+    y: 500,
     role: 'Operations & Satellite Telemetry',
   },
   {
     id: 'solar_farm',
     name: 'Solar Farm',
     texture: 'building_solar_farm',
-    x: 1260,
-    y: 330,
+    x: 1450,
+    y: 520,
     role: 'Photovoltaic Array & Battery Storage',
   },
   {
     id: 'greenhouse',
     name: 'Greenhouse',
     texture: 'building_greenhouse',
-    x: 320,
-    y: 620,
+    x: 550,
+    y: 1000,
     role: 'Hydroponic Crops & Biomass Cultivation',
   },
   {
     id: 'habitat',
     name: 'Habitat',
     texture: 'building_habitat',
-    x: 800,
-    y: 500,
+    x: 1000,
+    y: 750,
     role: 'Living Quarters & Life Support Hub',
   },
   {
     id: 'storm_shelter',
     name: 'Storm Shelter',
     texture: 'building_storm_shelter',
-    x: 1210,
-    y: 770,
+    x: 1420,
+    y: 1000,
     role: 'Radiation Bunker & Regolith Shield',
   },
 ];
@@ -155,61 +155,119 @@ interface M5WorldDecoration {
   collision?: 'rock' | 'crater';
 }
 
-const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
-  { key: 'environment_m5_crater_large_01', file: 'm5-crater-large-01.png' },
-  { key: 'environment_m5_crater_large_02', file: 'm5-crater-large-02.png' },
-  { key: 'environment_m5_crater_large_03', file: 'm5-crater-large-03.png' },
-  { key: 'environment_m5_crater_medium_01', file: 'm5-crater-medium-01.png' },
-  { key: 'environment_m5_crater_medium_02', file: 'm5-crater-medium-02.png' },
-  { key: 'environment_m5_crater_small_02', file: 'm5-crater-small-02.png' },
-  { key: 'environment_m5_crater_small_03', file: 'm5-crater-small-03.png' },
-  { key: 'environment_m5_crater_small_04', file: 'm5-crater-small-04.png' },
-  { key: 'environment_m5_crater_small_05', file: 'm5-crater-small-05.png' },
-  { key: 'environment_m5_rock_formation_01', file: 'm5-rock-formation-01.png' },
-  { key: 'environment_m5_rock_formation_02', file: 'm5-rock-formation-02.png' },
-  { key: 'environment_m5_rock_formation_03', file: 'm5-rock-formation-03.png' },
-  { key: 'environment_m5_rock_formation_04', file: 'm5-rock-formation-04.png' },
-  { key: 'environment_m5_rock_cluster_01', file: 'm5-rock-cluster-01.png' },
-  { key: 'environment_m5_rock_cluster_02', file: 'm5-rock-cluster-02.png' },
-  { key: 'environment_m5_rock_cluster_03', file: 'm5-rock-cluster-03.png' },
-  { key: 'environment_m5_rock_cluster_04', file: 'm5-rock-cluster-04.png' },
-  { key: 'environment_m5_boulder_01', file: 'm5-boulder-01.png' },
-  { key: 'environment_m5_boulder_02', file: 'm5-boulder-02.png' },
-  { key: 'environment_m5_pebble_cluster_01', file: 'm5-pebble-cluster-01.png' },
-  { key: 'environment_m5_pebble_cluster_02', file: 'm5-pebble-cluster-02.png' },
-  { key: 'environment_m5_pebble_cluster_03', file: 'm5-pebble-cluster-03.png' },
-  { key: 'environment_m5_dust_patch_01', file: 'm5-dust-patch-01.png' },
-  { key: 'environment_m5_dust_patch_02', file: 'm5-dust-patch-02.png' },
-  { key: 'environment_m5_dust_patch_03', file: 'm5-dust-patch-03.png' },
+const CRATER_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_crater_large_01', file: 'crater-large-01.png' },
+  { key: 'environment_crater_large_02', file: 'crater-large-02.png' },
+  { key: 'environment_crater_large_03', file: 'crater-large-3.png' },
+  { key: 'environment_crater_medium_01', file: 'crater-medium-1.png' },
+  { key: 'environment_crater_medium_02', file: 'crater-medium-2.png' },
+  { key: 'environment_crater_small_01', file: 'crater-small-1.png' },
+  { key: 'environment_crater_small_02', file: 'crater-small-2.png' },
 ];
 
-/** Fixed, curated world coordinates keep the colony clear and avoid the approved roads. */
+const DERIVED_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_rock_pile_01', file: 'rock-pile-01.png' },
+  { key: 'environment_rock_pile_02', file: 'rock-pile-02.png' },
+  { key: 'environment_rock_pile_03', file: 'rock-pile-03.png' },
+  { key: 'environment_rock_pile_04', file: 'rock-pile-04.png' },
+  { key: 'environment_rock_scatter_01', file: 'rock-scatter-01.png' },
+  { key: 'environment_rock_scatter_02', file: 'rock-scatter-02.png' },
+  { key: 'environment_rock_scatter_03', file: 'rock-scatter-03.png' },
+  { key: 'environment_rock_scatter_04', file: 'rock-scatter-04.png' },
+  { key: 'environment_stone_scatter_01', file: 'stone-scatter-01.png' },
+  { key: 'environment_stone_scatter_02', file: 'stone-scatter-02.png' },
+  { key: 'environment_stone_scatter_03', file: 'stone-scatter-03.png' },
+  { key: 'environment_rock_slab_01', file: 'rock-slab-01.png' },
+  { key: 'environment_rock_slab_02', file: 'rock-slab-02.png' },
+  { key: 'environment_soil_patch_01', file: 'soil-patch-01.png' },
+  { key: 'environment_soil_patch_02', file: 'soil-patch-02.png' },
+  { key: 'environment_soil_patch_03', file: 'soil-patch-03.png' },
+  // Curated Environmental Props from environmental-props
+  { key: 'environment_prop_flag_nasa', file: 'prop-flag-nasa.png' },
+  { key: 'environment_prop_comm_antenna', file: 'prop-comm-antenna.png' },
+  { key: 'environment_prop_sensor_dish', file: 'prop-sensor-dish.png' },
+  { key: 'environment_prop_floodlight', file: 'prop-floodlight.png' },
+  { key: 'environment_prop_power_storage', file: 'prop-power-storage.png' },
+  { key: 'environment_prop_water_tanks', file: 'prop-water-tanks.png' },
+  { key: 'environment_prop_cargo_crates', file: 'prop-cargo-crates.png' },
+  { key: 'environment_prop_hazard_barrier', file: 'prop-hazard-barrier.png' },
+  { key: 'environment_prop_beacon', file: 'prop-beacon.png' },
+  // Rock formations & ridges from rock-sprite-sheet
+  { key: 'environment_rock_monolith_01', file: 'rock-monolith-01.png' },
+  { key: 'environment_rock_monolith_02', file: 'rock-monolith-02.png' },
+  { key: 'environment_rock_ridge_01', file: 'rock-ridge-01.png' },
+  { key: 'environment_rock_ridge_02', file: 'rock-ridge-02.png' },
+  // Dune ripple formations from dunes-rippled-terrain
+  { key: 'environment_dune_ripple_01', file: 'dune-ripple-01.png' },
+  { key: 'environment_dune_ripple_02', file: 'dune-ripple-02.png' },
+  { key: 'environment_dune_ripple_03', file: 'dune-ripple-03.png' },
+];
+
+const M5_ENVIRONMENT_ASSETS: M5EnvironmentAsset[] = [
+  { key: 'environment_m5_boulder_01', file: 'boulder-01.png' },
+  { key: 'environment_m5_boulder_02', file: 'boulder-02.png' },
+];
+
+/** Curated world coordinates distribute environmental assets into 4 geological zones:
+ *  1. North Impact Crater Field (Y <= 420)
+ *  2. West Rock Ridges & Outcrops (X <= 400)
+ *  3. East Bedrock Flats & Slabs (X >= 1550)
+ *  4. South Dune Expanse & Regolith Basin (Y >= 1100)
+ */
 const M5_WORLD_DECORATIONS: M5WorldDecoration[] = [
-  { texture: 'environment_m5_crater_large_01', x: 230, y: 230, displayWidth: 140, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_large_02', x: 1485, y: 230, displayWidth: 130, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_large_03', x: 800, y: 900, displayWidth: 180, depth: 2, collision: 'crater' },
-  { texture: 'environment_m5_crater_medium_01', x: 700, y: 230, displayWidth: 120, depth: 2 },
-  { texture: 'environment_m5_crater_medium_02', x: 1000, y: 230, displayWidth: 120, depth: 2 },
-  { texture: 'environment_m5_crater_small_02', x: 250, y: 410, displayWidth: 105, depth: 2 },
-  { texture: 'environment_m5_crater_small_03', x: 1490, y: 410, displayWidth: 105, depth: 2 },
-  { texture: 'environment_m5_crater_small_04', x: 220, y: 930, displayWidth: 100, depth: 2 },
-  { texture: 'environment_m5_crater_small_05', x: 1240, y: 930, displayWidth: 105, depth: 2 },
-  { texture: 'environment_m5_rock_formation_01', x: 75, y: 760, displayWidth: 125, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_02', x: 1480, y: 760, displayWidth: 115, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_03', x: 980, y: 800, displayWidth: 140, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_formation_04', x: 350, y: 870, displayWidth: 130, depth: 7, collision: 'rock' },
-  { texture: 'environment_m5_rock_cluster_01', x: 80, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_02', x: 550, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_03', x: 970, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_rock_cluster_04', x: 1480, y: 920, displayWidth: 115, depth: 6 },
-  { texture: 'environment_m5_boulder_01', x: 230, y: 350, displayWidth: 65, depth: 7 },
-  { texture: 'environment_m5_boulder_02', x: 1485, y: 320, displayWidth: 60, depth: 7 },
-  { texture: 'environment_m5_pebble_cluster_01', x: 650, y: 340, displayWidth: 75, depth: 5 },
-  { texture: 'environment_m5_pebble_cluster_02', x: 1050, y: 290, displayWidth: 70, depth: 5 },
-  { texture: 'environment_m5_pebble_cluster_03', x: 650, y: 850, displayWidth: 78, depth: 5 },
-  { texture: 'environment_m5_dust_patch_01', x: 210, y: 810, displayWidth: 120, depth: 3, alpha: 0.78 },
-  { texture: 'environment_m5_dust_patch_02', x: 520, y: 840, displayWidth: 120, depth: 3, alpha: 0.78 },
-  { texture: 'environment_m5_dust_patch_03', x: 700, y: 760, displayWidth: 120, depth: 3, alpha: 0.78 },
+  // North: Impact Crater Field & Perimeter Ridges
+  { texture: 'environment_crater_large_01', x: 300, y: 240, displayWidth: 155, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_large_02', x: 1700, y: 240, displayWidth: 157, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_medium_01', x: 720, y: 220, displayWidth: 180, depth: 2 },
+  { texture: 'environment_crater_medium_02', x: 1280, y: 220, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_01', x: 320, y: 420, displayWidth: 182, depth: 2 },
+  { texture: 'environment_crater_small_02', x: 1720, y: 420, displayWidth: 214, depth: 2 },
+  { texture: 'environment_rock_ridge_01', x: 120, y: 120, displayWidth: 180, depth: 6 },
+  { texture: 'environment_rock_ridge_02', x: 1880, y: 120, displayWidth: 180, depth: 6 },
+
+  // West: Rock Ridges & Outcrops
+  { texture: 'environment_m5_boulder_01', x: 260, y: 520, displayWidth: 65, depth: 7 },
+  { texture: 'environment_rock_pile_01', x: 120, y: 720, displayWidth: 125, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_monolith_01', x: 140, y: 380, displayWidth: 160, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_pile_04', x: 180, y: 950, displayWidth: 130, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_scatter_01', x: 140, y: 1150, displayWidth: 115, depth: 6 },
+  { texture: 'environment_crater_small_02', x: 260, y: 1280, displayWidth: 204, depth: 2 },
+
+  // East: Bedrock Flats & Slabs
+  { texture: 'environment_m5_boulder_02', x: 1720, y: 520, displayWidth: 60, depth: 7 },
+  { texture: 'environment_rock_slab_01', x: 1720, y: 720, displayWidth: 135, depth: 4, alpha: 0.88 },
+  { texture: 'environment_rock_monolith_02', x: 1860, y: 880, displayWidth: 155, depth: 7, collision: 'rock' },
+  { texture: 'environment_stone_scatter_02', x: 1650, y: 960, displayWidth: 70, depth: 5 },
+  { texture: 'environment_rock_pile_02', x: 1650, y: 1020, displayWidth: 120, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_scatter_04', x: 1750, y: 1150, displayWidth: 115, depth: 6 },
+
+  // South: Dune Expanse & Regolith Basin
+  { texture: 'environment_soil_patch_01', x: 600, y: 1200, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_soil_patch_02', x: 1000, y: 1140, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_soil_patch_03', x: 1400, y: 1200, displayWidth: 125, depth: 3, alpha: 0.78 },
+  { texture: 'environment_stone_scatter_01', x: 820, y: 1220, displayWidth: 75, depth: 5 },
+  { texture: 'environment_stone_scatter_03', x: 1180, y: 1220, displayWidth: 80, depth: 5 },
+  { texture: 'environment_rock_pile_03', x: 1140, y: 1080, displayWidth: 135, depth: 7, collision: 'rock' },
+  { texture: 'environment_rock_slab_02', x: 680, y: 1350, displayWidth: 140, depth: 4, alpha: 0.88 },
+  { texture: 'environment_rock_scatter_02', x: 460, y: 1350, displayWidth: 115, depth: 6 },
+  { texture: 'environment_rock_scatter_03', x: 1540, y: 1350, displayWidth: 115, depth: 6 },
+  { texture: 'environment_dune_ripple_01', x: 360, y: 1160, displayWidth: 260, depth: 2, alpha: 0.65 },
+  { texture: 'environment_dune_ripple_02', x: 920, y: 1430, displayWidth: 280, depth: 2, alpha: 0.65 },
+  { texture: 'environment_dune_ripple_03', x: 1750, y: 1360, displayWidth: 270, depth: 2, alpha: 0.65 },
+  { texture: 'environment_crater_large_03', x: 1000, y: 1300, displayWidth: 189, depth: 2, collision: 'crater' },
+  { texture: 'environment_crater_small_01', x: 1350, y: 1320, displayWidth: 182, depth: 2 },
+
+  // Central Plaza: OUTPOST: MARS Colony Flag & Outpost Infrastructure Props
+  { texture: 'environment_prop_flag_nasa', x: 740, y: 680, displayWidth: 56, depth: 21 },
+  { texture: 'environment_prop_comm_antenna', x: 820, y: 440, displayWidth: 46, depth: 21 },
+  { texture: 'environment_prop_sensor_dish', x: 440, y: 340, displayWidth: 44, depth: 21 },
+  { texture: 'environment_prop_floodlight', x: 420, y: 580, displayWidth: 38, depth: 21 },
+  { texture: 'environment_prop_power_storage', x: 1240, y: 480, displayWidth: 58, depth: 21 },
+  { texture: 'environment_prop_floodlight', x: 1650, y: 580, displayWidth: 38, depth: 21 },
+  { texture: 'environment_prop_water_tanks', x: 340, y: 960, displayWidth: 50, depth: 21 },
+  { texture: 'environment_prop_cargo_crates', x: 1220, y: 840, displayWidth: 58, depth: 21 },
+  { texture: 'environment_prop_beacon', x: 860, y: 220, displayWidth: 38, depth: 8 },
+  { texture: 'environment_prop_hazard_barrier', x: 840, y: 1320, displayWidth: 62, depth: 8 },
 ];
 
 const ENVIRONMENT_DECORATIONS: EnvironmentDecoration[] = [
@@ -252,7 +310,7 @@ const MILESTONE_1_ENABLE_ENVIRONMENT_DECORATIONS = false;
 
 /**
  * OUTPOST: MARS — MarsScene (Phase 03 Asset Integration)
- * Composes the 1600x1200 top-down Martian outpost surface featuring:
+ * Composes the 2000x1500 top-down Martian outpost surface featuring:
  * - Approved PNG artwork for all 5 canonical outpost structures
  * - Approved PNG artwork for the astronaut character in the central plaza
  * - Approved Mars terrain PNG as a single aspect-preserving world background
@@ -289,7 +347,9 @@ export class MarsScene extends Phaser.Scene {
   private joystickCenter = new Phaser.Math.Vector2();
   private joystickVector = new Phaser.Math.Vector2();
   private joystickPointerId: number | null = null;
-  private readonly joystickRadius = 34;
+  private readonly joystickRadius = JOYSTICK_RADIUS;
+  private readonly joystickHitRadius = JOYSTICK_HIT_RADIUS;
+  private touchInputActive = false;
 
   constructor() {
     super({ key: 'MarsScene' });
@@ -297,10 +357,10 @@ export class MarsScene extends Phaser.Scene {
 
   preload(): void {
     // 1. Load the approved Mars surface background as the base world layer.
-    this.load.image(TERRAIN_BACKGROUND_TEXTURE, 'assets/environment/mars-terrain-background.png');
+    this.load.image(TERRAIN_BACKGROUND_TEXTURE, 'assets/environment/terrain/mars-terrain-background.png');
 
     // 2. Load separately derived track pieces. Original extracted candidates stay untouched.
-    const trackPrefix = 'assets/environment/tracks/derived/';
+    const trackPrefix = 'assets/environment/tracks/';
     this.load.image('rover_track_straight_approved', `${trackPrefix}track-straight.png`);
     this.load.image('rover_track_curve_right_approved', `${trackPrefix}track-curve-right.png`);
     this.load.image('rover_track_curve_left_approved', `${trackPrefix}track-curve-left.png`);
@@ -330,37 +390,20 @@ export class MarsScene extends Phaser.Scene {
     );
     this.load.image(ASTRONAUT_STATIC_FALLBACK_TEXTURE, `${prefix}characters/astronaut.png`);
 
-    // 6. Load reviewed environmental crops. The reference sheets and rover
-    // tracks are not modified or used as environmental props.
+    // 6. Load replacement crater assets, derived environmental props, rocks, and terrain assets.
+    for (const asset of CRATER_ASSETS) {
+      this.load.image(asset.key, `${prefix}environment/craters/${asset.file}`);
+    }
+    for (const asset of DERIVED_ENVIRONMENT_ASSETS) {
+      const subfolder = asset.file.startsWith('prop-')
+        ? 'props'
+        : asset.file.startsWith('soil-') || asset.file.startsWith('dune-')
+          ? 'terrain'
+          : 'rocks';
+      this.load.image(asset.key, `${prefix}environment/${subfolder}/${asset.file}`);
+    }
     for (const asset of M5_ENVIRONMENT_ASSETS) {
       this.load.image(asset.key, `${prefix}environment/props/${asset.file}`);
-    }
-
-    if (MILESTONE_1_ENABLE_ENVIRONMENT_DECORATIONS) {
-      // Retain the prepared loading map for a later, reviewed environment pass.
-      this.load.image('crater_large_1', `${prefix}environment/crater-large-1.png`);
-      this.load.image('crater_large_2', `${prefix}environment/crater-large-2.png`);
-      this.load.image('crater_large_3', `${prefix}environment/crater-large-3.png`);
-      this.load.image('crater_medium_1', `${prefix}environment/crater-medium-1.png`);
-      this.load.image('crater_medium_2', `${prefix}environment/crater-medium-2.png`);
-      this.load.image('crater_small_1', `${prefix}environment/crater-small-1.png`);
-      this.load.image('crater_small_2', `${prefix}environment/crater-small-2.png`);
-
-      this.load.image('rock_formation_1', `${prefix}environment/rock-formation-1.png`);
-      this.load.image('rock_formation_2', `${prefix}environment/rock-formation-2.png`);
-      this.load.image('rock_formation_3', `${prefix}environment/rock-formation-3.png`);
-      this.load.image('rock_cluster_1', `${prefix}environment/rock-cluster-1.png`);
-      this.load.image('rock_cluster_2', `${prefix}environment/rock-cluster-2.png`);
-      this.load.image('boulder_1', `${prefix}environment/boulder-1.png`);
-      this.load.image('boulder_2', `${prefix}environment/boulder-2.png`);
-
-      this.load.image('rover_track_curve', `${prefix}environment/rover-track-curve.png`);
-      this.load.image('rover_track_straight', `${prefix}environment/rover-track-straight.png`);
-
-      this.load.image('prop_nasa_flag', `${prefix}environment/prop-nasa-flag.png`);
-      this.load.image('prop_beacon', `${prefix}environment/prop-beacon.png`);
-      this.load.image('prop_crates', `${prefix}environment/prop-crates.png`);
-      this.load.image('prop_water_tanks', `${prefix}environment/prop-water-tanks.png`);
     }
 
     // 7. Generate atmospheric dust particle texture (3x3 soft mote)
@@ -380,9 +423,12 @@ export class MarsScene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
 
     // 2. Approved Mars surface background (Depth 0)
+    // Visible Martian terrain occupies the top ~75% of the frame (visible center at 37.5% from top).
+    // Using origin (0.5, 0.375) and scaling to cover the visible 75% height ensures 100% full-bleed
+    // coverage across the 2000x1500 world with zero transparent letterboxing for both original and replacement PNGs.
     this.terrainBackground = this.add
       .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, TERRAIN_BACKGROUND_TEXTURE)
-      .setOrigin(0.5, 0.5)
+      .setOrigin(0.5, 0.375)
       .setDepth(0);
 
     // Rover tracks sit above the terrain and below every building and character sprite.
@@ -419,6 +465,9 @@ export class MarsScene extends Phaser.Scene {
       }
 
       sprite.setDepth(20);
+      applyBuildingHitArea(sprite, b.id);
+      // Direct pointerdown click-to-open removed: buildings can strictly only be opened
+      // when the astronaut is physically near the structure and the player presses E.
       this.buildings.set(b.id, sprite);
 
       // Building Label Plaque (High-contrast, accessible)
@@ -434,8 +483,8 @@ export class MarsScene extends Phaser.Scene {
 
       if (b.id === 'habitat') {
         plaque.setPosition(
-          position.x + sprite.displayWidth / 2 + plaque.displayWidth / 2 + 8,
-          badgeY
+          position.x,
+          position.y - sprite.displayHeight / 2 - plaque.displayHeight / 2 - 10
         );
       }
 
@@ -490,10 +539,8 @@ export class MarsScene extends Phaser.Scene {
     this.configureKeyboardMovement();
     this.game.canvas.tabIndex = 0;
     this.game.canvas.setAttribute('aria-label', 'OUTPOST: MARS colony; use WASD or arrow keys to explore');
-    this.input.on('pointerdown', this.focusGameCanvas, this);
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.input.off('pointerdown', this.focusGameCanvas, this);
-    });
+    this.setupDomPointerListeners();
+    this.input.on('pointerdown', this.onPointerDownGeneral, this);
     this.game.events.on(
       BUILDING_INTERACTION_EVENTS.requestInteract,
       this.openNearbyBuildingPanel,
@@ -504,20 +551,18 @@ export class MarsScene extends Phaser.Scene {
       this.closeBuildingPanel,
       this
     );
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.removeBuildingInteractionListeners, this);
     this.game.events.on(
       TUTORIAL_EVENTS.highlightBuilding,
       this.setTutorialHighlightBuilding,
       this
     );
-    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
-      this.game.events.off(TUTORIAL_EVENTS.highlightBuilding, this.setTutorialHighlightBuilding, this);
-    });
     this.syncVirtualJoystick();
     this.input.on('pointerdown', this.handleJoystickPointerDown, this);
     this.input.on('pointermove', this.handleJoystickPointerMove, this);
     this.input.on('pointerup', this.handleJoystickPointerUp, this);
     this.input.on('pointerupoutside', this.handleJoystickPointerUp, this);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, this.cleanupScene, this);
+    this.events.once(Phaser.Scenes.Events.DESTROY, this.cleanupScene, this);
 
     console.info('[OUTPOST: MARS] Approved sprite texture dimensions', {
       buildings: Array.from(this.buildings.entries()).map(([id, sprite]) => ({
@@ -677,9 +722,9 @@ export class MarsScene extends Phaser.Scene {
 
     // Compact landscape viewports use a denser composition, not a full-world shrink.
     if (width < 768 || height < 500) {
-      camera.setZoom(0.47);
+      camera.setZoom(0.52);
     } else if (width < 1400 || height < 850) {
-      camera.setZoom(0.9);
+      camera.setZoom(0.85);
     } else {
       camera.setZoom(1.0);
     }
@@ -708,119 +753,219 @@ export class MarsScene extends Phaser.Scene {
   }
 
   /**
-   * Rebuild only the small track layer when the viewport switches between the
-   * full colony map and the compact landscape overview.
+   * Renders the continuous, natural compacted Martian dirt road network.
+   * Features gentle curves, consistent ~52px roadbed width, compacted aprons
+   * beneath building entrances, and parallel rover tire impressions at depth 1.
    */
   private renderRoverTrackNetwork(): void {
     for (const track of this.roverTrackSprites) track.destroy();
     this.roverTrackSprites = [];
 
-    const compact = this.isCompactViewport();
-    const straight = 'rover_track_straight_approved';
-
-    const compactRoutes: RoverTrackRoute[] = [
-      // The compact layout shares one narrow, continuous access road below the row.
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: { x: 160, y: 625 },
-        worldEnd: { x: 1440, y: 625 },
-        straightCrossScale: 0.18,
-      },
-    ];
-
-    const desktopRoutes: RoverTrackRoute[] = [
-      // Each route uses one straight sprite. The ends sit beneath the building
-      // artwork at the entrance edges, so the paths read as one connected road.
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 480, y: 540 } : { x: 460, y: 375 },
-        worldEnd: this.isMediumViewport() ? { x: 690, y: 535 } : { x: 660, y: 480 },
-        straightCrossScale: 0.24,
-      },
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 300, y: 760 } : { x: 320, y: 680 },
-        worldEnd: this.isMediumViewport() ? { x: 690, y: 620 } : { x: 660, y: 565 },
-        straightCrossScale: 0.24,
-      },
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 1010, y: 535 } : { x: 940, y: 480 },
-        worldEnd: this.isMediumViewport() ? { x: 1315, y: 515 } : { x: 1315, y: 375 },
-        straightCrossScale: 0.24,
-      },
-      {
-        texture: straight,
-        sourceWidth: 617,
-        sourceHeight: 198,
-        sourceStart: { x: 10, y: 99 },
-        sourceEnd: { x: 607, y: 99 },
-        worldStart: this.isMediumViewport() ? { x: 1010, y: 625 } : { x: 940, y: 565 },
-        worldEnd: this.isMediumViewport() ? { x: 1260, y: 855 } : { x: 1210, y: 830 },
-        straightCrossScale: 0.24,
-      },
-    ];
-
-    const routes = compact ? compactRoutes : desktopRoutes;
-    for (const route of routes) {
-      if (!this.textures.exists(route.texture)) continue;
-
-      const sourceDx = route.sourceEnd.x - route.sourceStart.x;
-      const sourceDy = route.sourceEnd.y - route.sourceStart.y;
-      const worldDx = route.worldEnd.x - route.worldStart.x;
-      const worldDy = route.worldEnd.y - route.worldStart.y;
-      const sourceLength = Math.hypot(sourceDx, sourceDy);
-      const worldLength = Math.hypot(worldDx, worldDy);
-      const scale = worldLength / sourceLength;
-      const rotation = Math.atan2(worldDy, worldDx) - Math.atan2(sourceDy, sourceDx);
-      const scaleX = scale;
-      const scaleY = route.straightCrossScale ?? scale;
-
-      const track = this.add
-        .image(route.worldStart.x, route.worldStart.y, route.texture)
-        .setOrigin(route.sourceStart.x / route.sourceWidth, route.sourceStart.y / route.sourceHeight)
-        .setScale(scaleX, scaleY)
-        .setRotation(rotation)
-        .setAlpha(0.72)
-        .setDepth(10);
-      this.roverTrackSprites.push(track);
+    const textureKey = 'martian_road_network';
+    let roadCanvas = this.textures.get(textureKey) as Phaser.Textures.CanvasTexture | null;
+    if (!roadCanvas || !this.textures.exists(textureKey)) {
+      roadCanvas = this.textures.createCanvas(textureKey, WORLD_WIDTH, WORLD_HEIGHT);
     }
 
-    if (this.roverTrackSprites.length !== routes.length) {
-      console.warn('[OUTPOST: MARS] Some rover-track textures did not load', {
-        expected: routes.length,
-        rendered: this.roverTrackSprites.length,
-      });
+    if (roadCanvas) {
+      const ctx = roadCanvas.getContext();
+      if (ctx) {
+        ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+        const compact = this.isCompactViewport();
+        if (compact) {
+          this.drawCompactRoads(ctx);
+        } else {
+          this.drawDesktopRoads(ctx);
+        }
+        roadCanvas.refresh();
+      }
+
+      const roadImage = this.add
+        .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, textureKey)
+        .setOrigin(0.5)
+        .setDepth(1);
+      this.roverTrackSprites.push(roadImage);
+    }
+  }
+
+  private drawDesktopRoads(ctx: CanvasRenderingContext2D): void {
+    const routes: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }[] = [
+      // 1. Central Plaza Spine (Habitat wings to junctions)
+      { p0: { x: 760, y: 750 }, p1: { x: 880, y: 750 }, p2: { x: 1120, y: 750 }, p3: { x: 1240, y: 750 } },
+      // 2. Habitat to Mission Control (Northwest corridor -> MC entrance ramp)
+      { p0: { x: 760, y: 750 }, p1: { x: 700, y: 730 }, p2: { x: 640, y: 660 }, p3: { x: 620, y: 580 } },
+      // 3. Habitat to Greenhouse (Southwest corridor -> GH front apron)
+      { p0: { x: 760, y: 750 }, p1: { x: 700, y: 780 }, p2: { x: 620, y: 880 }, p3: { x: 550, y: 920 } },
+      // 4. Habitat to Solar Farm (Northeast corridor -> SF service apron)
+      { p0: { x: 1240, y: 750 }, p1: { x: 1300, y: 720 }, p2: { x: 1380, y: 660 }, p3: { x: 1450, y: 600 } },
+      // 5. Habitat to Storm Shelter (Southeast corridor -> SS bunker entrance)
+      { p0: { x: 1240, y: 750 }, p1: { x: 1300, y: 780 }, p2: { x: 1380, y: 880 }, p3: { x: 1420, y: 920 } },
+      // 6. North Crater Wilderness Route (radiating past Colony flag to north ridge)
+      { p0: { x: 760, y: 680 }, p1: { x: 780, y: 550 }, p2: { x: 810, y: 380 }, p3: { x: 820, y: 200 } },
+      // 7. Southeast Dunes Wilderness Route (radiating past Storm Shelter to southeast dunes)
+      { p0: { x: 1420, y: 940 }, p1: { x: 1480, y: 1040 }, p2: { x: 1580, y: 1180 }, p3: { x: 1720, y: 1300 } },
+    ];
+
+    const traceRoute = (seg: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }) => {
+      ctx.beginPath();
+      ctx.moveTo(seg.p0.x, seg.p0.y);
+      if (typeof ctx.bezierCurveTo === 'function') {
+        ctx.bezierCurveTo(seg.p1.x, seg.p1.y, seg.p2.x, seg.p2.y, seg.p3.x, seg.p3.y);
+      } else {
+        ctx.lineTo(seg.p3.x, seg.p3.y);
+      }
+    };
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    // Pass 1: Outer softened regolith shoulder
+    ctx.lineWidth = 56;
+    ctx.strokeStyle = 'rgba(108, 44, 28, 0.42)';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
     }
 
-    console.info(
-      '[OUTPOST: MARS] Runtime rover-track routes ' +
-        JSON.stringify(
-          this.roverTrackSprites.map((track) => ({
-            key: track.texture.key,
-            source: { width: track.width, height: track.height },
-            world: { width: track.displayWidth, height: track.displayHeight },
-            position: { x: track.x, y: track.y },
-            depth: track.depth,
-          }))
-        )
-    );
+    // Pass 2: Compacted Martian roadbed
+    ctx.lineWidth = 44;
+    ctx.strokeStyle = 'rgba(126, 54, 36, 0.88)';
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
+    }
+
+    // Pass 3: Center worn dirt surface
+    ctx.lineWidth = 28;
+    ctx.strokeStyle = 'rgba(146, 68, 47, 0.72)';
+    for (const r of routes) {
+      traceRoute(r);
+      ctx.stroke();
+    }
+
+    // Pass 4 & 5: Parallel dual tire ruts with dashed track impressions
+    this.drawTireRuts(ctx, routes, 13);
+
+    // Compacted entrance aprons and plaza junctions
+    const aprons = [
+      { x: 1000, y: 750, r: 52 },
+      { x: 620, y: 580, r: 36 },
+      { x: 1450, y: 600, r: 36 },
+      { x: 550, y: 920, r: 36 },
+      { x: 1420, y: 920, r: 36 },
+      { x: 760, y: 750, r: 40 },
+      { x: 1240, y: 750, r: 40 },
+    ];
+
+    for (const a of aprons) {
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r + 6, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(108, 44, 28, 0.35)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(126, 54, 36, 0.85)';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r * 0.65, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(146, 68, 47, 0.65)';
+      ctx.fill();
+    }
+  }
+
+  private drawCompactRoads(ctx: CanvasRenderingContext2D): void {
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
+
+    // Shoulder
+    ctx.lineWidth = 50;
+    ctx.strokeStyle = 'rgba(108, 44, 28, 0.42)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Roadbed
+    ctx.lineWidth = 38;
+    ctx.strokeStyle = 'rgba(126, 54, 36, 0.88)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Worn path
+    ctx.lineWidth = 24;
+    ctx.strokeStyle = 'rgba(146, 68, 47, 0.72)';
+    ctx.beginPath();
+    ctx.moveTo(160, 760);
+    ctx.lineTo(1840, 760);
+    ctx.stroke();
+
+    // Tire ruts
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([7, 5]);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(58, 20, 12, 0.65)';
+    ctx.beginPath();
+    ctx.moveTo(160, 749);
+    ctx.lineTo(1840, 749);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(160, 771);
+    ctx.lineTo(1840, 771);
+    ctx.stroke();
+  }
+
+  private drawTireRuts(
+    ctx: CanvasRenderingContext2D,
+    routes: { p0: TrackPoint; p1: TrackPoint; p2: TrackPoint; p3: TrackPoint }[],
+    offset: number
+  ): void {
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = 'rgba(58, 20, 12, 0.65)';
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([7, 5]);
+
+    for (const r of routes) {
+      const steps = 60;
+      const leftPts: TrackPoint[] = [];
+      const rightPts: TrackPoint[] = [];
+
+      for (let i = 0; i <= steps; i++) {
+        const t = i / steps;
+        const mt = 1 - t;
+        const x = mt * mt * mt * r.p0.x + 3 * mt * mt * t * r.p1.x + 3 * mt * t * t * r.p2.x + t * t * t * r.p3.x;
+        const y = mt * mt * mt * r.p0.y + 3 * mt * mt * t * r.p1.y + 3 * mt * t * t * r.p2.y + t * t * t * r.p3.y;
+
+        const dx = 3 * mt * mt * (r.p1.x - r.p0.x) + 6 * mt * t * (r.p2.x - r.p1.x) + 3 * t * t * (r.p3.x - r.p2.x);
+        const dy = 3 * mt * mt * (r.p1.y - r.p0.y) + 6 * mt * t * (r.p2.y - r.p1.y) + 3 * t * t * (r.p3.y - r.p2.y);
+        const len = Math.hypot(dx, dy);
+
+        if (len > 0) {
+          const nx = -dy / len;
+          const ny = dx / len;
+          leftPts.push({ x: x - nx * offset, y: y - ny * offset });
+          rightPts.push({ x: x + nx * offset, y: y + ny * offset });
+        }
+      }
+
+      if (leftPts.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(leftPts[0].x, leftPts[0].y);
+        for (let i = 1; i < leftPts.length; i++) ctx.lineTo(leftPts[i].x, leftPts[i].y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(rightPts[0].x, rightPts[0].y);
+        for (let i = 1; i < rightPts.length; i++) ctx.lineTo(rightPts[i].x, rightPts[i].y);
+        ctx.stroke();
+      }
+    }
+
+    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
   }
 
   update(): void {
@@ -896,7 +1041,7 @@ export class MarsScene extends Phaser.Scene {
     body.setAllowGravity(false);
     body.setDrag(0, 0);
     // Match the visible sprite bounds so the astronaut stays fully on-world
-    // when Arcade Physics clamps it against the 1600x1200 world edges.
+    // when Arcade Physics clamps it against the 2000x1500 world edges.
     body.setSize(
       this.hasAstronautAnimations ? ASTRONAUT_BODY_WIDTH : this.astronaut.width,
       this.hasAstronautAnimations ? ASTRONAUT_BODY_HEIGHT : this.astronaut.height,
@@ -976,19 +1121,27 @@ export class MarsScene extends Phaser.Scene {
       .setAlpha(0.72 + Math.sin(this.time.now / 200) * 0.2);
   }
 
-  private openNearbyBuildingPanel(): void {
-    if (this.isBuildingPanelOpen || !this.nearbyBuilding) return;
+  public openBuilding(building?: BuildingData): void {
+    if (this.isBuildingPanelOpen) return;
 
-    const building = this.nearbyBuilding;
+    // Strict Proximity Validation:
+    // Only allow opening if the astronaut is physically within the interaction radius
+    const nearby = this.getNearbyBuilding();
+    if (!nearby) return;
+    if (building && building.id !== nearby.id) return;
+
     this.isBuildingPanelOpen = true;
     this.nearbyBuilding = undefined;
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.nearby, null);
-    this.joystickVector.set(0, 0);
-    this.joystickPointerId = null;
-    this.joystickThumb?.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    this.resetJoystick();
     (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
-    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, building);
+    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, nearby);
   }
+
+  private openNearbyBuildingPanel = (): void => {
+    if (this.isBuildingPanelOpen || !this.nearbyBuilding) return;
+    this.openBuilding(this.nearbyBuilding);
+  };
 
   private closeBuildingPanel(): void {
     if (!this.isBuildingPanelOpen) return;
@@ -1053,9 +1206,9 @@ export class MarsScene extends Phaser.Scene {
       if (!sprite) continue;
 
       const isCrater = decoration.collision === 'crater';
-      const width = sprite.displayWidth * (isCrater ? 0.44 : 0.46);
-      const height = sprite.displayHeight * (isCrater ? 0.3 : 0.32);
-      const centerY = sprite.y + sprite.displayHeight * (isCrater ? 0.08 : 0.18);
+      const width = isCrater ? sprite.displayWidth * 0.4 : sprite.displayWidth * 0.46;
+      const height = isCrater ? sprite.displayHeight * 0.2 : sprite.displayHeight * 0.32;
+      const centerY = sprite.y + sprite.displayHeight * (isCrater ? 0.04 : 0.18);
       const obstacle = this.add
         .rectangle(sprite.x, centerY, width, height, 0x000000, 0)
         .setVisible(false);
@@ -1091,19 +1244,40 @@ export class MarsScene extends Phaser.Scene {
     };
   }
 
+  private isPointerTouch(pointer: Phaser.Input.Pointer): boolean {
+    if (pointer.wasTouch) return true;
+    const raw = pointer.event as PointerEvent | undefined;
+    return raw?.pointerType === 'touch';
+  }
+
+  private onPointerDownGeneral(pointer: Phaser.Input.Pointer): void {
+    this.focusGameCanvas();
+    if (this.isPointerTouch(pointer) && !this.touchInputActive) {
+      this.touchInputActive = true;
+      this.syncVirtualJoystick();
+    }
+  }
+
+  private isPointerOverJoystick(pointer: Phaser.Input.Pointer): boolean {
+    if (!this.joystickBase) return false;
+    return (
+      Phaser.Math.Distance.Between(
+        pointer.x,
+        pointer.y,
+        this.joystickCenter.x,
+        this.joystickCenter.y
+      ) <= this.joystickHitRadius
+    );
+  }
+
   private syncVirtualJoystick(): void {
-    if (!this.isCompactViewport()) {
-      this.joystickBase?.destroy();
-      this.joystickThumb?.destroy();
-      this.joystickBase = undefined;
-      this.joystickThumb = undefined;
-      this.joystickPointerId = null;
-      this.joystickVector.set(0, 0);
+    const isTouch = this.touchInputActive || isTouchDevice();
+    if (!isTouch) {
+      this.destroyVirtualJoystick();
       return;
     }
 
-    const x = Math.max(46, this.scale.width - 50);
-    const y = Math.max(46, this.scale.height - 50);
+    const { x, y } = getJoystickPosition(this.scale.width, this.scale.height);
     this.joystickCenter.set(x, y);
 
     if (!this.joystickBase) {
@@ -1118,20 +1292,25 @@ export class MarsScene extends Phaser.Scene {
         .setDepth(61);
     } else {
       this.joystickBase.setPosition(x, y);
-      this.joystickThumb?.setPosition(x, y);
+      if (this.joystickPointerId === null) {
+        this.joystickThumb?.setPosition(x, y);
+      }
     }
   }
 
   private handleJoystickPointerDown(pointer: Phaser.Input.Pointer): void {
+    if (this.isPointerTouch(pointer) && !this.touchInputActive) {
+      this.touchInputActive = true;
+      this.syncVirtualJoystick();
+    }
+
     if (this.isBuildingPanelOpen || !this.joystickBase || this.joystickPointerId !== null) return;
-    if (
-      Phaser.Math.Distance.Between(pointer.x, pointer.y, this.joystickCenter.x, this.joystickCenter.y) >
-      this.joystickRadius + 18
-    ) {
+    if (!this.isPointerOverJoystick(pointer)) {
       return;
     }
 
     this.joystickPointerId = pointer.id;
+    this.capturePointer(pointer);
     this.updateJoystickFromPointer(pointer);
   }
 
@@ -1142,41 +1321,164 @@ export class MarsScene extends Phaser.Scene {
 
   private handleJoystickPointerUp(pointer: Phaser.Input.Pointer): void {
     if (pointer.id !== this.joystickPointerId) return;
-    this.joystickPointerId = null;
-    this.joystickVector.set(0, 0);
-    this.joystickThumb?.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    this.releasePointer(pointer.id);
+    this.resetJoystick();
   }
 
   private updateJoystickFromPointer(pointer: Phaser.Input.Pointer): void {
     const dx = pointer.x - this.joystickCenter.x;
     const dy = pointer.y - this.joystickCenter.y;
-    this.joystickVector.set(dx / this.joystickRadius, dy / this.joystickRadius).limit(1);
+    const vector = calculateJoystickVector(dx, dy, this.joystickRadius);
+    this.joystickVector.set(vector.x, vector.y);
     this.joystickThumb?.setPosition(
       this.joystickCenter.x + this.joystickVector.x * this.joystickRadius,
       this.joystickCenter.y + this.joystickVector.y * this.joystickRadius
     );
   }
 
-  /** Prepared proximity query for the next building-interaction milestone. */
-  public getNearbyBuilding(maxDistance = 80): BuildingData | undefined {
-    let nearestBuilding: BuildingData | undefined;
-    let nearestDistance = maxDistance;
+  private capturePointer(pointer: Phaser.Input.Pointer): void {
+    const rawEvent = pointer.event as PointerEvent | undefined;
+    if (rawEvent && typeof rawEvent.pointerId === 'number' && this.game.canvas.setPointerCapture) {
+      try {
+        this.game.canvas.setPointerCapture(rawEvent.pointerId);
+      } catch {
+        // Safe fallback in test or headless environments
+      }
+    }
+  }
+
+  private releasePointer(pointerId: number): void {
+    if (this.game.canvas.releasePointerCapture) {
+      try {
+        if (this.game.canvas.hasPointerCapture?.(pointerId)) {
+          this.game.canvas.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Safe fallback
+      }
+    }
+  }
+
+  private setupDomPointerListeners(): void {
+    const canvas = this.game.canvas;
+    canvas.addEventListener('pointercancel', this.handleDomPointerCancel);
+    canvas.addEventListener('lostpointercapture', this.handleDomPointerCancel);
+    window.addEventListener('pointercancel', this.handleDomPointerCancel);
+    window.addEventListener('pointerup', this.handleWindowPointerUp);
+    window.addEventListener('blur', this.handleWindowBlur);
+  }
+
+  private removeDomPointerListeners(): void {
+    const canvas = this.game.canvas;
+    canvas.removeEventListener('pointercancel', this.handleDomPointerCancel);
+    canvas.removeEventListener('lostpointercapture', this.handleDomPointerCancel);
+    window.removeEventListener('pointercancel', this.handleDomPointerCancel);
+    window.removeEventListener('pointerup', this.handleWindowPointerUp);
+    window.removeEventListener('blur', this.handleWindowBlur);
+  }
+
+  private handleDomPointerCancel = (event: PointerEvent): void => {
+    if (this.joystickPointerId === event.pointerId || event.type === 'pointercancel') {
+      this.resetJoystick();
+    }
+  };
+
+  private handleWindowPointerUp = (event: PointerEvent): void => {
+    if (this.joystickPointerId === event.pointerId) {
+      this.resetJoystick();
+    }
+  };
+
+  private handleWindowBlur = (): void => {
+    this.resetJoystick();
+  };
+
+  public resetJoystick(): void {
+    if (this.joystickPointerId !== null) {
+      this.releasePointer(this.joystickPointerId);
+      this.joystickPointerId = null;
+    }
+    this.joystickVector.set(0, 0);
+    if (this.joystickThumb) {
+      this.joystickThumb.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+    }
+  }
+
+  private destroyVirtualJoystick(): void {
+    this.resetJoystick();
+    this.joystickBase?.destroy();
+    this.joystickThumb?.destroy();
+    this.joystickBase = undefined;
+    this.joystickThumb = undefined;
+  }
+
+  private cleanupScene(): void {
+    this.destroyVirtualJoystick();
+    this.removeDomPointerListeners();
+    this.input.off('pointerdown', this.onPointerDownGeneral, this);
+    this.input.off('pointerdown', this.handleJoystickPointerDown, this);
+    this.input.off('pointermove', this.handleJoystickPointerMove, this);
+    this.input.off('pointerup', this.handleJoystickPointerUp, this);
+    this.input.off('pointerupoutside', this.handleJoystickPointerUp, this);
+    this.scale.off('resize', this.handleResize, this);
+    this.removeBuildingInteractionListeners();
+  }
+
+  public getJoystickBase(): Phaser.GameObjects.Arc | undefined {
+    return this.joystickBase;
+  }
+
+  public getJoystickThumb(): Phaser.GameObjects.Arc | undefined {
+    return this.joystickThumb;
+  }
+
+  public getJoystickCenter(): Phaser.Math.Vector2 {
+    return this.joystickCenter;
+  }
+
+  public getJoystickVector(): Phaser.Math.Vector2 {
+    return this.joystickVector;
+  }
+
+  public getJoystickPointerId(): number | null {
+    return this.joystickPointerId;
+  }
+
+  public isTouchActive(): boolean {
+    return this.touchInputActive || isTouchDevice();
+  }
+
+  /**
+   * Authoritative proximity query: finds the single nearby building within maxDistance.
+   * Resolves deterministically if multiple buildings are in range.
+   */
+  public getNearbyBuilding(maxDistance = INTERACTION_MAX_DISTANCE): BuildingData | undefined {
+    const list: Array<{
+      building: BuildingData;
+      bounds: { left: number; right: number; top: number; bottom: number };
+    }> = [];
 
     for (const building of CANONICAL_BUILDINGS) {
       const sprite = this.buildings.get(building.id);
       if (!sprite) continue;
 
       const bounds = sprite.getBounds();
-      const dx = Math.max(bounds.left - this.astronaut.x, 0, this.astronaut.x - bounds.right);
-      const dy = Math.max(bounds.top - this.astronaut.y, 0, this.astronaut.y - bounds.bottom);
-      const distance = Math.hypot(dx, dy);
-      if (distance <= nearestDistance) {
-        nearestBuilding = building;
-        nearestDistance = distance;
-      }
+      list.push({
+        building,
+        bounds: {
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom,
+        },
+      });
     }
 
-    return nearestBuilding;
+    return resolveNearbyBuilding(
+      list,
+      { x: this.astronaut.x, y: this.astronaut.y },
+      maxDistance
+    );
   }
 
   private isCompactViewport(): boolean {
@@ -1189,9 +1491,9 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private getInitialCameraTarget(): TrackPoint {
-    if (this.isCompactViewport()) return { x: 800, y: 435 };
-    if (this.isMediumViewport()) return { x: 850, y: 570 };
-    return { x: 800, y: 560 };
+    if (this.isCompactViewport()) return { x: 1000, y: 580 };
+    if (this.isMediumViewport()) return { x: 1000, y: 750 };
+    return { x: 1000, y: 750 };
   }
 
   private getBuildingPosition(building: BuildingData): { x: number; y: number } {
@@ -1278,9 +1580,14 @@ export class MarsScene extends Phaser.Scene {
     const excessHeight = Math.max(0, viewHeight - WORLD_HEIGHT);
     const coverWidth = Math.max(WORLD_WIDTH, viewWidth) + excessWidth + 2;
     const coverHeight = Math.max(WORLD_HEIGHT, viewHeight) + excessHeight + 2;
+    // In both the original (1672x941) and replacement (1448x1086) backgrounds,
+    // visible terrain occupies the top ~75% of the source height. Scaling against
+    // visible height prevents transparent margins across the 2000x1500 world.
+    const visibleRatio = 0.75;
+    const visibleTerrainHeight = background.height * visibleRatio;
     const uniformScale = Math.max(
       coverWidth / background.width,
-      coverHeight / background.height
+      coverHeight / visibleTerrainHeight
     );
 
     background
