@@ -32,7 +32,7 @@ export class BuildingInteractionUI {
   private focusedBeforePanel?: HTMLElement;
   private feedbackTimer?: number;
   private lastState?: GameState;
-  private isObjectivesCollapsed = false;
+  private isObjectivesCollapsed = typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth <= 768;
   private hasCompletionFlash = false;
   private currentNearbyBuilding: BuildingData | null = null;
   private currentNearbyDiscovery: MarsDiscovery | null = null;
@@ -44,6 +44,21 @@ export class BuildingInteractionUI {
     private readonly feedbackContainer: HTMLElement,
     private readonly handlers: BuildingInteractionHandlers
   ) {
+    this.promptContainer.addEventListener('pointerup', (event: PointerEvent) => {
+      if (
+        event.pointerType === 'touch' ||
+        (typeof window !== 'undefined' &&
+          window.matchMedia &&
+          window.matchMedia('(pointer: coarse)').matches)
+      ) {
+        event.preventDefault();
+        if (this.currentNearbyBuilding) {
+          this.handlers.onInteract();
+        } else if (this.currentNearbyDiscovery) {
+          this.handlers.onInteractDiscovery?.();
+        }
+      }
+    });
     this.objectivesContainer.addEventListener('click', (event) => {
       const toggle = (event.target as HTMLElement).closest('[data-objective-toggle]');
       if (toggle) {
@@ -268,6 +283,7 @@ export class BuildingInteractionUI {
           <strong class="interaction-building-name">${escapeHtml(building.name)}</strong>
           <span class="interaction-hints">
             <span class="interaction-desktop-hint">Press <kbd>E</kbd> to inspect</span>
+            <span class="interaction-mobile-hint">Tap to inspect</span>
           </span>
         </div>
         <span class="interaction-prompt-arrow" aria-hidden="true">➔</span>
@@ -303,6 +319,7 @@ export class BuildingInteractionUI {
           <strong class="interaction-building-name">${discovery.icon} ${escapeHtml(discovery.name)}</strong>
           <span class="interaction-hints">
             <span class="interaction-desktop-hint">Press <kbd>E</kbd> to discover</span>
+            <span class="interaction-mobile-hint">Tap to discover</span>
           </span>
         </div>
         <span class="interaction-prompt-arrow" aria-hidden="true">➔</span>

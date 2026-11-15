@@ -181,7 +181,7 @@ export class FirstTimeTutorialUI {
           <span class="tutorial-kicker">FIRST-TIME FLIGHT BRIEFING</span>
           <h1 id="tutorial-title">OUTPOST: MARS</h1>
           <p>Your mission: Build knowledge, explore Mars and keep your crew safe.</p>
-          <p class="tutorial-desktop-notice">OUTPOST: MARS is designed for desktop and laptop screens. For the best experience, use Google Chrome with a keyboard.</p>
+          <p class="tutorial-desktop-notice">Optimized for desktop, tablet, and mobile touch screens.</p>
           <div class="tutorial-actions">
             <button class="tutorial-primary" type="button" data-tutorial-start>Start Mission</button>
             <button class="tutorial-secondary" type="button" data-tutorial-skip>Skip Tutorial</button>

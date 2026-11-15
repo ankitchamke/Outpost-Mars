@@ -30,16 +30,22 @@ export class OutpostHud {
   private container: HTMLElement;
   private previousSnapshot?: ResourceSnapshot;
   private isCrewExpanded = false;
+  private isTelemetryExpanded = true;
   private lastState?: GameState;
 
   constructor(container: HTMLElement) {
     this.container = container;
 
-    // Delegated click handler for the crew details toggle
+    // Delegated click handler for the crew and telemetry toggles
     this.container.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
       if (target.closest('.btn-crew-toggle') || target.closest('.crew-summary-trigger')) {
         this.isCrewExpanded = !this.isCrewExpanded;
+        if (this.lastState) {
+          this.update(this.lastState);
+        }
+      } else if (target.closest('.btn-telemetry-toggle') || target.closest('.telemetry-summary-trigger')) {
+        this.isTelemetryExpanded = !this.isTelemetryExpanded;
         if (this.lastState) {
           this.update(this.lastState);
         }
@@ -100,10 +106,20 @@ export class OutpostHud {
 
     this.container.innerHTML = `
       <!-- Compact Resource Telemetry Widget (Top-Left) -->
-      <section class="hud-panel resource-gauges" aria-label="Life Support & Resource Telemetry">
-        <div class="hud-panel-header hud-compact-header">
-          <span class="hud-panel-title">TELEMETRY</span>
-          <span class="hud-live-tag" aria-hidden="true">LIVE</span>
+      <section class="hud-panel resource-gauges ${this.isTelemetryExpanded ? '' : 'is-collapsed'}" aria-label="Life Support & Resource Telemetry">
+        <div class="hud-panel-header hud-compact-header telemetry-summary-trigger" role="button" tabindex="0" aria-expanded="${this.isTelemetryExpanded}" aria-label="Toggle telemetry panel">
+          <div class="hud-header-left">
+            <span class="hud-panel-title">TELEMETRY</span>
+            <span class="hud-live-tag" aria-hidden="true">LIVE</span>
+          </div>
+          <div class="telemetry-compact-preview" aria-hidden="true">
+            <span class="mini-gauge-val" title="Power">⚡ ${power.current}</span>
+            <span class="mini-gauge-val" title="Life Support">🫁 ${lifeSupport.current}%</span>
+            <span class="mini-gauge-val" title="Storm Shielding">🛡️ ${stormShield.current}%</span>
+          </div>
+          <button class="btn-telemetry-toggle" type="button" aria-expanded="${this.isTelemetryExpanded}" aria-label="${this.isTelemetryExpanded ? 'Collapse telemetry' : 'Expand telemetry'}" title="${this.isTelemetryExpanded ? 'Hide telemetry details' : 'Show telemetry details'}">
+            <span aria-hidden="true">${this.isTelemetryExpanded ? '▲' : '▼'}</span>
+          </button>
         </div>
 
         <!-- Power Gauge -->
