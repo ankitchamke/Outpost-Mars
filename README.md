@@ -214,7 +214,7 @@ OUTPOST: MARS delivers a first-class mobile and tablet experience optimized acro
 - **Camera Compensation:** Inverts Phaser camera scale transforms so the canvas joystick maintains exact 1:1 alignment with DOM safe-area overlays regardless of viewport zoom.
 
 ### Proximity Interaction Dock
-- **Collinear Control Equator:** The building interaction button anchors to the exact same vertical centerline ($70\text{px}$ from the viewport bottom) as the virtual joystick, creating a balanced, thumb-friendly handheld console layout.
+- **Collinear Control Equator:** The building interaction button and virtual joystick share one responsive dock coordinate and remain vertically aligned, with equal safe-area-aware clearance from their screen edges.
 - **Independent Touch Targets:** Visual and touch clearances ($> 34\text{px}$ visual gap, isolated touch hit areas) prevent accidental interactions while steering.
 - **WCAG 2.1 AA Compliant Touch Areas:** All mobile buttons maintain a minimum $44 \times 44\text{px}$ touch target size.
 
