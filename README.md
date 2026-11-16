@@ -41,7 +41,7 @@
 | 🚀 **Live Interactive Web Game (Primary)** | Vercel Cloud | **[https://outpost-mars.vercel.app/](https://outpost-mars.vercel.app/)** |
 | 🌍 **Live Interactive Web Game (Mirror)** | GitHub Pages | **[https://ankitchamke.github.io/Outpost-Mars/](https://ankitchamke.github.io/Outpost-Mars/)** |
 | 📦 **Open-Source Repository** | GitHub | **[https://github.com/ankitchamke/Outpost-Mars](https://github.com/ankitchamke/Outpost-Mars)** |
-| 🏆 **NASA Space Apps Challenge** | Competition Portal | **[NASA Space Apps Challenge 2024](https://www.spaceappschallenge.org/)** |
+| 🏆 **NASA Space Apps Challenge** | Competition Portal | **[NASA Space Apps Challenge 2024](https://www.spaceappschallenge.org/2026/find-a-team/nova-69/)** |
 
 > [!TIP]
 > **Zero Installation, Instant Play:** OUTPOST: MARS is a 100% static, client-side web application. It requires zero plugins, zero browser extensions, and zero judge API keys. Works directly in Google Chrome, Microsoft Edge, Mozilla Firefox, and Safari across desktop, laptop, tablet, and mobile screens.
