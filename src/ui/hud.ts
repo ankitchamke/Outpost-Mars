@@ -30,7 +30,7 @@ export class OutpostHud {
   private container: HTMLElement;
   private previousSnapshot?: ResourceSnapshot;
   private isCrewExpanded = false;
-  private isTelemetryExpanded = true;
+  private isTelemetryExpanded = !(typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth <= 768);
   private lastState?: GameState;
 
   constructor(container: HTMLElement) {

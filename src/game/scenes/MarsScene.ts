@@ -470,8 +470,19 @@ export class MarsScene extends Phaser.Scene {
 
       sprite.setDepth(20);
       applyBuildingHitArea(sprite, b.id);
-      // Direct pointerdown click-to-open removed: buildings can strictly only be opened
-      // when the astronaut is physically near the structure and the player presses E.
+
+      let lastBuildingTapTime = 0;
+      const handleSelectBuilding = (pointer: Phaser.Input.Pointer) => {
+        if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen) return;
+        if (this.joystickPointerId === pointer.id || this.isPointerOverJoystick(pointer)) return;
+        const now = Date.now();
+        if (now - lastBuildingTapTime < 300) return;
+        lastBuildingTapTime = now;
+        this.openBuilding(b);
+      };
+
+      sprite.on('pointerdown', handleSelectBuilding);
+      sprite.on('pointerup', handleSelectBuilding);
       this.buildings.set(b.id, sprite);
 
       // Building Label Plaque (High-contrast, accessible)
@@ -493,6 +504,9 @@ export class MarsScene extends Phaser.Scene {
       }
 
       plaque.setDepth(25);
+      plaque.setInteractive({ useHandCursor: true });
+      plaque.on('pointerdown', handleSelectBuilding);
+      plaque.on('pointerup', handleSelectBuilding);
       this.buildingLabels.set(b.id, plaque);
     }
 
@@ -1155,23 +1169,22 @@ export class MarsScene extends Phaser.Scene {
       this.closeDiscoveryPanel();
     }
 
-    // Strict Proximity Validation:
-    // Only allow opening if the astronaut is physically within the interaction radius
-    const nearby = this.getNearbyBuilding();
-    if (!nearby) return;
-    if (building && building.id !== nearby.id) return;
+    const targetBuilding = building ?? this.getNearbyBuilding();
+    if (!targetBuilding) return;
 
     this.isBuildingPanelOpen = true;
     this.nearbyBuilding = undefined;
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.nearby, null);
     this.resetJoystick();
     (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
-    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, nearby);
+    this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, targetBuilding);
   }
 
   private openNearbyBuildingPanel = (): void => {
-    if (this.isBuildingPanelOpen || !this.nearbyBuilding) return;
-    this.openBuilding(this.nearbyBuilding);
+    if (this.isBuildingPanelOpen) return;
+    const nearby = this.getNearbyBuilding();
+    if (!nearby) return;
+    this.openBuilding(nearby);
   };
 
   private closeBuildingPanel(): void {

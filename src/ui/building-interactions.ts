@@ -36,6 +36,7 @@ export class BuildingInteractionUI {
   private hasCompletionFlash = false;
   private currentNearbyBuilding: BuildingData | null = null;
   private currentNearbyDiscovery: MarsDiscovery | null = null;
+  private lastInteractionTimestamp = 0;
 
   constructor(
     private readonly promptContainer: HTMLElement,
@@ -44,21 +45,27 @@ export class BuildingInteractionUI {
     private readonly feedbackContainer: HTMLElement,
     private readonly handlers: BuildingInteractionHandlers
   ) {
-    this.promptContainer.addEventListener('pointerup', (event: PointerEvent) => {
-      if (
-        event.pointerType === 'touch' ||
-        (typeof window !== 'undefined' &&
-          window.matchMedia &&
-          window.matchMedia('(pointer: coarse)').matches)
-      ) {
-        event.preventDefault();
-        if (this.currentNearbyBuilding) {
-          this.handlers.onInteract();
-        } else if (this.currentNearbyDiscovery) {
-          this.handlers.onInteractDiscovery?.();
+    const handlePromptTrigger = (event: Event) => {
+      const target = event.target as HTMLElement | null;
+      const prompt = target?.closest('.building-interaction-prompt');
+      if (!prompt) return;
+
+      event.preventDefault();
+      this.triggerNearbyInteraction();
+    };
+
+    this.promptContainer.addEventListener('pointerup', handlePromptTrigger);
+    this.promptContainer.addEventListener('click', handlePromptTrigger);
+    this.promptContainer.addEventListener('keydown', (event: KeyboardEvent) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        const target = event.target as HTMLElement | null;
+        if (target?.closest('.building-interaction-prompt')) {
+          event.preventDefault();
+          this.triggerNearbyInteraction();
         }
       }
     });
+
     this.objectivesContainer.addEventListener('click', (event) => {
       const toggle = (event.target as HTMLElement).closest('[data-objective-toggle]');
       if (toggle) {
@@ -71,7 +78,9 @@ export class BuildingInteractionUI {
     });
     this.panelContainer.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
-      if (target.closest('[data-science-console]')) {
+      if (target === this.panelContainer) {
+        this.handlers.onClose();
+      } else if (target.closest('[data-science-console]')) {
         this.handlers.onOpenScienceConsole();
       } else if (target.closest('[data-space-weather-open]')) {
         this.handlers.onClose();
@@ -111,13 +120,22 @@ export class BuildingInteractionUI {
         !this.promptContainer.hidden
       ) {
         event.preventDefault();
-        if (this.currentNearbyBuilding) {
-          this.handlers.onInteract();
-        } else if (this.currentNearbyDiscovery) {
-          this.handlers.onInteractDiscovery?.();
-        }
+        this.triggerNearbyInteraction();
       }
     });
+  }
+
+  private triggerNearbyInteraction(): void {
+    if (!this.panelContainer.hidden) return;
+    const now = Date.now();
+    if (now - this.lastInteractionTimestamp < 350) return;
+    this.lastInteractionTimestamp = now;
+
+    if (this.currentNearbyBuilding) {
+      this.handlers.onInteract();
+    } else if (this.currentNearbyDiscovery) {
+      this.handlers.onInteractDiscovery?.();
+    }
   }
 
   public triggerCompletionFlash(): void {
@@ -273,7 +291,7 @@ export class BuildingInteractionUI {
 
     this.promptContainer.hidden = false;
     this.promptContainer.innerHTML = `
-      <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="status" aria-label="Nearby structure: ${escapeHtml(building.name)}. Press E to inspect.">
+      <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="button" tabindex="0" aria-label="Nearby structure: ${escapeHtml(building.name)}. Tap or press E to inspect.">
         <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
         <div class="interaction-prompt-content">
           <div class="interaction-prompt-kicker">
@@ -310,7 +328,7 @@ export class BuildingInteractionUI {
   private renderDiscoveryPrompt(discovery: MarsDiscovery): void {
     this.promptContainer.hidden = false;
     this.promptContainer.innerHTML = `
-      <div class="building-interaction-prompt is-discovery-prompt" role="status" aria-label="Field discovery: ${escapeHtml(discovery.name)}. Press E to discover.">
+      <div class="building-interaction-prompt is-discovery-prompt" role="button" tabindex="0" aria-label="Field discovery: ${escapeHtml(discovery.name)}. Tap or press E to discover.">
         <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
         <div class="interaction-prompt-content">
           <div class="interaction-prompt-kicker">

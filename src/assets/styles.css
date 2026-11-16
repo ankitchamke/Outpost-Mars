@@ -1499,12 +1499,24 @@ html, body {
   border: 1px solid rgba(255, 107, 53, 0.75);
   border-radius: var(--radius-full);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 16px rgba(255, 107, 53, 0.22);
-  cursor: default;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   animation: hudPromptSlideIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   transition: all 0.18s ease;
   user-select: none;
+}
+
+.building-interaction-prompt:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 22px rgba(255, 107, 53, 0.4);
+}
+
+.building-interaction-prompt:active {
+  transform: scale(0.97);
+  filter: brightness(1.2);
 }
 
 @keyframes hudPromptSlideIn {
@@ -3744,7 +3756,9 @@ html, body {
 /* 640px and below (Smartphones in portrait) */
 @media (max-width: 640px) {
   .hud-overlay {
-    flex-direction: column;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
     left: max(0.5rem, var(--sal));
     right: max(0.5rem, var(--sar));
     top: 0.5rem;
@@ -3752,8 +3766,8 @@ html, body {
   }
   .resource-gauges,
   .crew-safety-panel {
-    width: 100%;
-    max-width: none;
+    width: calc(50% - 0.25rem);
+    max-width: 50%;
     min-width: 0;
     padding: 0.45rem 0.65rem;
   }
