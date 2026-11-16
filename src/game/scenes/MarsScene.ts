@@ -1422,13 +1422,15 @@ export class MarsScene extends Phaser.Scene {
     this.joystickCenter.set(x, y);
 
     if (!this.joystickBase) {
+      // Fixed base: familiar mobile game joystick with outer ring and high-contrast thumb
       this.joystickBase = this.add
-        .circle(x, y, this.joystickRadius, 0x101827, 0.48)
-        .setStrokeStyle(2, 0xcbd5e1, 0.72)
+        .circle(x, y, this.joystickRadius, 0x090e17, 0.65)
+        .setStrokeStyle(2, 0x38bdf8, 0.8)
         .setScrollFactor(0)
         .setDepth(60);
       this.joystickThumb = this.add
-        .circle(x, y, 14, 0xe2e8f0, 0.86)
+        .circle(x, y, 18, 0x0284c7, 0.95)
+        .setStrokeStyle(2.5, 0xf0f9ff, 0.95)
         .setScrollFactor(0)
         .setDepth(61);
     } else {
@@ -1466,26 +1468,10 @@ export class MarsScene extends Phaser.Scene {
       return;
     }
 
+    // Permanently anchored: base NEVER moves from bottom-left!
     this.joystickPointerId = pointer.id;
     this.capturePointer(pointer);
-
-    if (inZone && !isDirectHit) {
-      // Dynamic anchor: center joystick smoothly at touchdown point clamped to safe bounds
-      const minX = this.joystickRadius + 12;
-      const maxX = Math.max(minX, Math.min(this.scale.width * 0.42, 280));
-      const minY = Math.max(this.scale.height * 0.52, this.scale.height - 260);
-      const maxY = this.scale.height - (this.joystickRadius + 12);
-
-      const clampedX = Math.max(minX, Math.min(pointer.x, maxX));
-      const clampedY = Math.max(minY, Math.min(pointer.y, maxY));
-
-      this.joystickCenter.set(clampedX, clampedY);
-      this.joystickBase.setPosition(clampedX, clampedY);
-      this.joystickThumb?.setPosition(clampedX, clampedY);
-      this.joystickVector.set(0, 0);
-    } else {
-      this.updateJoystickFromPointer(pointer);
-    }
+    this.updateJoystickFromPointer(pointer);
   }
 
   private handleJoystickPointerMove(pointer: Phaser.Input.Pointer): void {

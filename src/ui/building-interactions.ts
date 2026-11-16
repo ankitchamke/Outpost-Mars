@@ -158,6 +158,7 @@ export class BuildingInteractionUI {
     const objective = getCurrentMissionObjective(state);
     const lowResource = getCriticalResourceHint(state);
     this.objectivesContainer.hidden = false;
+    this.objectivesContainer.classList.toggle('is-expanded-view', !this.isObjectivesCollapsed);
 
     // Collapsed State: Sleek compact HUD bar
     if (this.isObjectivesCollapsed) {
@@ -289,10 +290,13 @@ export class BuildingInteractionUI {
       return;
     }
 
+    const buildingIcon = BUILDING_LESSONS.find((entry) => entry.id === building.id)?.icon ?? '🏛️';
+
     this.promptContainer.hidden = false;
     this.promptContainer.innerHTML = `
       <div class="building-interaction-prompt${tutorialHighlight ? ' is-tutorial-highlight' : ''}" role="button" tabindex="0" aria-label="Nearby structure: ${escapeHtml(building.name)}. Tap or press E to inspect.">
         <span class="interaction-keycap" aria-hidden="true"><kbd>E</kbd></span>
+        <span class="interaction-mobile-icon" aria-hidden="true">${buildingIcon}</span>
         <div class="interaction-prompt-content">
           <div class="interaction-prompt-kicker">
             <span class="interaction-kicker-text">STRUCTURE PROXIMITY</span>
@@ -389,31 +393,119 @@ function renderBuildingPanel(
   curiositySnapshot?: CuriosityRadSnapshot,
   outcome?: MissionInteractionOutcome
 ): string {
-  const commonFacts: Record<ExploredBuildingId, string[]> = {
+  const visualConcepts: Record<ExploredBuildingId, Array<{ icon: string; title: string; desc: string }>> = {
     habitat: [
-      'Air systems provide oxygen and keep the living space at a safe pressure.',
-      'Filters help recycle water so the crew can use supplies carefully.',
-      'Walls and storm shelters add protection from radiation coming from space.',
+      {
+        icon: '🫁',
+        title: 'Life-Sustaining Air',
+        desc: 'Recovers oxygen and maintains 70 kPa cabin pressure so crew members can breathe without spacesuits.',
+      },
+      {
+        icon: '💧',
+        title: 'Closed-Loop Water',
+        desc: 'Advanced filtration recycles 98% of all water from humidity, breath, and hygiene for ongoing reuse.',
+      },
+      {
+        icon: '🛡️',
+        title: 'Composite Radiation Shield',
+        desc: 'Multi-layer composite walls reinforced with Martian soil buffer against galactic cosmic radiation.',
+      },
     ],
     solar_farm: [
-      'Solar cells change sunlight into electrical energy.',
-      'Batteries can save some energy for later use.',
-      'Dusty skies and night reduce sunlight, so crews watch their power supply.',
+      {
+        icon: '☀️',
+        title: 'Photovoltaic Array',
+        desc: 'High-efficiency solar cells convert Martian sunlight into continuous electrical power for outpost systems.',
+      },
+      {
+        icon: '🔋',
+        title: 'Lithium-Ion Storage',
+        desc: 'Stores surplus energy during peak midday sun to sustain colony life support through the 12-hour Martian night.',
+      },
+      {
+        icon: '🌪️',
+        title: 'Atmospheric Dust Management',
+        desc: 'Martian dust storms reduce sunlight by up to 99%, requiring electrostatic dust-repelling array coatings.',
+      },
     ],
     greenhouse: [
-      'Plants need the right light, air, water and temperature to grow.',
-      'A greenhouse controls these conditions inside a protected space.',
-      'Recycling water helps save supplies; growing food also takes time and care.',
+      {
+        icon: '🌱',
+        title: 'Hydroponic Aeration',
+        desc: 'Crops grow in nutrient-rich water solutions without native Martian soil, which contains toxic perchlorates.',
+      },
+      {
+        icon: '💡',
+        title: 'LED Photosynthesis Spectrum',
+        desc: 'Targeted red and blue light frequencies maximize plant growth while consuming 60% less electrical power.',
+      },
+      {
+        icon: '🔄',
+        title: 'Oxygen-Carbon Exchange',
+        desc: 'Crops absorb CO₂ exhaled by astronauts and release fresh oxygen, augmenting mechanical life support.',
+      },
     ],
     storm_shelter: [
-      'Space radiation can pass through thin walls and can be harmful to people.',
-      'Extra shielding, such as thick soil or stored water, can reduce exposure.',
-      'A shelter gives the crew a more protected place during a solar storm.',
+      {
+        icon: '⚡',
+        title: 'Solar Flare Defense',
+        desc: 'Dedicated subterranean refuge shielding against extreme Solar Particle Events (SPE) and coronal mass ejections.',
+      },
+      {
+        icon: '🧱',
+        title: 'Regolith & Water Bulkheads',
+        desc: 'Dense packed Martian regolith and hydrogen-rich water jackets reduce lethal ionizing radiation by 85%.',
+      },
+      {
+        icon: '🛰️',
+        title: 'Early Warning Integration',
+        desc: 'NASA DONKI satellite telemetry alerts the crew 20 to 60 minutes before peak solar particle storms strike.',
+      },
     ],
     mission_control: [
-      'Mission teams plan science work and watch information sent back by spacecraft.',
-      'Radio messages between Earth and Mars take time to travel.',
-      'That delay means a crew and its robots must handle many tasks without an instant reply.',
+      {
+        icon: '📡',
+        title: 'Deep Space Network Link',
+        desc: 'Ultra-high frequency parabolic antennas maintain high-bandwidth communication with NASA Earth stations.',
+      },
+      {
+        icon: '⏱️',
+        title: 'Time-Delay Operations',
+        desc: 'Radio signals take 4 to 24 minutes each way; colony operations require high onboard autonomy.',
+      },
+      {
+        icon: '🤖',
+        title: 'Autonomous Telemetry AI',
+        desc: 'Robotic rovers and surface instruments automatically log discoveries and manage critical survival routines.',
+      },
+    ],
+  };
+
+  const visualComparisons: Record<ExploredBuildingId, Array<{ label: string; earthVal: string; marsVal: string }>> = {
+    habitat: [
+      { label: 'Surface Pressure', earthVal: '101.3 kPa', marsVal: '0.6 kPa (Vacuum-Thin)' },
+      { label: 'Habitat Living Pressure', earthVal: '101.3 kPa', marsVal: '70.3 kPa (Pressurized)' },
+      { label: 'Outside Temperature', earthVal: '+15°C avg', marsVal: '-63°C avg (Freezing)' },
+    ],
+    solar_farm: [
+      { label: 'Solar Irradiance', earthVal: '~1000 W/m²', marsVal: '~590 W/m² (Further from Sun)' },
+      { label: 'Day Length (Sol)', earthVal: '24h 00m', marsVal: '24h 39m 35s' },
+      { label: 'Dust Storm Loss', earthVal: 'Minimal', marsVal: 'Up to 99% reduction' },
+    ],
+    greenhouse: [
+      { label: 'Growing Method', earthVal: 'Organic Soil', marsVal: 'Perchlorate-Free Hydroponics' },
+      { label: 'Atmosphere CO₂', earthVal: '0.04% (Trace)', marsVal: '95.3% (Plant-Dense)' },
+      { label: 'Water Recycling', earthVal: 'Natural Rain', marsVal: '98% Closed-Loop Reclaim' },
+    ],
+    storm_shelter: [
+      { label: 'Daily Background Dose', earthVal: '~0.01 mSv', marsVal: '~0.64 mSv/day (Curiosity RAD)' },
+      { label: 'Solar Flare Peak', earthVal: 'Atmosphere Blocks', marsVal: '>100 mSv/hr (Lethal without shelter)' },
+      { label: 'Shielding Bulkhead', earthVal: 'Magnetosphere', marsVal: 'Water & Regolith (-85% dose)' },
+    ],
+    mission_control: [
+      { label: 'Radio Signal Lag', earthVal: '<0.1 sec', marsVal: '4 to 24 minutes each way' },
+      { label: 'Surface Autonomy', earthVal: 'Real-time GPS', marsVal: 'Autonomous AI Navigation' },
+      { label: 'Orbital Relays', earthVal: 'Thousands', marsVal: 'MRO & Odyssey satellites' },
     ],
   };
 
@@ -422,7 +514,7 @@ function renderBuildingPanel(
   const isShelter = lesson.id === 'storm_shelter' && !!gcr;
   const learningTag = isHabitat || isShelter ? 'GENERAL SCIENCE · OFFLINE NASA REFERENCE' : 'GENERAL SCIENCE';
   const lifeSupport = state.lifeSupportDetails;
-  const currentObjective = getCurrentMissionObjective(state);
+  const currentObjective = getCurrentObjectiveForBuilding(state, lesson.id);
 
   const spaceWeatherCallout = lesson.id === 'storm_shelter'
     ? state.spaceWeatherDecision
@@ -479,8 +571,57 @@ function renderBuildingPanel(
       <div class="building-lesson-body">
         <p class="building-lesson-tag">${learningTag}</p>
         ${taskCallout}
-        <ul class="building-lesson-facts">${commonFacts[lesson.id].map((fact) => `<li>${fact}</li>`).join('')}</ul>
-        ${referenceCard}
+
+        <!-- Visual Concept Cards -->
+        <div class="building-concept-cards" role="list" aria-label="Key scientific concepts">
+          ${visualConcepts[lesson.id].map((concept) => `
+            <div class="concept-card" role="listitem">
+              <span class="concept-card-icon" aria-hidden="true">${concept.icon}</span>
+              <div class="concept-card-content">
+                <strong class="concept-card-title">${concept.title}</strong>
+                <p class="concept-card-desc">${concept.desc}</p>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <!-- Visual Planetary Comparison (Earth vs Mars) -->
+        <div class="building-comparison-section">
+          <span class="comparison-section-title">PLANETARY BENCHMARKS</span>
+          <div class="comparison-grid">
+            ${visualComparisons[lesson.id].map((comp) => `
+              <div class="comparison-row">
+                <span class="comp-label">${comp.label}</span>
+                <div class="comp-values">
+                  <span class="comp-val earth" title="Earth reference">🌍 ${comp.earthVal}</span>
+                  <span class="comp-arrow" aria-hidden="true">→</span>
+                  <span class="comp-val mars" title="Mars conditions">🔴 ${comp.marsVal}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- Progressive Disclosure: Real NASA Data vs Colony Simulation -->
+        ${referenceCard ? `
+          <details class="nasa-science-disclosure">
+            <summary class="nasa-disclosure-summary">
+              <div class="summary-left">
+                <span class="nasa-disclosure-icon">🔬</span>
+                <span class="nasa-disclosure-title">Real NASA Scientific Records</span>
+              </div>
+              <span class="nasa-disclosure-tag">Learn more ▾</span>
+            </summary>
+            <div class="nasa-disclosure-content">
+              <div class="nasa-distinction-banner">
+                <span class="distinction-pill real">🔬 REAL NASA DATA</span>
+                <span class="distinction-pill sim">🚀 SIMULATION</span>
+              </div>
+              ${referenceCard}
+            </div>
+          </details>
+        ` : ''}
+
         ${spaceWeatherCallout}
         ${scienceConsole}
         ${missionSummary}
@@ -491,6 +632,11 @@ function renderBuildingPanel(
       </footer>
     </section>
   `;
+}
+
+function getCurrentObjectiveForBuilding(state: GameState, buildingId: string) {
+  const objective = getCurrentMissionObjective(state);
+  return objective?.buildingId === buildingId ? objective : undefined;
 }
 
 function renderMissionSummary(state: GameState): string {

@@ -30,6 +30,7 @@ declare const process: {
   cwd(): string;
   argv: string[];
   exit(code?: number): never;
+  platform?: string;
 };
 
 declare const Buffer: {

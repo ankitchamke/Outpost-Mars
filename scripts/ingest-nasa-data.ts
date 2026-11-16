@@ -605,7 +605,20 @@ export async function writeSnapshotBatchTransactional(
       if (options?.faultInjectOnFilename === staged.filename) {
         throw new Error(`Simulated fault during atomic replacement of ${staged.filename}`);
       }
-      await fs.rename(staged.tmpPath, staged.targetPath);
+      try {
+        await fs.rename(staged.tmpPath, staged.targetPath);
+      } catch (renameErr: any) {
+        if (process.platform === 'win32' && (renameErr?.code === 'EPERM' || renameErr?.code === 'EEXIST')) {
+          // On Windows NTFS, rename over an existing file can throw EPERM/EEXIST.
+          // Remove destination first since backup was already preserved in step 2.
+          try {
+            await fs.unlink(staged.targetPath);
+          } catch {}
+          await fs.rename(staged.tmpPath, staged.targetPath);
+        } else {
+          throw renameErr;
+        }
+      }
       console.log(`[Wrote] Committed ${staged.targetPath}`);
     }
 

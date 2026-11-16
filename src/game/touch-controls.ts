@@ -5,10 +5,10 @@
  * and vector mathematics for touch-based mobile and tablet gameplay.
  */
 
-export const JOYSTICK_RADIUS = 34;
-export const JOYSTICK_HIT_MARGIN = 22;
-export const JOYSTICK_HIT_RADIUS = JOYSTICK_RADIUS + JOYSTICK_HIT_MARGIN; // 56px radius (112px touch zone)
-export const JOYSTICK_MARGIN = 56;
+export const JOYSTICK_RADIUS = 38;
+export const JOYSTICK_HIT_MARGIN = 26;
+export const JOYSTICK_HIT_RADIUS = JOYSTICK_RADIUS + JOYSTICK_HIT_MARGIN; // 64px radius (128px touch zone)
+export const JOYSTICK_MARGIN = 62;
 
 export interface JoystickPosition {
   x: number;

@@ -692,6 +692,19 @@ html, body {
   letter-spacing: 0.05em;
 }
 
+/* Mobile Unified Status Strip (Hidden on Desktop by default) */
+.hud-mobile-strip {
+  display: none;
+}
+
+.hud-mobile-drawer {
+  display: none;
+}
+
+.desktop-hud-panel {
+  display: flex;
+}
+
 /* ==========================================================================
    2. RESOURCE PANEL (Top-Left Telemetry)
    ========================================================================== */
@@ -1614,6 +1627,10 @@ html, body {
   display: none;
 }
 
+.interaction-mobile-icon {
+  display: none;
+}
+
 .interaction-prompt-arrow {
   color: #fdba74;
   font-size: 1rem;
@@ -1839,10 +1856,10 @@ html, body {
 .tutorial-overlay,
 .science-overlay,
 .space-weather-overlay,
-.reset-choice-overlay {
+.discovery-dialog-overlay {
   position: absolute;
   inset: 0;
-  z-index: 50;
+  z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1851,6 +1868,24 @@ html, body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   animation: modalFadeIn 0.2s ease-out;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.reset-choice-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  background: rgba(5, 9, 16, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: modalFadeIn 0.2s ease-out;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 @keyframes modalFadeIn {
@@ -1865,9 +1900,12 @@ html, body {
 }
 
 .building-lesson-card {
-  width: min(440px, 100%);
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  width: min(460px, 100%);
+  max-height: calc(100% - 1rem);
+  max-height: calc(100dvh - 110px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   color: var(--text-primary);
   background: var(--bg-panel-solid);
   border: 1px solid var(--border-panel);
@@ -1875,15 +1913,19 @@ html, body {
   border-radius: var(--radius-lg);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.65), var(--glow-inner);
   pointer-events: auto;
-  scrollbar-color: #334155 #0b1422;
 }
 
 .building-lesson-header {
   display: flex;
   align-items: center;
   gap: 0.85rem;
-  padding: 1.1rem 1.25rem 0.9rem;
+  padding: 1rem 1.25rem 0.85rem;
   border-bottom: 1px solid rgba(56, 189, 248, 0.16);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-panel-solid);
+  flex-shrink: 0;
 }
 
 .building-lesson-icon {
@@ -1959,6 +2001,10 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-color: #334155 #0b1422;
 }
 
 .building-lesson-tag {
@@ -1995,6 +2041,224 @@ html, body {
   font-size: 0.65rem;
 }
 
+/* Visual Concept Cards */
+.building-concept-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0.25rem 0;
+}
+
+.concept-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  background: var(--bg-panel-inset);
+  border: 1px solid rgba(56, 189, 248, 0.18);
+  border-left: 3px solid var(--color-mars-accent);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease;
+}
+
+.concept-card:hover {
+  border-color: rgba(56, 189, 248, 0.35);
+}
+
+.concept-card-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  font-size: 1.35rem;
+  background: rgba(56, 189, 248, 0.1);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.concept-card-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.concept-card-title {
+  font-family: var(--font-family-display);
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+.concept-card-desc {
+  font-size: 0.82rem;
+  color: #cbd5e1;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* Planetary Benchmark Comparison (Earth vs Mars) */
+.building-comparison-section {
+  margin-top: 0.35rem;
+  padding: 0.75rem 0.85rem;
+  background: rgba(14, 25, 42, 0.7);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.comparison-section-title {
+  display: block;
+  font-family: var(--font-family-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #38bdf8;
+  margin-bottom: 0.45rem;
+  text-transform: uppercase;
+}
+
+.comparison-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.comparison-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  background: rgba(4, 9, 16, 0.65);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 3px;
+  font-size: 0.8rem;
+}
+
+.comp-label {
+  font-weight: 600;
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.comp-values {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font-family-mono);
+  font-size: 0.78rem;
+}
+
+.comp-val.earth {
+  color: #60a5fa;
+}
+
+.comp-arrow {
+  color: #64748b;
+  font-size: 0.72rem;
+}
+
+.comp-val.mars {
+  color: #fb923c;
+  font-weight: 700;
+}
+
+/* Progressive Disclosure for NASA Scientific Records */
+.nasa-science-disclosure {
+  margin-top: 0.45rem;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-sm);
+  background: rgba(8, 15, 28, 0.8);
+  overflow: hidden;
+}
+
+.nasa-disclosure-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #7dd3fc;
+  list-style: none;
+  background: rgba(14, 25, 42, 0.6);
+  transition: background-color 0.15s ease;
+}
+
+.nasa-disclosure-summary::-webkit-details-marker {
+  display: none;
+}
+
+.nasa-disclosure-summary:hover {
+  background: rgba(24, 40, 66, 0.7);
+}
+
+.summary-left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.nasa-disclosure-icon {
+  font-size: 1rem;
+}
+
+.nasa-disclosure-title {
+  font-family: var(--font-family-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #f8fafc;
+}
+
+.nasa-disclosure-tag {
+  font-size: 0.72rem;
+  color: #38bdf8;
+  font-family: var(--font-family-mono);
+}
+
+.nasa-disclosure-content {
+  padding: 0.75rem 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nasa-distinction-banner {
+  display: flex;
+  gap: 0.45rem;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid rgba(56, 189, 248, 0.14);
+  background: rgba(4, 9, 16, 0.5);
+  border-radius: 3px;
+}
+
+.distinction-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family-mono);
+  letter-spacing: 0.02em;
+}
+
+.distinction-pill.real {
+  background: rgba(56, 189, 248, 0.2);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+}
+
+.distinction-pill.sim {
+  background: rgba(255, 107, 53, 0.2);
+  color: #ff8552;
+  border: 1px solid rgba(255, 107, 53, 0.4);
+}
+
 .learning-reference {
   display: grid;
   gap: 0.3rem;
@@ -2024,6 +2288,7 @@ html, body {
 }
 
 .building-lesson-footer {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -3755,59 +4020,387 @@ html, body {
 
 /* 640px and below (Smartphones in portrait) */
 @media (max-width: 640px) {
+  .desktop-hud-panel {
+    display: none !important;
+  }
+
   .hud-overlay {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: flex-start;
+    flex-direction: column !important;
+    justify-content: flex-start !important;
+    align-items: stretch !important;
     left: max(0.5rem, var(--sal));
     right: max(0.5rem, var(--sar));
-    top: 0.5rem;
-    gap: 0.45rem;
-  }
-  .resource-gauges,
-  .crew-safety-panel {
-    width: calc(50% - 0.25rem);
-    max-width: 50%;
-    min-width: 0;
-    padding: 0.45rem 0.65rem;
-  }
-  .btn-telemetry-toggle {
-    display: grid;
-  }
-  .resource-gauges.is-collapsed .gauge-row {
-    display: none;
-  }
-  .resource-gauges.is-collapsed .telemetry-compact-preview {
-    display: flex;
-  }
-  .resource-gauges.is-collapsed {
-    padding: 0.35rem 0.65rem;
+    top: max(0.45rem, var(--sat));
     gap: 0;
+    pointer-events: none;
+    z-index: 40;
   }
 
-  .crew-compact-summary {
-    min-height: 36px;
+  .hud-mobile-strip {
+    display: flex !important;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+    width: 100%;
+    pointer-events: auto;
   }
-  .crew-chips-grid {
-    grid-template-columns: repeat(2, 1fr);
+
+  .hud-mobile-pill {
+    display: flex;
+    align-items: center;
     gap: 0.35rem;
-  }
-  .crew-chip {
-    padding: 0.35rem 0.45rem;
+    padding: 0.35rem 0.65rem;
+    background: rgba(10, 18, 30, 0.92);
+    border: 1px solid var(--border-panel);
+    border-radius: var(--radius-full);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    color: var(--text-primary);
+    font-family: var(--font-family-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: all 0.15s ease;
+    user-select: none;
+    min-height: 38px;
   }
 
-  .objectives-overlay {
-    bottom: max(5.2rem, calc(var(--sab) + 4.8rem));
-    width: min(360px, calc(100vw - 1rem));
+  .hud-mobile-pill:active,
+  .hud-mobile-pill.is-active {
+    border-color: var(--border-focus);
+    background: rgba(18, 32, 54, 0.96);
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
   }
-  .mission-log {
+
+  .hud-mobile-telemetry {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .hud-mobile-crew {
+    flex-shrink: 0;
+  }
+
+  .hud-mobile-val {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    white-space: nowrap;
+  }
+
+  .hud-mobile-val.val-power { color: #f59e0b; }
+  .hud-mobile-val.val-lifesupport { color: #06b6d4; }
+  .hud-mobile-val.val-shield { color: #a855f7; }
+
+  .hud-mobile-val.status-danger {
+    color: #ef4444;
+  }
+
+  .hud-mobile-sep {
+    color: rgba(148, 163, 184, 0.35);
+    font-size: 0.7rem;
+    margin: 0 0.1rem;
+  }
+
+  .hud-mobile-caret {
+    font-size: 0.65rem;
+    color: #7dd3fc;
+    margin-left: 0.2rem;
+  }
+
+  .hud-mobile-crew-badge {
+    font-family: var(--font-family-display);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .hud-mobile-crew.nominal {
+    border-color: rgba(16, 185, 129, 0.45);
+    color: #86efac;
+  }
+
+  .hud-mobile-crew.caution {
+    border-color: rgba(245, 158, 11, 0.5);
+    color: #fcd34d;
+  }
+
+  .hud-mobile-crew.danger {
+    border-color: rgba(239, 68, 68, 0.6);
+    color: #fca5a5;
+  }
+
+  .hud-mobile-drawer {
+    display: flex !important;
+    flex-direction: column;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    background: var(--bg-panel-solid);
+    border: 1px solid var(--border-panel-bright);
+    border-radius: var(--radius-md);
+    box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), var(--glow-inner);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    pointer-events: auto;
+    padding: 0.75rem;
+    z-index: 50;
+    animation: drawerSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     max-height: min(280px, 45vh);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+
+  .hud-drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.18);
+    padding-bottom: 0.45rem;
+    margin-bottom: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  .hud-drawer-title {
+    font-family: var(--font-family-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: #7dd3fc;
+  }
+
+  .btn-drawer-close {
+    display: grid;
+    place-items: center;
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(148, 163, 184, 0.1);
+    color: #ffffff;
+    font-size: 1rem;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* Compact Objectives Bar */
+  .objectives-overlay {
+    position: absolute;
+    top: auto !important;
+    bottom: max(0.5rem, var(--sab)) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: min(340px, calc(100vw - 1rem)) !important;
+    min-width: 0 !important;
+    pointer-events: none;
+    z-index: 20;
+  }
+
+  .mission-log {
+    pointer-events: auto;
+    max-height: min(240px, 40vh);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.65rem 0.85rem;
+  }
+
   .mission-log.is-collapsed {
-    max-height: none;
-    overflow: visible;
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0.4rem 0.65rem;
+  }
+
+  .mission-log-collapsed-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .collapsed-text-group {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.2;
+  }
+
+  .collapsed-title {
+    display: block;
+    font-size: 0.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #ffffff;
+  }
+
+  .collapsed-meta {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+  }
+
+  .btn-objective-toggle {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.72rem;
+    gap: 0.25rem;
+  }
+
+  .objectives-overlay.is-expanded-view ~ .building-prompt-overlay {
+    bottom: calc(max(0.5rem, var(--sab)) + 225px) !important;
+  }
+
+  /* Compact Building Interaction Button */
+  .building-prompt-overlay {
+    position: absolute;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    right: auto !important;
+    bottom: calc(max(0.5rem, var(--sab)) + 52px) !important;
+    max-width: calc(100vw - 1rem);
+    pointer-events: none;
+    z-index: 25;
+    display: flex;
+    justify-content: center;
+  }
+
+  .building-interaction-prompt {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: 40px;
+    padding: 0.35rem 0.85rem;
+    background: linear-gradient(135deg, rgba(14, 24, 40, 0.96), rgba(22, 36, 60, 0.94));
+    border: 1.5px solid var(--color-mars-accent);
+    border-radius: var(--radius-full);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), 0 0 14px rgba(255, 107, 53, 0.35);
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+
+  .interaction-keycap {
+    display: none !important;
+  }
+
+  .interaction-mobile-icon {
+    display: inline-flex !important;
+    font-size: 1.15rem;
+    line-height: 1;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .interaction-prompt-kicker {
+    display: none !important;
+  }
+
+  .interaction-hints {
+    display: none !important;
+  }
+
+  .interaction-building-name {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+  }
+
+  .interaction-prompt-arrow {
+    display: inline-block !important;
+    font-size: 1rem;
+    color: #ff8552;
+    margin-left: 0.2rem;
+  }
+
+  /* Modals & Dialogs Layout on Mobile */
+  .panel-overlay,
+  .tutorial-overlay,
+  .science-overlay,
+  .space-weather-overlay,
+  .discovery-dialog-overlay {
+    padding: 0.5rem;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    pointer-events: auto;
+  }
+
+  .reset-choice-overlay {
+    z-index: 200;
+    padding: 0.5rem;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .building-lesson-card,
+  .science-panel,
+  .space-weather-card,
+  .discovery-card,
+  .tutorial-card,
+  .reset-choice-card {
+    width: min(440px, 100%);
+    max-height: calc(100% - 1rem);
+    max-height: calc(100dvh - 110px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: auto;
+  }
+
+  .building-lesson-header,
+  .science-header,
+  .space-weather-header,
+  .discovery-header,
+  .tutorial-header,
+  .reset-choice-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-panel-solid);
+    flex-shrink: 0;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .building-lesson-body,
+  .science-body,
+  .space-weather-body,
+  .discovery-body,
+  .tutorial-body,
+  .reset-choice-body {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.75rem 0.85rem;
+  }
+
+  .building-lesson-footer,
+  .science-footer,
+  .space-weather-footer,
+  .discovery-footer,
+  .tutorial-footer,
+  .reset-choice-footer {
+    flex-shrink: 0;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .building-lesson-close,
+  .science-close,
+  .discovery-close,
+  .tutorial-close {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
   }
 
   .space-weather-choices {
@@ -3941,48 +4534,54 @@ html, body {
     display: none;
   }
   .brand-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
   }
   .brand-logo-mark {
-    width: 28px;
-    height: 28px;
+    width: 26px;
+    height: 26px;
   }
   .header-controls .btn-sm {
     min-height: 44px;
     min-width: 44px;
-    padding: 0.25rem 0.1rem;
+    padding: 0.2rem 0.1rem;
   }
   .header-controls .btn-icon {
     width: 14px;
     height: 14px;
   }
-  .building-prompt-overlay {
-    max-width: calc(100vw - 110px);
-    right: 0.5rem;
-    bottom: 0.65rem;
+
+  /* Scale mobile strip for 320px-360px */
+  .hud-mobile-strip {
+    gap: 0.35rem;
   }
-  .building-interaction-prompt {
-    padding: 0.4rem 0.6rem;
-    gap: 0.4rem;
-    min-height: 44px;
+  .hud-mobile-pill {
+    padding: 0.25rem 0.45rem;
+    font-size: 0.72rem;
+    min-height: 36px;
   }
-  .interaction-keycap {
-    min-width: 22px;
-    height: 22px;
+  .hud-mobile-val {
+    font-size: 0.7rem;
+    gap: 0.15rem;
   }
-  .interaction-keycap kbd {
-    min-width: 22px;
-    height: 22px;
+  .hud-mobile-crew-badge {
     font-size: 0.7rem;
   }
+
+  .objectives-overlay {
+    width: calc(100vw - 0.75rem) !important;
+  }
+
+  .building-prompt-overlay {
+    bottom: calc(max(0.5rem, var(--sab)) + 48px) !important;
+    max-width: calc(100vw - 1rem);
+  }
+  .building-interaction-prompt {
+    padding: 0.3rem 0.65rem;
+    min-height: 36px;
+    gap: 0.35rem;
+  }
   .interaction-building-name {
-    font-size: 0.82rem;
-  }
-  .interaction-kicker-text {
-    font-size: 0.62rem;
-  }
-  .interaction-mobile-hint {
-    font-size: 0.68rem;
+    font-size: 0.8rem;
   }
 
   #mission-status-footer {
