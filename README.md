@@ -9,8 +9,7 @@
 <br/>
 
 [![NASA Space Apps Challenge](https://img.shields.io/badge/NASA_Space_Apps-Challenge_Project-0b3d91?style=for-the-badge&logo=nasa&logoColor=white)](https://www.spaceappschallenge.org/)
-[![Live Demo - Vercel](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://outpost-mars.vercel.app/)
-[![Live Demo - GitHub Pages](https://img.shields.io/badge/Live_Demo-GitHub_Pages-181717?style=for-the-badge&logo=github&logoColor=white)](https://ankitchamke.github.io/Outpost-Mars/)
+[![Live Demo - Vercel](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://outpost-mars-chi.vercel.app/)
 [![Tests](https://img.shields.io/badge/Tests-237%20Passed%20(100%25)-10b981?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Phaser 3](https://img.shields.io/badge/Phaser-3.90.0-e74c3c?style=for-the-badge&logo=phaser&logoColor=white)](https://phaser.io/)
@@ -40,8 +39,7 @@
 
 | Destination | Platform / Type | URL / Access |
 | :--- | :--- | :--- |
-| 🚀 **Live Interactive Web Game (Primary)** | Vercel Cloud | **[https://outpost-mars.vercel.app/](https://outpost-mars.vercel.app/)** |
-| 🌍 **Live Interactive Web Game (Mirror)** | GitHub Pages | **[https://ankitchamke.github.io/Outpost-Mars/](https://ankitchamke.github.io/Outpost-Mars/)** |
+| 🚀 **Live Interactive Web Game (Primary)** | Vercel Cloud | **[https://outpost-mars-chi.vercel.app/](https://outpost-mars-chi.vercel.app/)** |
 | 📦 **Open-Source Repository** | GitHub | **[https://github.com/ankitchamke/Outpost-Mars](https://github.com/ankitchamke/Outpost-Mars)** |
 | 🏆 **NASA Space Apps Challenge** | Competition Portal | **[NASA Space Apps Challenge 2024](https://www.spaceappschallenge.org/2026/find-a-team/nova-69/)** |
 
