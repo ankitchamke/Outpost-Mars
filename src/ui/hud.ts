@@ -131,28 +131,28 @@ export class OutpostHud {
     this.container.innerHTML = `
       <!-- 1. Mobile Unified Status Strip (Mobile viewports <= 640px) -->
       <div class="hud-mobile-strip" role="region" aria-label="Life Support & Crew Status">
-        <!-- Telemetry Pill -->
+        <!-- Left Group: Power & Life Support -->
         <button 
-          class="hud-mobile-pill hud-mobile-telemetry ${this.isTelemetryExpanded ? 'is-active' : ''}" 
+          class="hud-mobile-pill hud-mobile-left hud-mobile-telemetry ${this.isTelemetryExpanded ? 'is-active' : ''}" 
           type="button" 
           aria-expanded="${this.isTelemetryExpanded}"
-          aria-label="Colony Telemetry. Power ${power.current} kW, Life Support ${lifeSupportPercent}%, Storm Shield ${stormShieldPercent}%. Tap for gauges."
+          aria-label="Colony Telemetry. Power ${power.current} kW, Life Support ${lifeSupportPercent}%. Tap for details."
         >
           <span class="hud-mobile-val val-power ${powerLevel.className}" title="Power Systems">⚡ ${power.current}</span>
           <span class="hud-mobile-sep" aria-hidden="true">|</span>
           <span class="hud-mobile-val val-lifesupport ${lifeSupportLevel.className}" title="Life Support (ECLSS)">🫁 ${lifeSupportPercent}%</span>
-          <span class="hud-mobile-sep" aria-hidden="true">|</span>
-          <span class="hud-mobile-val val-shield ${stormShieldLevel.className}" title="Storm Shielding">🛡️ ${stormShieldPercent}%</span>
           <span class="hud-mobile-caret" aria-hidden="true">${this.isTelemetryExpanded ? '▲' : '▾'}</span>
         </button>
 
-        <!-- Crew Status Pill -->
+        <!-- Right Group: Storm Shield & Crew Status -->
         <button 
-          class="hud-mobile-pill hud-mobile-crew ${safetyConfig.colorClass} ${this.isCrewExpanded ? 'is-active' : ''}" 
+          class="hud-mobile-pill hud-mobile-right hud-mobile-crew ${safetyConfig.colorClass} ${this.isCrewExpanded ? 'is-active' : ''}" 
           type="button" 
           aria-expanded="${this.isCrewExpanded}"
-          aria-label="Crew Safety Status: ${safetyConfig.label}. Tap for roster."
+          aria-label="Storm Shield ${stormShieldPercent}%, Crew Safety: ${safetyConfig.label}. Tap for details."
         >
+          <span class="hud-mobile-val val-shield ${stormShieldLevel.className}" title="Storm Shielding">🛡️ ${stormShieldPercent}%</span>
+          <span class="hud-mobile-sep" aria-hidden="true">|</span>
           <span class="hud-mobile-crew-badge">CREW ${safety === 'nominal' ? '✓' : safetyConfig.chipStatus.toUpperCase()}</span>
           <span class="hud-mobile-caret" aria-hidden="true">${this.isCrewExpanded ? '▲' : '▾'}</span>
         </button>
