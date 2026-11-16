@@ -78,6 +78,13 @@
   --sar: env(safe-area-inset-right, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
+
+  /* Shared Mobile Control Dock Tokens */
+  --mobile-control-center-y: 70px;
+  --mobile-control-dock-left: 148px;
+  --mobile-control-gap: 16px;
+  --mobile-dock-bottom: var(--mobile-control-center-y);
+  --mobile-objectives-bottom: calc(max(0.45rem, var(--sab)) + 128px);
 }
 
 /* Reset & Box Model */
@@ -4195,7 +4202,7 @@ html, body {
   .objectives-overlay {
     position: absolute;
     top: auto !important;
-    bottom: calc(max(0.45rem, var(--sab)) + 124px) !important;
+    bottom: var(--mobile-objectives-bottom) !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
     width: min(340px, calc(100vw - 1.5rem)) !important;
@@ -4272,14 +4279,14 @@ html, body {
     gap: 0.25rem;
   }
 
-  /* Dedicated Bottom Control Dock: Building Interaction Pill immediately to the RIGHT of Joystick */
+  /* Dedicated Bottom Control Dock: Building Interaction Pill aligned on shared horizontal equator with Joystick */
   .building-prompt-overlay {
     position: absolute;
-    left: calc(max(0.75rem, var(--sal)) + 144px) !important;
+    left: calc(max(0.75rem, var(--sal)) + var(--mobile-control-dock-left)) !important;
     right: auto !important;
-    transform: none !important;
-    bottom: calc(max(0.45rem, var(--sab)) + 26px) !important;
-    max-width: calc(100vw - 165px);
+    bottom: var(--mobile-dock-bottom) !important;
+    transform: translateY(50%) !important;
+    max-width: calc(100vw - var(--mobile-control-dock-left) - max(0.75rem, var(--sar)) - 16px);
     pointer-events: none;
     z-index: 25;
     display: flex;
@@ -4622,19 +4629,13 @@ html, body {
     width: min(320px, calc(100vw - 1rem)) !important;
   }
 
-  .building-prompt-overlay {
-    left: calc(max(0.5rem, var(--sal)) + 140px) !important;
-    right: auto !important;
-    bottom: calc(max(0.45rem, var(--sab)) + 24px) !important;
-    max-width: calc(100vw - 155px);
-  }
   .objectives-overlay.is-expanded-view ~ .building-prompt-overlay {
     display: none !important;
   }
   .building-interaction-prompt {
-    padding: 0.3rem 0.65rem;
-    min-height: 36px;
-    gap: 0.35rem;
+    padding: 0.35rem 0.75rem;
+    min-height: 38px;
+    gap: 0.4rem;
   }
   .interaction-building-name {
     font-size: 0.8rem;

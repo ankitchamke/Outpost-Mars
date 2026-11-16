@@ -735,7 +735,7 @@ export class MarsScene extends Phaser.Scene {
     } else if (width >= 768 && height >= 500) {
       camera.setZoom(0.95);
     } else {
-      camera.setZoom(0.90);
+      camera.setZoom(0.85);
     }
   }
 

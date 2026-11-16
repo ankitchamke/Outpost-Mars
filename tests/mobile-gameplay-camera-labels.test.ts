@@ -410,17 +410,17 @@ describe('Mobile Gameplay Camera, Joystick & World Layout (fix/mobile-gameplay-c
       // Test 360x800 (Compact mobile)
       scene.scale = { width: 360, height: 800 };
       scene.updateCameraZoom();
-      expect(appliedZoom).toBe(0.90);
+      expect(appliedZoom).toBe(0.85);
 
       // Test 390x844 (Standard mobile)
       scene.scale = { width: 390, height: 844 };
       scene.updateCameraZoom();
-      expect(appliedZoom).toBe(0.90);
+      expect(appliedZoom).toBe(0.85);
 
       // Test 412x915 (Android flagship)
       scene.scale = { width: 412, height: 915 };
       scene.updateCameraZoom();
-      expect(appliedZoom).toBe(0.90);
+      expect(appliedZoom).toBe(0.85);
 
       // Test tablet 768x1024
       scene.scale = { width: 768, height: 1024 };

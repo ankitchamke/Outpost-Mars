@@ -116,31 +116,31 @@ class MockDOMElement {
 
 describe('Mobile Layout Refinement (fix/mobile-layout-refinement)', () => {
   describe('1. Camera Zoom (~10% Zoom Out for Mobile Viewports)', () => {
-    it('applies 0.90 zoom on compact mobile (360x800)', () => {
+    it('applies 0.85 zoom on compact mobile (360x800)', () => {
       const scene: any = new MarsScene();
       let zoom = 0;
       scene.cameras = { main: { setZoom: vi.fn((z: number) => { zoom = z; }) } };
       scene.scale = { width: 360, height: 800 };
       scene.updateCameraZoom();
-      expect(zoom).toBe(0.90);
+      expect(zoom).toBe(0.85);
     });
 
-    it('applies 0.90 zoom on standard mobile (390x844)', () => {
+    it('applies 0.85 zoom on standard mobile (390x844)', () => {
       const scene: any = new MarsScene();
       let zoom = 0;
       scene.cameras = { main: { setZoom: vi.fn((z: number) => { zoom = z; }) } };
       scene.scale = { width: 390, height: 844 };
       scene.updateCameraZoom();
-      expect(zoom).toBe(0.90);
+      expect(zoom).toBe(0.85);
     });
 
-    it('applies 0.90 zoom on Android flagship (412x915)', () => {
+    it('applies 0.85 zoom on Android flagship (412x915)', () => {
       const scene: any = new MarsScene();
       let zoom = 0;
       scene.cameras = { main: { setZoom: vi.fn((z: number) => { zoom = z; }) } };
       scene.scale = { width: 412, height: 915 };
       scene.updateCameraZoom();
-      expect(zoom).toBe(0.90);
+      expect(zoom).toBe(0.85);
     });
 
     it('preserves 0.95 zoom on tablet (768x1024) and 1.0 on desktop (1920x1080)', () => {
