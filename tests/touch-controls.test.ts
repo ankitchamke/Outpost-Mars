@@ -66,6 +66,7 @@ import {
   calculateJoystickVector,
   getJoystickPosition,
   isTouchDevice,
+  isPointInMovementZone,
   JOYSTICK_MARGIN,
   JOYSTICK_RADIUS,
 } from '../src/game/touch-controls';
@@ -197,6 +198,27 @@ describe('Touch Controls & Capability Detection (Phase 07.1)', () => {
       const vec = calculateJoystickVector(30, 30, JOYSTICK_RADIUS);
       expect(Math.abs(vec.x - vec.y)).toBeLessThan(1e-5);
       expect(vec.magnitude).toBeLessThanOrEqual(1);
+    });
+  });
+
+  describe('isPointInMovementZone() - Ergonomic Touch Control Area', () => {
+    it('returns true for touchdown in the bottom-left zone on mobile portrait (375x812)', () => {
+      expect(isPointInMovementZone(60, 750, 375, 812)).toBe(true);
+      expect(isPointInMovementZone(120, 700, 375, 812)).toBe(true);
+    });
+
+    it('returns true for touchdown in bottom-left zone on tablet (768x1024)', () => {
+      expect(isPointInMovementZone(100, 900, 768, 1024)).toBe(true);
+    });
+
+    it('returns false for touches in the top half of the screen', () => {
+      expect(isPointInMovementZone(50, 100, 375, 812)).toBe(false);
+      expect(isPointInMovementZone(100, 300, 768, 1024)).toBe(false);
+    });
+
+    it('returns false for touches on the right side of the screen (prompt/telemetry area)', () => {
+      expect(isPointInMovementZone(320, 750, 375, 812)).toBe(false);
+      expect(isPointInMovementZone(600, 900, 768, 1024)).toBe(false);
     });
   });
 

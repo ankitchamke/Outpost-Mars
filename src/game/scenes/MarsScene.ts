@@ -8,6 +8,7 @@ import {
   isTouchDevice,
   getJoystickPosition,
   calculateJoystickVector,
+  isPointInMovementZone,
   JOYSTICK_RADIUS,
   JOYSTICK_HIT_RADIUS,
 } from '../touch-controls';
@@ -474,7 +475,13 @@ export class MarsScene extends Phaser.Scene {
       let lastBuildingTapTime = 0;
       const handleSelectBuilding = (pointer: Phaser.Input.Pointer) => {
         if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen) return;
-        if (this.joystickPointerId === pointer.id || this.isPointerOverJoystick(pointer)) return;
+        if (
+          this.joystickPointerId === pointer.id ||
+          this.isPointerOverJoystick(pointer) ||
+          isPointInMovementZone(pointer.x, pointer.y, this.scale.width, this.scale.height)
+        ) {
+          return;
+        }
         const now = Date.now();
         if (now - lastBuildingTapTime < 300) return;
         lastBuildingTapTime = now;
@@ -1163,14 +1170,26 @@ export class MarsScene extends Phaser.Scene {
       .setAlpha(0.72 + Math.sin(this.time.now / 200) * 0.2);
   }
 
-  public openBuilding(building?: BuildingData): void {
-    if (this.isBuildingPanelOpen) return;
+  public isNearBuilding(building: BuildingData, maxDistance = INTERACTION_MAX_DISTANCE): boolean {
+    const nearby = this.getNearbyBuilding(maxDistance);
+    return nearby?.id === building.id;
+  }
+
+  public openBuilding(building?: BuildingData): boolean {
+    if (this.isBuildingPanelOpen) return false;
     if (this.isDiscoveryPanelOpen) {
       this.closeDiscoveryPanel();
     }
 
-    const targetBuilding = building ?? this.getNearbyBuilding();
-    if (!targetBuilding) return;
+    const nearby = this.getNearbyBuilding();
+    // Proximity enforcement: if a specific building was targeted, astronaut MUST be in range
+    if (building && (!nearby || nearby.id !== building.id)) {
+      this.game.events.emit(BUILDING_INTERACTION_EVENTS.distantClick, building);
+      return false;
+    }
+
+    const targetBuilding = building ?? nearby;
+    if (!targetBuilding) return false;
 
     this.isBuildingPanelOpen = true;
     this.nearbyBuilding = undefined;
@@ -1178,6 +1197,7 @@ export class MarsScene extends Phaser.Scene {
     this.resetJoystick();
     (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
     this.game.events.emit(BUILDING_INTERACTION_EVENTS.panelOpen, targetBuilding);
+    return true;
   }
 
   private openNearbyBuildingPanel = (): void => {
@@ -1284,8 +1304,10 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private isUiControlFocused(): boolean {
+    if (typeof document === 'undefined') return false;
     const activeElement = document.activeElement;
-    if (!(activeElement instanceof HTMLElement)) return false;
+    if (!activeElement) return false;
+    if (typeof HTMLElement !== 'undefined' && !(activeElement instanceof HTMLElement)) return false;
     if (
       activeElement === document.body ||
       activeElement === document.documentElement ||
@@ -1295,7 +1317,7 @@ export class MarsScene extends Phaser.Scene {
     }
 
     return Boolean(
-      activeElement.closest('button, input, textarea, select, a[href], [contenteditable="true"], [role="button"]')
+      (activeElement as HTMLElement).closest?.('button, input, textarea, select, a[href], [contenteditable="true"], [role="button"]')
     );
   }
 
@@ -1423,14 +1445,47 @@ export class MarsScene extends Phaser.Scene {
       this.syncVirtualJoystick();
     }
 
-    if (this.isBuildingPanelOpen || this.isDiscoveryPanelOpen || !this.joystickBase || this.joystickPointerId !== null) return;
-    if (!this.isPointerOverJoystick(pointer)) {
+    if (
+      this.isBuildingPanelOpen ||
+      this.isDiscoveryPanelOpen ||
+      !this.joystickBase ||
+      this.joystickPointerId !== null
+    ) {
+      return;
+    }
+
+    const isDirectHit = this.isPointerOverJoystick(pointer);
+    const inZone = isPointInMovementZone(
+      pointer.x,
+      pointer.y,
+      this.scale.width,
+      this.scale.height
+    );
+
+    if (!isDirectHit && !inZone) {
       return;
     }
 
     this.joystickPointerId = pointer.id;
     this.capturePointer(pointer);
-    this.updateJoystickFromPointer(pointer);
+
+    if (inZone && !isDirectHit) {
+      // Dynamic anchor: center joystick smoothly at touchdown point clamped to safe bounds
+      const minX = this.joystickRadius + 12;
+      const maxX = Math.max(minX, Math.min(this.scale.width * 0.42, 280));
+      const minY = Math.max(this.scale.height * 0.52, this.scale.height - 260);
+      const maxY = this.scale.height - (this.joystickRadius + 12);
+
+      const clampedX = Math.max(minX, Math.min(pointer.x, maxX));
+      const clampedY = Math.max(minY, Math.min(pointer.y, maxY));
+
+      this.joystickCenter.set(clampedX, clampedY);
+      this.joystickBase.setPosition(clampedX, clampedY);
+      this.joystickThumb?.setPosition(clampedX, clampedY);
+      this.joystickVector.set(0, 0);
+    } else {
+      this.updateJoystickFromPointer(pointer);
+    }
   }
 
   private handleJoystickPointerMove(pointer: Phaser.Input.Pointer): void {
@@ -1481,7 +1536,6 @@ export class MarsScene extends Phaser.Scene {
   private setupDomPointerListeners(): void {
     const canvas = this.game.canvas;
     canvas.addEventListener('pointercancel', this.handleDomPointerCancel);
-    canvas.addEventListener('lostpointercapture', this.handleDomPointerCancel);
     window.addEventListener('pointercancel', this.handleDomPointerCancel);
     window.addEventListener('pointerup', this.handleWindowPointerUp);
     window.addEventListener('blur', this.handleWindowBlur);
@@ -1490,14 +1544,13 @@ export class MarsScene extends Phaser.Scene {
   private removeDomPointerListeners(): void {
     const canvas = this.game.canvas;
     canvas.removeEventListener('pointercancel', this.handleDomPointerCancel);
-    canvas.removeEventListener('lostpointercapture', this.handleDomPointerCancel);
     window.removeEventListener('pointercancel', this.handleDomPointerCancel);
     window.removeEventListener('pointerup', this.handleWindowPointerUp);
     window.removeEventListener('blur', this.handleWindowBlur);
   }
 
   private handleDomPointerCancel = (event: PointerEvent): void => {
-    if (this.joystickPointerId === event.pointerId || event.type === 'pointercancel') {
+    if (this.joystickPointerId !== null && this.joystickPointerId === event.pointerId) {
       this.resetJoystick();
     }
   };
@@ -1518,8 +1571,16 @@ export class MarsScene extends Phaser.Scene {
       this.joystickPointerId = null;
     }
     this.joystickVector.set(0, 0);
+    const { x, y } = getJoystickPosition(this.scale.width, this.scale.height);
+    this.joystickCenter.set(x, y);
+    if (this.joystickBase) {
+      this.joystickBase.setPosition(x, y);
+    }
     if (this.joystickThumb) {
-      this.joystickThumb.setPosition(this.joystickCenter.x, this.joystickCenter.y);
+      this.joystickThumb.setPosition(x, y);
+    }
+    if (this.astronaut?.body) {
+      (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
     }
   }
 

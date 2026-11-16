@@ -4,4 +4,6 @@ export const BUILDING_INTERACTION_EVENTS = {
   requestClose: 'outpost:building-close-request',
   panelOpen: 'outpost:building-panel-open',
   panelClose: 'outpost:building-panel-close',
+  distantClick: 'outpost:building-distant-click',
 } as const;
+

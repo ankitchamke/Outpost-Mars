@@ -94,3 +94,25 @@ export function calculateJoystickVector(
     magnitude: 1,
   };
 }
+
+/**
+ * Determines whether a screen coordinate falls within the bottom-left
+ * movement control zone suitable for virtual joystick activation.
+ *
+ * @param x Screen X coordinate
+ * @param y Screen Y coordinate
+ * @param viewportWidth Screen/canvas width
+ * @param viewportHeight Screen/canvas height
+ */
+export function isPointInMovementZone(
+  x: number,
+  y: number,
+  viewportWidth: number,
+  viewportHeight: number
+): boolean {
+  const maxZoneWidth = Math.max(160, Math.min(viewportWidth * 0.42, 280));
+  const minZoneY = Math.max(viewportHeight * 0.52, viewportHeight - 260);
+
+  return x >= 0 && x <= maxZoneWidth && y >= minZoneY && y <= viewportHeight;
+}
+

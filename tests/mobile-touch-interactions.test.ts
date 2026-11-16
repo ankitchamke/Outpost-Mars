@@ -45,6 +45,7 @@ if (typeof window === 'undefined') {
   };
 
   (globalThis as any).window = domStub;
+  (globalThis as any).HTMLElement = class {};
   (globalThis as any).HTMLCanvasElement = MockCanvasElement;
   (globalThis as any).HTMLVideoElement = class {};
   (globalThis as any).HTMLAudioElement = class {};
@@ -179,275 +180,338 @@ class MockDOMElement {
   }
 }
 
-describe('Mobile Touch & Gameplay Interaction Pipeline', () => {
-  describe('Phaser Building Taps & Click Handling', async () => {
-    const { CANONICAL_BUILDINGS, MarsScene } = await import('../src/game/scenes/MarsScene');
-    const { BUILDING_INTERACTION_EVENTS } = await import('../src/game/building-events');
+describe('Mobile Proximity-Based Gameplay & Movement Pipeline', async () => {
+  const { CANONICAL_BUILDINGS, MarsScene } = await import('../src/game/scenes/MarsScene');
+  const { BUILDING_INTERACTION_EVENTS } = await import('../src/game/building-events');
+  const { BuildingInteractionUI } = await import('../src/ui/building-interactions');
+  const { getJoystickPosition, isPointInMovementZone } = await import(
+    '../src/game/touch-controls'
+  );
 
-    let scene: any;
-    let panelOpenEvents: any[];
+  let scene: any;
+  let panelOpenEvents: any[];
+  let distantClickEvents: any[];
+  let nearbyEvents: any[];
 
-    beforeEach(() => {
-      scene = new MarsScene();
-      panelOpenEvents = [];
+  let promptContainer: MockDOMElement;
+  let objectivesContainer: MockDOMElement;
+  let panelContainer: MockDOMElement;
+  let feedbackContainer: MockDOMElement;
+  let handlers: {
+    onInteract: ReturnType<typeof vi.fn>;
+    onClose: ReturnType<typeof vi.fn>;
+    onOpenScienceConsole: ReturnType<typeof vi.fn>;
+  };
+  let ui: any;
 
-      // Mock scene game and events emitter
-      scene.game = {
-        events: {
-          emit: vi.fn((event: string, data?: any) => {
-            if (event === BUILDING_INTERACTION_EVENTS.panelOpen) {
-              panelOpenEvents.push(data);
-            }
-          }),
-          on: vi.fn(),
-          off: vi.fn(),
-        },
-        canvas: {
-          tabIndex: 0,
-          setAttribute: vi.fn(),
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-        },
-      };
+  beforeEach(() => {
+    scene = new MarsScene();
+    panelOpenEvents = [];
+    distantClickEvents = [];
+    nearbyEvents = [];
 
-      scene.events = {
-        once: vi.fn(),
+    // Mock scene game and events emitter
+    scene.game = {
+      events: {
+        emit: vi.fn((event: string, data?: any) => {
+          if (event === BUILDING_INTERACTION_EVENTS.panelOpen) {
+            panelOpenEvents.push(data);
+          } else if (event === BUILDING_INTERACTION_EVENTS.distantClick) {
+            distantClickEvents.push(data);
+          } else if (event === BUILDING_INTERACTION_EVENTS.nearby) {
+            nearbyEvents.push(data);
+          }
+        }),
         on: vi.fn(),
-        emit: vi.fn(),
-      };
-
-      // Mock astronaut sprite & body
-      scene.astronaut = {
-        x: 1000,
-        y: 800,
-        body: {
-          setVelocity: vi.fn(),
-        },
-      };
-    });
-
-    it('1. Tap Habitat building → Habitat inspection opens', () => {
-      const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
-      expect(habitat).toBeDefined();
-
-      scene.openBuilding(habitat);
-
-      expect(scene.isBuildingPanelOpen).toBe(true);
-      expect(panelOpenEvents.length).toBe(1);
-      expect(panelOpenEvents[0].id).toBe('habitat');
-      expect(panelOpenEvents[0].name).toBe('Habitat');
-    });
-
-    it('2. Tap Mission Control → Mission Control opens', () => {
-      const missionControl = CANONICAL_BUILDINGS.find((b: any) => b.id === 'mission_control')!;
-      expect(missionControl).toBeDefined();
-
-      scene.openBuilding(missionControl);
-
-      expect(scene.isBuildingPanelOpen).toBe(true);
-      expect(panelOpenEvents.length).toBe(1);
-      expect(panelOpenEvents[0].id).toBe('mission_control');
-      expect(panelOpenEvents[0].name).toBe('Mission Control');
-    });
-
-    it('3. Tap Solar Farm → Solar Farm inspection opens', () => {
-      const solarFarm = CANONICAL_BUILDINGS.find((b: any) => b.id === 'solar_farm')!;
-      expect(solarFarm).toBeDefined();
-
-      scene.openBuilding(solarFarm);
-
-      expect(scene.isBuildingPanelOpen).toBe(true);
-      expect(panelOpenEvents.length).toBe(1);
-      expect(panelOpenEvents[0].id).toBe('solar_farm');
-      expect(panelOpenEvents[0].name).toBe('Solar Farm');
-    });
-
-    it('8. Desktop mouse click → inspection works', () => {
-      const greenhouse = CANONICAL_BUILDINGS.find((b: any) => b.id === 'greenhouse')!;
-      expect(greenhouse).toBeDefined();
-
-      // Desktop click passes the building directly
-      scene.openBuilding(greenhouse);
-
-      expect(scene.isBuildingPanelOpen).toBe(true);
-      expect(panelOpenEvents.length).toBe(1);
-      expect(panelOpenEvents[0].id).toBe('greenhouse');
-    });
-
-    it('10. Repeated taps → no duplicate modals', () => {
-      const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
-
-      // First tap opens modal
-      scene.openBuilding(habitat);
-      expect(scene.isBuildingPanelOpen).toBe(true);
-      expect(panelOpenEvents.length).toBe(1);
-
-      // Subsequent rapid taps while panel is open are safely ignored
-      scene.openBuilding(habitat);
-      scene.openBuilding(habitat);
-      scene.openBuilding(CANONICAL_BUILDINGS[1]);
-
-      expect(panelOpenEvents.length).toBe(1);
-    });
-  });
-
-  describe('Orange E Interaction Prompt Touch Target', async () => {
-    const { CANONICAL_BUILDINGS } = await import('../src/game/scenes/MarsScene');
-    const { BuildingInteractionUI } = await import('../src/ui/building-interactions');
-
-    let promptContainer: MockDOMElement;
-    let objectivesContainer: MockDOMElement;
-    let panelContainer: MockDOMElement;
-    let feedbackContainer: MockDOMElement;
-    let handlers: {
-      onInteract: ReturnType<typeof vi.fn>;
-      onClose: ReturnType<typeof vi.fn>;
-      onOpenScienceConsole: ReturnType<typeof vi.fn>;
+        off: vi.fn(),
+      },
+      canvas: {
+        tabIndex: 0,
+        setAttribute: vi.fn(),
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        focus: vi.fn(),
+      },
     };
-    let ui: any;
 
-    beforeEach(() => {
-      promptContainer = new MockDOMElement('DIV', 'building-prompt-overlay');
-      objectivesContainer = new MockDOMElement('DIV', 'objectives-overlay');
-      panelContainer = new MockDOMElement('DIV', 'panel-overlay');
-      feedbackContainer = new MockDOMElement('DIV', 'feedback-overlay');
-      panelContainer.hidden = true; // Closed initially
+    scene.events = {
+      once: vi.fn(),
+      on: vi.fn(),
+      emit: vi.fn(),
+    };
 
-      handlers = {
-        onInteract: vi.fn(),
-        onClose: vi.fn(),
-        onOpenScienceConsole: vi.fn(),
-      };
+    scene.time = { now: 1000 };
+    scene.scale = { width: 390, height: 844 };
 
-      ui = new BuildingInteractionUI(
-        promptContainer as any,
-        objectivesContainer as any,
-        panelContainer as any,
-        feedbackContainer as any,
-        handlers as any
-      );
-    });
+    // Mock astronaut sprite & Arcade Physics body
+    scene.astronaut = {
+      x: 1000,
+      y: 800,
+      body: {
+        setVelocity: vi.fn(),
+      },
+    };
 
-    it('4. Tap the orange E prompt → correct building opens', () => {
-      const habitat = CANONICAL_BUILDINGS[0];
-      ui.setNearbyBuilding(habitat);
-      expect(promptContainer.hidden).toBe(false);
+    // Populate scene buildings with realistic bounds matching canonical coordinates
+    scene.buildings = new Map();
+    for (const b of CANONICAL_BUILDINGS) {
+      scene.buildings.set(b.id, {
+        x: b.x,
+        y: b.y,
+        displayWidth: 200,
+        displayHeight: 150,
+        getBounds: () => ({
+          left: b.x - 100,
+          right: b.x + 100,
+          top: b.y - 75,
+          bottom: b.y + 75,
+        }),
+      });
+    }
 
-      // Child prompt pill
-      const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
-      promptPill.parentNode = promptContainer;
+    // Set up DOM interaction UI
+    promptContainer = new MockDOMElement('DIV', 'building-prompt-overlay');
+    objectivesContainer = new MockDOMElement('DIV', 'objectives-overlay');
+    panelContainer = new MockDOMElement('DIV', 'panel-overlay');
+    feedbackContainer = new MockDOMElement('DIV', 'feedback-overlay');
+    panelContainer.hidden = true;
 
-      // Tap on the prompt pill
-      promptPill.pointerup('touch');
+    handlers = {
+      onInteract: vi.fn(),
+      onClose: vi.fn(),
+      onOpenScienceConsole: vi.fn(),
+    };
 
-      expect(handlers.onInteract).toHaveBeenCalledTimes(1);
-    });
-
-    it('5. Tap prompt arrow → correct building opens', () => {
-      const solarFarm = CANONICAL_BUILDINGS.find((b: any) => b.id === 'solar_farm')!;
-      ui.setNearbyBuilding(solarFarm);
-      expect(promptContainer.hidden).toBe(false);
-
-      // Child arrow inside prompt pill
-      const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
-      promptPill.parentNode = promptContainer;
-      const arrow = new MockDOMElement('SPAN', 'interaction-prompt-arrow');
-      arrow.parentNode = promptPill;
-
-      // Tap on the arrow
-      arrow.pointerup('touch');
-
-      expect(handlers.onInteract).toHaveBeenCalledTimes(1);
-    });
-
-    it('Tapping the orange E keycap button triggers inspection', () => {
-      const missionControl = CANONICAL_BUILDINGS.find((b: any) => b.id === 'mission_control')!;
-      ui.setNearbyBuilding(missionControl);
-      expect(promptContainer.hidden).toBe(false);
-
-      // Keycap inside prompt pill
-      const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
-      promptPill.parentNode = promptContainer;
-      const keycap = new MockDOMElement('SPAN', 'interaction-keycap');
-      keycap.parentNode = promptPill;
-
-      // Tap on the keycap button
-      keycap.pointerup('touch');
-
-      expect(handlers.onInteract).toHaveBeenCalledTimes(1);
-    });
-
-    it('9. Desktop keyboard E → inspection works', () => {
-      const habitat = CANONICAL_BUILDINGS[0];
-      ui.setNearbyBuilding(habitat);
-      expect(promptContainer.hidden).toBe(false);
-
-      // Keyboard E event dispatched via triggerNearbyInteraction
-      (ui as any).triggerNearbyInteraction();
-
-      expect(handlers.onInteract).toHaveBeenCalledTimes(1);
-    });
-
-    it('Tapping repeatedly debounces duplicate inspection events', () => {
-      const habitat = CANONICAL_BUILDINGS[0];
-      ui.setNearbyBuilding(habitat);
-
-      const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
-      promptPill.parentNode = promptContainer;
-
-      // Rapid consecutive pointerup + click events
-      promptPill.pointerup('touch');
-      promptPill.click();
-
-      // Debounced: onInteract called exactly once
-      expect(handlers.onInteract).toHaveBeenCalledTimes(1);
-    });
+    ui = new BuildingInteractionUI(
+      promptContainer as any,
+      objectivesContainer as any,
+      panelContainer as any,
+      feedbackContainer as any,
+      handlers as any
+    );
   });
 
-  describe('Virtual Joystick Movement & Separation', async () => {
-    const { calculateJoystickVector, getJoystickPosition } = await import('../src/game/touch-controls');
-    const { MarsScene } = await import('../src/game/scenes/MarsScene');
+  it('1. Click distant Habitat with desktop mouse → no panel', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    // Place astronaut far away from Habitat (e.g. at (100, 100))
+    scene.astronaut.x = 100;
+    scene.astronaut.y = 100;
 
-    it('6. Move joystick → player movement works', () => {
-      // Joystick drag to the right (+34px x, 0px y)
-      const vector = calculateJoystickVector(34, 0, 34);
+    const opened = scene.openBuilding(habitat);
 
-      expect(vector.x).toBeCloseTo(1.0);
-      expect(vector.y).toBeCloseTo(0.0);
-      expect(vector.magnitude).toBeCloseTo(1.0);
+    expect(opened).toBe(false);
+    expect(scene.isBuildingPanelOpen).toBe(false);
+    expect(panelOpenEvents.length).toBe(0);
+    expect(distantClickEvents.length).toBe(1);
+    expect(distantClickEvents[0].id).toBe('habitat');
+  });
 
-      // Joystick drag diagonally down-left (-20px x, 20px y)
-      const diag = calculateJoystickVector(-20, 20, 34);
-      expect(diag.x).toBeLessThan(0);
-      expect(diag.y).toBeGreaterThan(0);
-      expect(diag.magnitude).toBeLessThanOrEqual(1.0);
-    });
+  it('2. Tap distant Habitat on mobile → no panel', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    // Place astronaut far away at Mission Control coordinates (620, 500)
+    scene.astronaut.x = 620;
+    scene.astronaut.y = 500;
 
-    it('7. Move joystick while near a building → no accidental inspection', () => {
-      const scene: any = new MarsScene();
-      const openSpy = vi.spyOn(scene, 'openBuilding');
+    // Mobile tap handler calls openBuilding
+    const opened = scene.openBuilding(habitat);
 
-      // Joystick center position on mobile 390x844
-      const joyPos = getJoystickPosition(390, 844);
-      scene.joystickCenter = joyPos;
-      scene.joystickRadius = 34;
-      scene.joystickHitRadius = 56;
-      scene.joystickBase = { x: joyPos.x, y: joyPos.y };
-      scene.joystickPointerId = 1; // Active joystick pointer
+    expect(opened).toBe(false);
+    expect(scene.isBuildingPanelOpen).toBe(false);
+    expect(panelOpenEvents.length).toBe(0);
+    expect(distantClickEvents.length).toBe(1);
+    expect(distantClickEvents[0].id).toBe('habitat');
+  });
 
-      // Pointer event from the joystick touch
-      const joystickPointer = {
-        id: 1,
-        x: joyPos.x + 10,
-        y: joyPos.y + 10,
-      } as any;
+  it('3. Move astronaut towards Habitat → position changes', () => {
+    // Astronaut moving towards Habitat via joystick
+    scene.joystickVector.set(0, 1);
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 650;
 
-      // When joystickPointerId matches or is over joystick, selection is rejected
-      const isOverJoystick = scene.isPointerOverJoystick(joystickPointer);
-      expect(isOverJoystick).toBe(true);
+    scene.update();
 
-      // openBuilding is never called from joystick dragging
-      expect(openSpy).not.toHaveBeenCalled();
-    });
+    // Body velocity is driven towards Habitat at ASTRONAUT_MOVE_SPEED (190 px/s)
+    expect(scene.astronaut.body.setVelocity).toHaveBeenCalledWith(0, 190);
+    expect(scene.isFollowingAstronaut).toBe(true);
+  });
+
+  it('4. Enter Habitat radius → prompt appears', () => {
+    // Place astronaut directly at Habitat entrance (1000, 800)
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 800;
+
+    const nearby = scene.getNearbyBuilding();
+    expect(nearby).toBeDefined();
+    expect(nearby.id).toBe('habitat');
+
+    scene.refreshNearbyBuilding();
+    expect(scene.nearbyBuilding).toBeDefined();
+    expect(scene.nearbyBuilding.id).toBe('habitat');
+
+    // Notify UI that Habitat is in proximity
+    ui.setNearbyBuilding(nearby);
+    expect(promptContainer.hidden).toBe(false);
+    expect(promptContainer.innerHTML).toContain('Habitat');
+  });
+
+  it('5. Tap prompt → Habitat panel opens', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 800;
+    ui.setNearbyBuilding(habitat);
+    expect(promptContainer.hidden).toBe(false);
+
+    // Tap on the prompt pill
+    const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
+    promptPill.parentNode = promptContainer;
+    promptPill.pointerup('touch');
+
+    expect(handlers.onInteract).toHaveBeenCalledTimes(1);
+
+    // When interact event is handled by scene
+    scene.openNearbyBuildingPanel();
+
+    expect(scene.isBuildingPanelOpen).toBe(true);
+    expect(panelOpenEvents.length).toBe(1);
+    expect(panelOpenEvents[0].id).toBe('habitat');
+  });
+
+  it('6. Press E nearby on desktop → Habitat panel opens', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 800;
+    scene.nearbyBuilding = habitat;
+
+    // Desktop E interaction triggers openNearbyBuildingPanel
+    scene.openNearbyBuildingPanel();
+
+    expect(scene.isBuildingPanelOpen).toBe(true);
+    expect(panelOpenEvents.length).toBe(1);
+    expect(panelOpenEvents[0].id).toBe('habitat');
+  });
+
+  it('7. Leave Habitat radius → prompt disappears', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 800;
+    scene.refreshNearbyBuilding();
+    ui.setNearbyBuilding(habitat);
+    expect(promptContainer.hidden).toBe(false);
+
+    // Astronaut walks away from Habitat
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 1200;
+
+    const nearby = scene.getNearbyBuilding();
+    expect(nearby).toBeUndefined();
+
+    scene.refreshNearbyBuilding();
+    expect(scene.nearbyBuilding).toBeUndefined();
+
+    ui.setNearbyBuilding(null);
+    expect(promptContainer.hidden).toBe(true);
+  });
+
+  it('8. Approach Solar Farm → correct prompt appears', () => {
+    // Place astronaut near Solar Farm (x: 1450, y: 550)
+    scene.astronaut.x = 1450;
+    scene.astronaut.y = 550;
+
+    const nearby = scene.getNearbyBuilding();
+    expect(nearby).toBeDefined();
+    expect(nearby.id).toBe('solar_farm');
+
+    ui.setNearbyBuilding(nearby);
+    expect(promptContainer.hidden).toBe(false);
+    expect(promptContainer.innerHTML).toContain('Solar Farm');
+  });
+
+  it('9. Approach Mission Control → correct prompt appears', () => {
+    // Place astronaut near Mission Control (x: 620, y: 530)
+    scene.astronaut.x = 620;
+    scene.astronaut.y = 530;
+
+    const nearby = scene.getNearbyBuilding();
+    expect(nearby).toBeDefined();
+    expect(nearby.id).toBe('mission_control');
+
+    ui.setNearbyBuilding(nearby);
+    expect(promptContainer.hidden).toBe(false);
+    expect(promptContainer.innerHTML).toContain('Mission Control');
+  });
+
+  it('10. Joystick movement does not accidentally trigger inspection', () => {
+    const openSpy = vi.spyOn(scene, 'openBuilding');
+
+    const joyPos = getJoystickPosition(390, 844);
+    scene.joystickCenter = { x: joyPos.x, y: joyPos.y, set: vi.fn() };
+    scene.joystickRadius = 34;
+    scene.joystickHitRadius = 56;
+    scene.joystickBase = { x: joyPos.x, y: joyPos.y, setPosition: vi.fn() };
+    scene.joystickPointerId = 1; // Active drag pointer
+
+    // Pointer dragging inside the movement zone
+    const pointerInZone = { id: 1, x: 70, y: 780 } as any;
+
+    expect(isPointInMovementZone(pointerInZone.x, pointerInZone.y, 390, 844)).toBe(true);
+
+    // Building tap handler rejects touches matching joystickPointerId or within movement zone
+    const shouldIgnore =
+      scene.joystickPointerId === pointerInZone.id ||
+      scene.isPointerOverJoystick(pointerInZone) ||
+      isPointInMovementZone(pointerInZone.x, pointerInZone.y, 390, 844);
+
+    expect(shouldIgnore).toBe(true);
+    expect(openSpy).not.toHaveBeenCalled();
+  });
+
+  it('11. Simultaneous joystick and prompt interactions work', () => {
+    const habitat = CANONICAL_BUILDINGS.find((b: any) => b.id === 'habitat')!;
+    scene.astronaut.x = 1000;
+    scene.astronaut.y = 800;
+    ui.setNearbyBuilding(habitat);
+
+    // Left thumb (pointerId = 1) is actively moving the joystick
+    scene.joystickPointerId = 1;
+    scene.joystickVector.set(0.5, 0.5);
+
+    // Right thumb (pointerId = 2) taps the prompt
+    const promptPill = new MockDOMElement('DIV', 'building-interaction-prompt');
+    promptPill.parentNode = promptContainer;
+    promptPill.pointerup('touch');
+
+    expect(handlers.onInteract).toHaveBeenCalledTimes(1);
+
+    // Right thumb releasing does NOT reset left thumb joystick
+    const rightThumbReleaseEvent = { pointerId: 2, type: 'pointerup' } as PointerEvent;
+    scene.handleWindowPointerUp(rightThumbReleaseEvent);
+
+    expect(scene.joystickPointerId).toBe(1); // Joystick remains active during tap
+    expect(scene.joystickVector.x).toBe(0.5);
+
+    // Opening panel completes inspection and resets joystick cleanly
+    scene.openNearbyBuildingPanel();
+    expect(scene.isBuildingPanelOpen).toBe(true);
+    expect(scene.joystickPointerId).toBeNull();
+    expect(scene.joystickVector.x).toBe(0);
+  });
+
+  it('12. Existing desktop keyboard movement remains functional', () => {
+    scene.cursorKeys = {
+      left: { isDown: false },
+      right: { isDown: true }, // Pressing Right arrow
+      up: { isDown: false },
+      down: { isDown: false },
+    };
+    scene.wasdKeys = {
+      left: { isDown: false },
+      right: { isDown: false },
+      up: { isDown: false },
+      down: { isDown: false },
+    };
+
+    scene.update();
+
+    expect(scene.astronaut.body.setVelocity).toHaveBeenCalledWith(190, 0);
   });
 });
