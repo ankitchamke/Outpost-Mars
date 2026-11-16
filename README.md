@@ -11,10 +11,10 @@
 [![NASA Space Apps Challenge](https://img.shields.io/badge/NASA_Space_Apps-Challenge_Project-0b3d91?style=for-the-badge&logo=nasa&logoColor=white)](https://www.spaceappschallenge.org/)
 [![Live Demo - Vercel](https://img.shields.io/badge/Live_Demo-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://outpost-mars.vercel.app/)
 [![Live Demo - GitHub Pages](https://img.shields.io/badge/Live_Demo-GitHub_Pages-181717?style=for-the-badge&logo=github&logoColor=white)](https://ankitchamke.github.io/Outpost-Mars/)
-[![Tests](https://img.shields.io/badge/Tests-158%20Passed%20(100%25)-10b981?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
+[![Tests](https://img.shields.io/badge/Tests-237%20Passed%20(100%25)-10b981?style=for-the-badge&logo=vitest&logoColor=white)](tests/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-3178c6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Phaser 3](https://img.shields.io/badge/Phaser-3.90.0-e74c3c?style=for-the-badge&logo=phaser&logoColor=white)](https://phaser.io/)
-[![Vite](https://img.shields.io/badge/Vite-6.2.0-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![Vite](https://img.shields.io/badge/Vite-6.4.6-646cff?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Offline First](https://img.shields.io/badge/Architecture-100%25%20Offline%20First-8b5cf6?style=for-the-badge)](#bundled-offline-telemetry-snapshots)
 [![WCAG 2.1 AA](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA-0284c7?style=for-the-badge)](#accessibility--user-experience)
 
@@ -28,6 +28,12 @@
 
 ---
 
+> **Post-Submission Development Note**
+>
+> The mobile-responsive experience and subsequent interface refinements were developed after the NASA Space Apps Challenge submission deadline as part of the project's continued development. These improvements are included in this repository's ongoing development and should not be confused with the original submitted version.
+
+---
+
 ## 🌐 Live Project & Submission Links
 
 | Destination | Platform / Type | URL / Access |
@@ -38,7 +44,7 @@
 | 🏆 **NASA Space Apps Challenge** | Competition Portal | **[NASA Space Apps Challenge 2024](https://www.spaceappschallenge.org/)** |
 
 > [!TIP]
-> **Zero Installation, Instant Play:** OUTPOST: MARS is a 100% static, client-side web application. It requires zero plugins, zero browser extensions, and zero judge API keys. Works directly in Google Chrome, Microsoft Edge, Mozilla Firefox, and Safari on desktop and laptop screens.
+> **Zero Installation, Instant Play:** OUTPOST: MARS is a 100% static, client-side web application. It requires zero plugins, zero browser extensions, and zero judge API keys. Works directly in Google Chrome, Microsoft Edge, Mozilla Firefox, and Safari across desktop, laptop, tablet, and mobile screens.
 
 ---
 
@@ -53,19 +59,24 @@
    - [NASA DONKI Space Weather Crisis & Mission Debrief](#nasa-donki-space-weather-crisis--mission-debrief)
    - [Interactive NASA Science Challenges](#interactive-nasa-science-challenges)
    - [Atmospheric Sci-Fi Audio Engine](#atmospheric-sci-fi-audio-engine)
-4. [Real NASA Spaceflight Science & Truth Taxonomy](#real-nasa-spaceflight-science--truth-taxonomy)
+4. [Responsive Mobile Gameplay & Touch Controls](#responsive-mobile-gameplay--touch-controls)
+   - [Stationary Virtual Joystick](#stationary-virtual-joystick)
+   - [Proximity Interaction Dock](#proximity-interaction-dock)
+   - [Compact HUD & Telemetry Drawers](#compact-hud--telemetry-drawers)
+   - [Conflict-Free Objectives Panel](#conflict-free-objectives-panel)
+5. [Real NASA Spaceflight Science & Truth Taxonomy](#real-nasa-spaceflight-science--truth-taxonomy)
    - [The Three-Tier Scientific Truth Taxonomy](#the-three-tier-scientific-truth-taxonomy)
    - [Bundled Offline Telemetry Snapshots](#bundled-offline-telemetry-snapshots)
    - [Scientific Provenance & Boundary Clarifications](#scientific-provenance--boundary-clarifications)
-5. [System Architecture](#system-architecture)
+6. [System Architecture](#system-architecture)
    - [Architecture Diagram](#architecture-diagram)
    - [Project Directory Breakdown](#project-directory-breakdown)
-6. [Technology Stack](#technology-stack)
-7. [Visual Showcase & Telemetry Walkthrough](#visual-showcase--telemetry-walkthrough)
-8. [Controls & Operational Guide](#controls--operational-guide)
-9. [Automated Verification & Test Suite](#automated-verification--test-suite)
-10. [Local Development & Build Instructions](#local-development--build-instructions)
-11. [Credits, NASA Citations & Disclaimer](#credits-nasa-citations--disclaimer)
+7. [Technology Stack](#technology-stack)
+8. [Visual Showcase & Telemetry Walkthrough](#visual-showcase--telemetry-walkthrough)
+9. [Controls & Operational Guide](#controls--operational-guide)
+10. [Automated Verification & Test Suite](#automated-verification--test-suite)
+11. [Local Development & Build Instructions](#local-development--build-instructions)
+12. [Credits, NASA Citations & Disclaimer](#credits-nasa-citations--disclaimer)
 
 ---
 
@@ -104,8 +115,8 @@ The Jezero Crater colony consists of five canonical facilities arranged across a
 ### Strict Proximity-Based Building Access
 To simulate authentic extravehicular activity (EVA) and planetary exploration, building inspection follows strict physical rules:
 - **No Click-to-Open:** Clicking buildings from a distance does nothing. Clicking will never teleport or move the astronaut, nor bypass distance checks.
-- **Physical Approach:** The commander must physically navigate the astronaut to within the interaction radius of a structure using `WASD` or Arrow keys.
-- **Keycap HUD Prompt:** Once inside the interaction zone, a mechanical `[E] INSPECT` prompt appears at the bottom of the HUD. Pressing **`E`** opens the facility’s inspection field guide.
+- **Physical Approach:** The commander must physically navigate the astronaut to within the interaction radius of a structure using `WASD`, Arrow keys, or the mobile virtual joystick.
+- **Keycap HUD Prompt:** Once inside the interaction zone, a mechanical `[E] INSPECT` prompt appears on desktop, or a dedicated touch-friendly interaction button appears on mobile. Pressing **`E`** (or tapping the button) opens the facility’s inspection field guide.
 - **Precedence Rule:** Colony facility interactions strictly take precedence over ambient field discoveries when interaction radii overlap.
 
 ---
@@ -126,7 +137,7 @@ Beyond the base perimeter, the Jezero Crater wilderness is populated with educat
 </div>
 
 - **Inspection & Field Journal:** Approaching a natural feature displays an **`[E] DISCOVER`** prompt with category kicker. Pressing `E` opens a field guide card featuring kid-friendly explanations, interesting scientific facts, why NASA scientists study it, and authentic mission citations.
-- **Keyboard Dismissal:** Pressing `Escape` or clicking the close button dismisses the card and returns focus seamlessly to the astronaut.
+- **Keyboard & Touch Dismissal:** Pressing `Escape` or tapping the close button dismisses the card and returns focus seamlessly to the astronaut.
 
 ---
 
@@ -177,9 +188,44 @@ Accessible at any time via the **Science Log** in the header, players can solve 
 
 An immersive, subtle audio subsystem designed to enhance engagement without distracting from educational gameplay:
 - **Ambient Soundtrack:** Subtle sci-fi synthesizer pad loops creating an expansive, contemplative Martian atmosphere.
-- **Browser Autoplay Compliance:** Audio initializes silently and unlocks smoothly upon the player's first natural user interaction (click or keypress).
+- **Browser Autoplay Compliance:** Audio initializes silently and unlocks smoothly upon the player's first natural user interaction (click, touch, or keypress).
 - **Procedural Tactical Sound Effects:** Distinct audio cues for facility inspection, science log navigation, task completion, mission success, and reset warnings.
 - **Sound Settings Popover:** Interactive header controls allowing commanders to adjust master volume (0–100%), toggle music on/off, toggle SFX on/off, or mute all with persistent `localStorage` saving.
+
+---
+
+## 📱 Responsive Mobile Gameplay & Touch Controls
+
+*(Developed post-submission as part of the project's continued development roadmap)*
+
+OUTPOST: MARS delivers a first-class mobile and tablet experience optimized across 320px to 432px portrait viewports and landscape orientations:
+
+<div align="center">
+
+<img src="public/assets/showcase/mobile-gameplay.png" alt="OUTPOST: MARS Mobile Gameplay — Touch Controls & Dedicated Control Dock" width="390" style="max-width: 100%; border-radius: 12px; border: 1.5px solid #ff6b35; box-shadow: 0 12px 36px rgba(0,0,0,0.7);" />
+
+<p><em>OUTPOST: MARS Mobile Interface — Dedicated bottom control dock with fixed virtual joystick (bottom-left), proximity interaction pill (aligned on shared 70px horizontal centerline), compact telemetry status strip, and collapsible objectives card.</em></p>
+
+</div>
+
+### Stationary Virtual Joystick
+- **Permanent Ergonomic Anchor:** Permanently fixed at the bottom-left of the viewport with safe-area gutter clearance. The base never relocates unexpectedly on touch.
+- **True 8-Directional Navigation:** Full $360^\circ$ vector normalization ensuring smooth thumb steering and instant halt on release.
+- **Camera Compensation:** Inverts Phaser camera scale transforms so the canvas joystick maintains exact 1:1 alignment with DOM safe-area overlays regardless of viewport zoom.
+
+### Proximity Interaction Dock
+- **Collinear Control Equator:** The building interaction button anchors to the exact same vertical centerline ($70\text{px}$ from the viewport bottom) as the virtual joystick, creating a balanced, thumb-friendly handheld console layout.
+- **Independent Touch Targets:** Visual and touch clearances ($> 34\text{px}$ visual gap, isolated touch hit areas) prevent accidental interactions while steering.
+- **WCAG 2.1 AA Compliant Touch Areas:** All mobile buttons maintain a minimum $44 \times 44\text{px}$ touch target size.
+
+### Compact HUD & Telemetry Drawers
+- **Streamlined Status Strip:** Essential life-support gauges (Power, Oxygen/Life Support, Shield, Crew) condense into high-contrast status pills in the top HUD.
+- **Slide-Out Telemetry Drawers:** Tapping any status pill reveals detailed subsystem telemetry cards with glassmorphic styling, smooth animations, and backdrop blur.
+
+### Conflict-Free Objectives Panel
+- **Non-Overlapping Bottom Anchor:** Objectives card anchors safely at $128\text{px}$ above the viewport bottom, leaving $14\text{px}$ clearance above the joystick.
+- **Auto-Hiding Interaction Button:** When expanding the mission objectives drawer, the interaction prompt automatically hides (`display: none !important`), ensuring zero collision while preserving full joystick control.
+- **Sticky Collapse Controls:** Features a prominent, accessible `Hide` toggle button with full keyboard and touch focus handling.
 
 ---
 
@@ -259,9 +305,11 @@ graph TD
     subgraph ViewLayer ["Phaser 3 Game World (2000x1500)"]
         Config["src/game/config.ts<br/>(ScaleManager, Arcade Physics, 60fps)"]
         MarsScene["src/game/scenes/MarsScene.ts<br/>(Astronaut, Buildings, Craters, Proximity Check)"]
+        TouchControls["src/game/touch-controls.ts<br/>(Virtual Joystick & Camera Compensation)"]
         HitAreas["src/game/building-hit-areas.ts<br/>(Strict Radius Geometry)"]
         Config --> MarsScene
         MarsScene --> HitAreas
+        MarsScene --> TouchControls
     end
 
     subgraph UILayer ["Semantic Accessible DOM HUD & Overlays"]
@@ -312,7 +360,7 @@ Outpost-Mars/
 │   │   ├── building-hit-areas.ts  # Proximity distance geometry and hit-area boundaries
 │   │   ├── discovery-events.ts    # Environmental discovery event constants
 │   │   ├── tutorial-events.ts     # Onboarding tutorial event bus
-│   │   ├── touch-controls.ts      # Multi-touch capability detection & virtual joystick
+│   │   ├── touch-controls.ts      # Multi-touch detection, virtual joystick & dock insets
 │   │   ├── scenes/MarsScene.ts    # Main exploration scene: terrain, sprites, physics, camera
 │   │   └── textures/              # Procedural texture fallbacks and Martian color palette
 │   ├── ui/                        # Accessible DOM HUD and modal dialog controllers
@@ -323,7 +371,7 @@ Outpost-Mars/
 │   │   ├── science-challenges.ts  # Science console dialogs and persistent Science Log UI
 │   │   └── space-weather-dialog.ts# DONKI storm alert modal & Sol 5 mission debrief
 │   └── main.ts                    # Application orchestrator wiring Phaser with DOM UI
-├── tests/                         # Vitest automated test suite (158 passing tests)
+├── tests/                         # Vitest automated test suite (237 passing tests across 20 files)
 │   ├── data/                      # Snapshot validation, loading, and ingestion safety tests
 │   ├── audio-manager.test.ts      # Web Audio settings, sound toggles, and volume tests
 │   ├── building-hit-areas.test.ts # Proximity distance math and deterministic resolution
@@ -331,11 +379,17 @@ Outpost-Mars/
 │   ├── discovery-interactions.test.ts # Geological props, [E] prompt, and modal card tests
 │   ├── foundation.test.ts         # Initial state baseline and resource bounds tests
 │   ├── mission.test.ts            # Five-Sol campaign progression and recovery tests
+│   ├── mobile-control-alignment.test.ts # Collinear joystick & interaction dock alignment
+│   ├── mobile-gameplay-camera-labels.test.ts # Joystick directions and building label plaques
+│   ├── mobile-layout-refinement.test.ts # Viewport scale, camera zoom & objectives clearance
+│   ├── mobile-objectives-tutorial-flow.test.ts # Objectives toggle and onboarding flow
+│   ├── mobile-touch-interactions.test.ts # Touch event routing and hit-area dispatch
+│   ├── mobile-ux-polish.test.ts   # Stationary joystick base and HUD drawers
 │   ├── phaser-foundation.test.ts  # Phaser config, viewport scale, and boundary tests
 │   ├── science-challenges.test.ts # Challenge validation and supply calculation tests
 │   ├── space-weather-event.test.ts# DONKI snapshot parsing and Sol 5 debrief tests
 │   ├── storage.test.ts            # LocalStorage persistence and migration tests
-│   └── touch-controls.test.ts     # Multi-touch detection and virtual joystick tests
+│   └── touch-controls.test.ts     # Multi-touch detection, joystick math & dock insets
 ├── docs/                          # Architecture blueprints, scoring criteria, and QA plans
 ├── index.html                     # Application HTML5 shell with semantic containers
 ├── package.json                   # Project dependencies and npm scripts
@@ -351,8 +405,8 @@ Outpost-Mars/
 | :--- | :--- | :---: | :--- |
 | **Phaser 3** | Game Engine & Physics | `v3.90.0` | 2D WebGL/Canvas rendering, Arcade Physics, sprite animators, camera lerping, and coordinate space conversion. |
 | **TypeScript** | Programming Language | `v5.7.2` | Static type safety across state models, scientific telemetry schemas, DOM controllers, and event buses. |
-| **Vite** | Bundler & Dev Server | `v6.2.0` | High-velocity development server with Instant HMR, tree-shaking, and Rollup production bundling. |
-| **Vitest** | Test Runner | `v5.1.0` | High-speed unit, integration, and mathematical validation test suite (158 automated tests). |
+| **Vite** | Bundler & Dev Server | `v6.4.6` | High-velocity development server with Instant HMR, tree-shaking, and Rollup production bundling. |
+| **Vitest** | Test Runner | `v5.1.0` | High-speed unit, integration, and mathematical validation test suite (237 automated tests). |
 | **Web Audio API** | Audio Engine | *Native* | Procedural sound generation, synthesizer pad loop streaming, and volume attenuation without external audio plugins. |
 | **HTML5 & CSS3** | User Interface | *Native* | Semantic, accessible HUD overlays, mechanical keycaps, frosted glass styling, and ARIA role compliance. |
 | **Web Storage API** | State Persistence | *Native* | Zero-dependency client-side `localStorage` caching for mission saves, discovered science, and audio settings. |
@@ -380,7 +434,7 @@ Outpost-Mars/
 
 ## 🎮 Controls & Operational Guide
 
-### Primary Desktop Controls
+### Desktop Controls
 
 | Action | Control Key | Description |
 | :--- | :---: | :--- |
@@ -394,6 +448,17 @@ Outpost-Mars/
 | **Reset Outpost** | Click **Reset** in header | Open granular reset dialog (replay onboarding or reset campaign) |
 | **Help & Guide** | Click **Help** in header | Reopen the interactive commander onboarding guide |
 
+### Mobile & Tablet Touch Controls
+
+| Action | Touch Gesture | Description |
+| :--- | :---: | :--- |
+| **Move Astronaut** | Drag **Virtual Joystick** | Ergonomic bottom-left knob providing full $360^\circ$ directional steering |
+| **Inspect Facility** | Tap **Building Prompt Button** | High-contrast orange pill button aligned on the shared horizontal equator |
+| **Inspect Discovery** | Tap **Discovery Prompt Button** | High-contrast cyan pill button appearing when near natural geological props |
+| **Toggle Objectives** | Tap **Expand / Hide** | View full task descriptions and Sol requirements; auto-hides action buttons |
+| **Toggle Status Drawers** | Tap **Telemetry / Crew Pills** | Expand quick-access drawers for real-time life support and crew status |
+| **Dismiss Modals** | Tap **✕ Button** or Backdrop | Smooth touch-friendly closing for all field guides and dialog overlays |
+
 ---
 
 ## 🧪 Automated Verification & Test Suite
@@ -403,32 +468,39 @@ The repository contains an exhaustive automated test suite verified with **Vites
 ```text
  ✓ tests/data/loader.test.ts (20 tests)
  ✓ tests/data/validation.test.ts (35 tests)
- ✓ tests/space-weather-event.test.ts (7 tests)
- ✓ tests/mission.test.ts (4 tests)
- ✓ tests/building-hit-areas.test.ts (9 tests)
- ✓ tests/audio-manager.test.ts (10 tests)
- ✓ tests/building-interactions.test.ts (16 tests)
- ✓ tests/touch-controls.test.ts (16 tests)
- ✓ tests/discovery-interactions.test.ts (19 tests)
- ✓ tests/phaser-foundation.test.ts (8 tests)
  ✓ tests/data/ingestion-safety.test.ts (5 tests)
- ✓ tests/science-challenges.test.ts (4 tests)
- ✓ tests/storage.test.ts (4 tests)
  ✓ tests/foundation.test.ts (1 test)
+ ✓ tests/storage.test.ts (4 tests)
+ ✓ tests/mission.test.ts (4 tests)
+ ✓ tests/space-weather-event.test.ts (7 tests)
+ ✓ tests/science-challenges.test.ts (4 tests)
+ ✓ tests/audio-manager.test.ts (10 tests)
+ ✓ tests/phaser-foundation.test.ts (8 tests)
+ ✓ tests/building-hit-areas.test.ts (9 tests)
+ ✓ tests/building-interactions.test.ts (16 tests)
+ ✓ tests/discovery-interactions.test.ts (19 tests)
+ ✓ tests/touch-controls.test.ts (21 tests)
+ ✓ tests/mobile-touch-interactions.test.ts (12 tests)
+ ✓ tests/mobile-ux-polish.test.ts (14 tests)
+ ✓ tests/mobile-gameplay-camera-labels.test.ts (18 tests)
+ ✓ tests/mobile-layout-refinement.test.ts (10 tests)
+ ✓ tests/mobile-objectives-tutorial-flow.test.ts (9 tests)
+ ✓ tests/mobile-control-alignment.test.ts (11 tests)
 
-Test Files  14 passed (14)
-     Tests  158 passed (158)
-  Duration  3.88s
+Test Files  20 passed (20)
+     Tests  237 passed (237)
+  Duration  1.97s
 ```
 
 ### Comprehensive Quality Checks
 - ✅ **Strict TypeScript Compilation:** `npx tsc --noEmit` exits with **0 errors**.
 - ✅ **Production Bundling:** `npm run build` bundles all assets with zero syntax or packaging errors.
-- ✅ **Headless Chrome Browser Verification:** Verified via Chrome DevTools Protocol at $1920 \times 1080$:
+- ✅ **Headless Chrome Browser Verification:** Verified via Chrome DevTools Protocol across desktop (1920×1080) and mobile viewports (360×800, 390×844, 412×915):
   - Astronaut movement, proximity detection, and prompt triggers verified.
-  - Clicking objects confirmed to do nothing (no teleportation, no accidental panel opening).
+  - Clicking/tapping buildings remotely confirmed to do nothing (strict proximity enforcement).
   - Colony building precedence over environmental discoveries verified.
-  - [E] key inspection and Escape dismissal verified.
+  - Collinear virtual joystick and interaction prompt alignment confirmed ($\Delta Y = 0.00\text{px}$).
+  - Non-overlapping compact objectives panel and auto-hiding interaction buttons verified.
 
 ---
 
@@ -450,7 +522,7 @@ npm install
 
 # 3. Start local development server with Hot Module Replacement (HMR)
 npm run dev
-# The game will be running at http://localhost:5173
+# The game will be running at http://localhost:3000
 
 # 4. Run the automated test suite
 npm test
