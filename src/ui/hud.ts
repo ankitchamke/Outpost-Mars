@@ -30,21 +30,51 @@ export class OutpostHud {
   private container: HTMLElement;
   private previousSnapshot?: ResourceSnapshot;
   private isCrewExpanded = false;
+  private isTelemetryExpanded = !(typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth <= 768);
   private lastState?: GameState;
 
   constructor(container: HTMLElement) {
     this.container = container;
 
-    // Delegated click handler for the crew details toggle
+    // Delegated click handler for the crew and telemetry toggles (both desktop and mobile)
     this.container.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
-      if (target.closest('.btn-crew-toggle') || target.closest('.crew-summary-trigger')) {
+      if (
+        target.closest('.btn-crew-toggle') ||
+        target.closest('.crew-summary-trigger') ||
+        target.closest('.hud-mobile-crew')
+      ) {
         this.isCrewExpanded = !this.isCrewExpanded;
+        if (this.isCrewExpanded && this.isMobileViewport()) {
+          this.isTelemetryExpanded = false;
+        }
+        if (this.lastState) {
+          this.update(this.lastState);
+        }
+      } else if (
+        target.closest('.btn-telemetry-toggle') ||
+        target.closest('.telemetry-summary-trigger') ||
+        target.closest('.hud-mobile-telemetry')
+      ) {
+        this.isTelemetryExpanded = !this.isTelemetryExpanded;
+        if (this.isTelemetryExpanded && this.isMobileViewport()) {
+          this.isCrewExpanded = false;
+        }
+        if (this.lastState) {
+          this.update(this.lastState);
+        }
+      } else if (target.closest('.btn-drawer-close')) {
+        this.isCrewExpanded = false;
+        this.isTelemetryExpanded = false;
         if (this.lastState) {
           this.update(this.lastState);
         }
       }
     });
+  }
+
+  private isMobileViewport(): boolean {
+    return typeof window !== 'undefined' && typeof window.innerWidth === 'number' && window.innerWidth <= 640;
   }
 
   /**
@@ -99,11 +129,109 @@ export class OutpostHud {
     }[safety];
 
     this.container.innerHTML = `
-      <!-- Compact Resource Telemetry Widget (Top-Left) -->
-      <section class="hud-panel resource-gauges" aria-label="Life Support & Resource Telemetry">
-        <div class="hud-panel-header hud-compact-header">
-          <span class="hud-panel-title">TELEMETRY</span>
-          <span class="hud-live-tag" aria-hidden="true">LIVE</span>
+      <!-- 1. Mobile Unified Status Strip (Mobile viewports <= 640px) -->
+      <div class="hud-mobile-strip" role="region" aria-label="Life Support & Crew Status">
+        <!-- Left Group: Power & Life Support -->
+        <button 
+          class="hud-mobile-pill hud-mobile-left hud-mobile-telemetry ${this.isTelemetryExpanded ? 'is-active' : ''}" 
+          type="button" 
+          aria-expanded="${this.isTelemetryExpanded}"
+          aria-label="Colony Telemetry. Power ${power.current} kW, Life Support ${lifeSupportPercent}%. Tap for details."
+        >
+          <span class="hud-mobile-val val-power ${powerLevel.className}" title="Power Systems">⚡ ${power.current}</span>
+          <span class="hud-mobile-sep" aria-hidden="true">|</span>
+          <span class="hud-mobile-val val-lifesupport ${lifeSupportLevel.className}" title="Life Support (ECLSS)">🫁 ${lifeSupportPercent}%</span>
+          <span class="hud-mobile-caret" aria-hidden="true">${this.isTelemetryExpanded ? '▲' : '▾'}</span>
+        </button>
+
+        <!-- Right Group: Storm Shield & Crew Status -->
+        <button 
+          class="hud-mobile-pill hud-mobile-right hud-mobile-crew ${safetyConfig.colorClass} ${this.isCrewExpanded ? 'is-active' : ''}" 
+          type="button" 
+          aria-expanded="${this.isCrewExpanded}"
+          aria-label="Storm Shield ${stormShieldPercent}%, Crew Safety: ${safetyConfig.label}. Tap for details."
+        >
+          <span class="hud-mobile-val val-shield ${stormShieldLevel.className}" title="Storm Shielding">🛡️ ${stormShieldPercent}%</span>
+          <span class="hud-mobile-sep" aria-hidden="true">|</span>
+          <span class="hud-mobile-crew-badge">CREW ${safety === 'nominal' ? '✓' : safetyConfig.chipStatus.toUpperCase()}</span>
+          <span class="hud-mobile-caret" aria-hidden="true">${this.isCrewExpanded ? '▲' : '▾'}</span>
+        </button>
+      </div>
+
+      <!-- Mobile Expandable Telemetry Drawer -->
+      ${this.isTelemetryExpanded ? `
+        <div class="hud-mobile-drawer hud-telemetry-drawer" role="region" aria-label="Detailed Life Support Telemetry">
+          <div class="hud-drawer-header">
+            <span class="hud-drawer-title">COLONY TELEMETRY</span>
+            <button class="btn-drawer-close" type="button" aria-label="Close telemetry details">✕</button>
+          </div>
+          <div class="hud-drawer-body">
+            <div class="gauge-row ${powerLevel.isCritical ? 'gauge-row-critical' : ''}">
+              <div class="gauge-label">
+                <span class="gauge-name">⚡ Power Array</span>
+                <span class="gauge-number">${power.current} / ${power.max} <small>${power.unit}</small></span>
+              </div>
+              <div class="gauge-track"><div class="gauge-fill gauge-power ${powerLevel.className}" style="width: ${powerPercent}%"></div></div>
+            </div>
+            <div class="gauge-row ${lifeSupportLevel.isCritical ? 'gauge-row-critical' : ''}">
+              <div class="gauge-label">
+                <span class="gauge-name">🫁 Life Support</span>
+                <span class="gauge-number">${lifeSupport.current} <small>${lifeSupport.unit}</small></span>
+              </div>
+              <div class="gauge-track"><div class="gauge-fill gauge-life-support ${lifeSupportLevel.className}" style="width: ${lifeSupportPercent}%"></div></div>
+            </div>
+            <div class="gauge-row ${stormShieldLevel.isCritical ? 'gauge-row-critical' : ''}">
+              <div class="gauge-label">
+                <span class="gauge-name">🛡️ Storm Shield</span>
+                <span class="gauge-number">${stormShield.current} <small>${stormShield.unit}</small></span>
+              </div>
+              <div class="gauge-track"><div class="gauge-fill gauge-storm-shield ${stormShieldLevel.className}" style="width: ${stormShieldPercent}%"></div></div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Mobile Expandable Crew Drawer -->
+      ${this.isCrewExpanded ? `
+        <div class="hud-mobile-drawer hud-crew-drawer" role="region" aria-label="Astronaut Crew Roster">
+          <div class="hud-drawer-header">
+            <span class="hud-drawer-title">CREW ROSTER (4 ASTRONAUTS)</span>
+            <button class="btn-drawer-close" type="button" aria-label="Close crew roster">✕</button>
+          </div>
+          <div class="hud-drawer-body">
+            <div class="crew-chips-grid">
+              ${CREW_ROSTER.map((astronaut, idx) => {
+                const memberStatus = this.getIndividualCrewStatus(safety, idx);
+                return `
+                  <div class="crew-chip ${memberStatus.statusClass}">
+                    <div class="crew-chip-avatar"><span class="crew-chip-callsign">${astronaut.callsign}</span></div>
+                    <div class="crew-chip-details">
+                      <span class="crew-chip-role">${astronaut.role}</span>
+                      <span class="crew-chip-status"><span class="crew-status-dot"></span>${memberStatus.label}</span>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- 2. Desktop Resource Telemetry Widget (Top-Left) -->
+      <section class="hud-panel resource-gauges desktop-hud-panel ${this.isTelemetryExpanded ? '' : 'is-collapsed'}" aria-label="Life Support & Resource Telemetry">
+        <div class="hud-panel-header hud-compact-header telemetry-summary-trigger" role="button" tabindex="0" aria-expanded="${this.isTelemetryExpanded}" aria-label="Toggle telemetry panel">
+          <div class="hud-header-left">
+            <span class="hud-panel-title">TELEMETRY</span>
+            <span class="hud-live-tag" aria-hidden="true">LIVE</span>
+          </div>
+          <div class="telemetry-compact-preview" aria-hidden="true">
+            <span class="mini-gauge-val" title="Power">⚡ ${power.current}</span>
+            <span class="mini-gauge-val" title="Life Support">🫁 ${lifeSupport.current}%</span>
+            <span class="mini-gauge-val" title="Storm Shielding">🛡️ ${stormShield.current}%</span>
+          </div>
+          <button class="btn-telemetry-toggle" type="button" aria-expanded="${this.isTelemetryExpanded}" aria-label="${this.isTelemetryExpanded ? 'Collapse telemetry' : 'Expand telemetry'}" title="${this.isTelemetryExpanded ? 'Hide telemetry details' : 'Show telemetry details'}">
+            <span aria-hidden="true">${this.isTelemetryExpanded ? '▲' : '▼'}</span>
+          </button>
         </div>
 
         <!-- Power Gauge -->
@@ -212,8 +340,8 @@ export class OutpostHud {
         </div>
       </section>
 
-      <!-- Compact Crew Status Widget (Top-Right) -->
-      <section class="hud-panel crew-safety-panel" aria-label="Mission and Crew Status">
+      <!-- 3. Desktop Crew Status Widget (Top-Right) -->
+      <section class="hud-panel crew-safety-panel desktop-hud-panel" aria-label="Mission and Crew Status">
         <div class="crew-compact-summary crew-summary-trigger" role="button" tabindex="0" aria-expanded="${this.isCrewExpanded}" aria-label="Toggle crew details panel">
           <div class="crew-summary-left">
             <span class="crew-summary-icon" aria-hidden="true">

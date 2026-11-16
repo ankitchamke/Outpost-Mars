@@ -110,7 +110,7 @@ export class FirstTimeTutorialUI {
   public markPlayerMoved(): void {
     if (this.step !== 'movement' || this.movementComplete) return;
     this.movementComplete = true;
-    this.render();
+    this.advance();
   }
 
   public setNearbyBuilding(building: BuildingData | null): void {
@@ -151,7 +151,9 @@ export class FirstTimeTutorialUI {
   }
 
   private advance(): void {
-    if (this.step === 'movement' && !this.movementComplete) return;
+    if (this.step === 'movement') {
+      this.movementComplete = true;
+    }
 
     const currentIndex = GUIDED_STEPS.indexOf(this.step);
     if (currentIndex < 0 || currentIndex >= GUIDED_STEPS.length - 1) return;
@@ -181,7 +183,7 @@ export class FirstTimeTutorialUI {
           <span class="tutorial-kicker">FIRST-TIME FLIGHT BRIEFING</span>
           <h1 id="tutorial-title">OUTPOST: MARS</h1>
           <p>Your mission: Build knowledge, explore Mars and keep your crew safe.</p>
-          <p class="tutorial-desktop-notice">OUTPOST: MARS is designed for desktop and laptop screens. For the best experience, use Google Chrome with a keyboard.</p>
+          <p class="tutorial-desktop-notice">Optimized for desktop, tablet, and mobile touch screens.</p>
           <div class="tutorial-actions">
             <button class="tutorial-primary" type="button" data-tutorial-start>Start Mission</button>
             <button class="tutorial-secondary" type="button" data-tutorial-skip>Skip Tutorial</button>
@@ -225,7 +227,7 @@ export class FirstTimeTutorialUI {
             <p>${this.movementComplete ? 'You moved your astronaut. Now explore the colony.' : 'Walk a short distance to try the controls.'}</p>
             <div class="tutorial-controls"><span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><i>or</i><span><kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd></span><em>Mobile: use the joystick</em></div>
           `,
-          action: this.movementComplete ? '<button class="tutorial-primary" type="button" data-tutorial-next>Continue</button>' : '<span class="tutorial-waiting">Move to continue</span>',
+          action: '<button class="tutorial-primary" type="button" data-tutorial-next>Continue</button>',
         };
       case 'colony':
         return {
@@ -240,7 +242,7 @@ export class FirstTimeTutorialUI {
         return {
           title: 'Visit a building',
           content: `<p>${this.nearestBuilding ? `You’re near ${this.nearestBuilding.name}. Open its field guide.` : 'Approach a building entrance to open its field guide.'}</p><p class="tutorial-hint">Desktop: press <kbd>E</kbd>. Mobile: tap the highlighted building button.</p>`,
-          action: '<span class="tutorial-waiting">Interact with the highlighted building</span>',
+          action: '<button class="tutorial-primary" type="button" data-tutorial-next>Continue</button>',
         };
       case 'learning':
         return {

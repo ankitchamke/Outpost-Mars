@@ -188,7 +188,8 @@ export function isWorldPointInsideBuilding(
  */
 export function applyBuildingHitArea(
   sprite: Phaser.GameObjects.Sprite,
-  buildingId: string
+  buildingId: string,
+  useHandCursor = false
 ): void {
   const points = getBuildingPolygonPoints(buildingId, sprite.width, sprite.height);
 
@@ -197,7 +198,7 @@ export function applyBuildingHitArea(
     hitAreaCallback: (hitArea: unknown, x: number, y: number) => {
       return isPointInPolygon(x, y, hitArea as { x: number; y: number }[]);
     },
-    useHandCursor: false,
+    useHandCursor,
   });
 }
 

@@ -369,6 +369,20 @@ function initApp(): void {
     if (!interactionUi) return;
 
     gameInstance.events.on(TUTORIAL_EVENTS.playerMoved, () => tutorialUi?.markPlayerMoved());
+    let lastDistantClickToast = 0;
+    gameInstance.events.on(
+      BUILDING_INTERACTION_EVENTS.distantClick,
+      (building: BuildingData) => {
+        const now = Date.now();
+        if (now - lastDistantClickToast < 1200) return;
+        lastDistantClickToast = now;
+        showHudToast(
+          `${building.name} Out of Range`,
+          'Move closer to inspect.',
+          'info'
+        );
+      }
+    );
     gameInstance.events.on(
       BUILDING_INTERACTION_EVENTS.nearby,
       (building: BuildingData | null) => {
