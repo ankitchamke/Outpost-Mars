@@ -4195,13 +4195,31 @@ html, body {
   .objectives-overlay {
     position: absolute;
     top: auto !important;
-    bottom: calc(max(0.45rem, var(--sab)) + 128px) !important;
+    bottom: calc(max(0.45rem, var(--sab)) + 124px) !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
-    width: min(320px, calc(100vw - 1.5rem)) !important;
+    width: min(340px, calc(100vw - 1.5rem)) !important;
     min-width: 0 !important;
     pointer-events: none;
     z-index: 20;
+  }
+
+  .objectives-overlay.is-expanded-view {
+    z-index: 35 !important;
+  }
+
+  .objectives-overlay.is-expanded-view .mission-log {
+    max-height: min(300px, 44vh) !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .mission-log-header {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--bg-panel-solid);
+    padding-bottom: 0.35rem;
   }
 
   .mission-log {
@@ -4254,22 +4272,25 @@ html, body {
     gap: 0.25rem;
   }
 
-  /* Compact Building Interaction Button — Bottom-Right */
+  /* Dedicated Bottom Control Dock: Building Interaction Pill immediately to the RIGHT of Joystick */
   .building-prompt-overlay {
     position: absolute;
-    right: max(0.75rem, var(--sar)) !important;
-    left: auto !important;
+    left: calc(max(0.75rem, var(--sal)) + 144px) !important;
+    right: auto !important;
     transform: none !important;
-    bottom: calc(max(0.45rem, var(--sab)) + 172px) !important;
-    max-width: min(220px, 50vw);
+    bottom: calc(max(0.45rem, var(--sab)) + 26px) !important;
+    max-width: calc(100vw - 165px);
     pointer-events: none;
     z-index: 25;
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
+    align-items: center;
+    transition: opacity 0.2s ease, transform 0.2s ease;
   }
 
+  /* Temporarily hide building interaction pill when objectives panel is expanded to prevent overlap */
   .objectives-overlay.is-expanded-view ~ .building-prompt-overlay {
-    bottom: calc(max(0.45rem, var(--sab)) + 295px) !important;
+    display: none !important;
   }
 
   .building-interaction-prompt {
@@ -4326,7 +4347,6 @@ html, body {
 
   /* Modals & Dialogs Layout on Mobile */
   .panel-overlay,
-  .tutorial-overlay,
   .science-overlay,
   .space-weather-overlay,
   .discovery-dialog-overlay {
@@ -4335,6 +4355,34 @@ html, body {
     align-items: center;
     z-index: 100;
     pointer-events: auto;
+  }
+
+  /* Tutorial Overlay on Mobile: Touch pass-through for guided gameplay steps, modal only for welcome */
+  .tutorial-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: max(0.5rem, var(--sal));
+    padding-top: max(3.5rem, calc(var(--sat) + 3.2rem));
+    pointer-events: none !important;
+    background: transparent !important;
+  }
+
+  .tutorial-overlay.is-welcome {
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+    pointer-events: auto !important;
+    background: rgba(4, 8, 16, 0.8) !important;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  .tutorial-card {
+    pointer-events: auto !important;
   }
 
   .reset-choice-overlay {
@@ -4575,11 +4623,13 @@ html, body {
   }
 
   .building-prompt-overlay {
-    bottom: calc(max(0.45rem, var(--sab)) + 168px) !important;
-    max-width: min(210px, 50vw);
+    left: calc(max(0.5rem, var(--sal)) + 140px) !important;
+    right: auto !important;
+    bottom: calc(max(0.45rem, var(--sab)) + 24px) !important;
+    max-width: calc(100vw - 155px);
   }
   .objectives-overlay.is-expanded-view ~ .building-prompt-overlay {
-    bottom: calc(max(0.45rem, var(--sab)) + 295px) !important;
+    display: none !important;
   }
   .building-interaction-prompt {
     padding: 0.3rem 0.65rem;
@@ -4696,7 +4746,6 @@ html, body {
   }
 
   .panel-overlay,
-  .tutorial-overlay,
   .science-overlay,
   .space-weather-overlay,
   .reset-choice-overlay {

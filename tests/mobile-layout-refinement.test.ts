@@ -192,7 +192,7 @@ describe('Mobile Layout Refinement (fix/mobile-layout-refinement)', () => {
 
   describe('3. Telemetry & Resource Indicators Distributed Left & Right', () => {
     let container: any;
-    let hud: OutpostHud;
+    let hud: any;
 
     beforeEach(() => {
       container = new MockDOMElement('DIV', 'hud-overlay');
