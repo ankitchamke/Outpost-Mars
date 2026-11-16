@@ -184,19 +184,19 @@ describe('Mobile UX Polish & Game Controls Verification', async () => {
 
   describe('1. Fixed Virtual Joystick Anchor', () => {
     it('defines fixed ergonomic joystick dimensions', () => {
-      expect(JOYSTICK_RADIUS).toBe(38);
-      expect(JOYSTICK_HIT_RADIUS).toBe(64);
-      expect(JOYSTICK_MARGIN).toBe(62);
+      expect(JOYSTICK_RADIUS).toBe(44);
+      expect(JOYSTICK_HIT_RADIUS).toBe(75);
+      expect(JOYSTICK_MARGIN).toBe(70);
     });
 
     it('calculates stationary bottom-left anchor position based on viewport size', () => {
       const pos390 = getJoystickPosition(390, 844);
-      expect(pos390.x).toBe(62);
-      expect(pos390.y).toBe(844 - 62);
+      expect(pos390.x).toBe(70);
+      expect(pos390.y).toBe(844 - 70);
 
       const pos360 = getJoystickPosition(360, 800);
-      expect(pos360.x).toBe(62);
-      expect(pos360.y).toBe(800 - 62);
+      expect(pos360.x).toBe(70);
+      expect(pos360.y).toBe(800 - 70);
     });
 
     it('identifies touch within bottom-left movement zone without moving base', () => {
@@ -241,8 +241,8 @@ describe('Mobile UX Polish & Game Controls Verification', async () => {
 
       const fixedAnchorX = scene.joystickCenter.x;
       const fixedAnchorY = scene.joystickCenter.y;
-      expect(fixedAnchorX).toBe(62);
-      expect(fixedAnchorY).toBe(844 - 62);
+      expect(fixedAnchorX).toBe(70);
+      expect(fixedAnchorY).toBe(844 - 70);
 
       // Simulate touch down at an offset position within hit radius
       const touchDownPointer = {

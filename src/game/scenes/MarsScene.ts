@@ -52,21 +52,6 @@ const APPROVED_BUILDING_DISPLAY_WIDTHS: Record<string, number> = {
   solar_farm: OTHER_BUILDING_DISPLAY_WIDTH,
   storm_shelter: OTHER_BUILDING_DISPLAY_WIDTH,
 };
-const COMPACT_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
-  // Landscape mobile overview: a compact single row keeps every building clear of the HUD.
-  greenhouse: { x: 200, y: 700 },
-  mission_control: { x: 600, y: 700 },
-  habitat: { x: 1000, y: 700 },
-  solar_farm: { x: 1400, y: 700 },
-  storm_shelter: { x: 1800, y: 700 },
-};
-const MEDIUM_BUILDING_POSITIONS: Record<string, { x: number; y: number }> = {
-  mission_control: { x: 620, y: 500 },
-  solar_farm: { x: 1450, y: 520 },
-  greenhouse: { x: 550, y: 1000 },
-  habitat: { x: 1000, y: 750 },
-  storm_shelter: { x: 1420, y: 1000 },
-};
 
 export interface BuildingData {
   id: string;
@@ -492,9 +477,8 @@ export class MarsScene extends Phaser.Scene {
       sprite.on('pointerup', handleSelectBuilding);
       this.buildings.set(b.id, sprite);
 
-      // Building Label Plaque (High-contrast, accessible)
-      const badgeY = position.y + sprite.displayHeight / 2 + 14;
-      const plaque = this.add.text(position.x, badgeY, b.name.toUpperCase(), {
+      // Building Label Plaque (High-contrast, accessible) anchored consistently above roof
+      const plaque = this.add.text(position.x, position.y, b.name.toUpperCase(), {
         fontFamily: 'system-ui, -apple-system, sans-serif',
         fontSize: '11px',
         color: '#f8fafc',
@@ -503,12 +487,10 @@ export class MarsScene extends Phaser.Scene {
         align: 'center',
       }).setOrigin(0.5).setStroke('#38bdf8', 1);
 
-      if (b.id === 'habitat') {
-        plaque.setPosition(
-          position.x,
-          position.y - sprite.displayHeight / 2 - plaque.displayHeight / 2 - 10
-        );
-      }
+      plaque.setPosition(
+        position.x,
+        position.y - sprite.displayHeight / 2 - plaque.displayHeight / 2 - 10
+      );
 
       plaque.setDepth(25);
       plaque.setInteractive({ useHandCursor: true });
@@ -663,17 +645,8 @@ export class MarsScene extends Phaser.Scene {
     this.updateCameraZoom();
     const initialCameraTarget = this.getInitialCameraTarget();
     camera.centerOn(initialCameraTarget.x, initialCameraTarget.y);
-    this.syncCameraFollowOffset();
-    // Keep follow initialized while preserving the overview framing. The offset
-    // makes the initial camera center the followed point until the astronaut moves.
-    camera.startFollow(
-      this.astronaut,
-      true,
-      0.12,
-      0.12,
-      this.astronaut.x - camera.midPoint.x,
-      this.astronaut.y - camera.midPoint.y
-    );
+    camera.startFollow(this.astronaut, true, 0.12, 0.12, 0, 0);
+    this.isFollowingAstronaut = true;
     this.updateTerrainBackgroundCover();
 
     console.info('[OUTPOST: MARS] Terrain background dimensions', {
@@ -750,16 +723,17 @@ export class MarsScene extends Phaser.Scene {
 
   /**
    * Adjusts camera zoom dynamically based on viewport aspect ratio and display width.
+   * Maintains full, immersive world scale across mobile, tablet, and desktop (matching desktop 1.0 scale).
+   * Camera follows the astronaut without shrinking or miniaturizing the Mars world.
    */
   private updateCameraZoom(): void {
     const { width, height } = this.scale;
     const camera = this.cameras.main;
 
-    // Compact landscape viewports use a denser composition, not a full-world shrink.
-    if (width < 768 || height < 500) {
-      camera.setZoom(0.52);
-    } else if (width < 1400 || height < 850) {
-      camera.setZoom(0.85);
+    if (width >= 1400 && height >= 850) {
+      camera.setZoom(1.0);
+    } else if (width >= 768 && height >= 500) {
+      camera.setZoom(0.95);
     } else {
       camera.setZoom(1.0);
     }
@@ -781,10 +755,7 @@ export class MarsScene extends Phaser.Scene {
 
   private syncCameraFollowOffset(): void {
     const camera = this.cameras.main;
-    camera.setFollowOffset(
-      this.astronaut.x - camera.midPoint.x,
-      this.astronaut.y - camera.midPoint.y
-    );
+    camera.setFollowOffset(0, 0);
   }
 
   /**
@@ -806,12 +777,7 @@ export class MarsScene extends Phaser.Scene {
       const ctx = roadCanvas.getContext();
       if (ctx) {
         ctx.clearRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
-        const compact = this.isCompactViewport();
-        if (compact) {
-          this.drawCompactRoads(ctx);
-        } else {
-          this.drawDesktopRoads(ctx);
-        }
+        this.drawDesktopRoads(ctx);
         roadCanvas.refresh();
       }
 
@@ -909,50 +875,6 @@ export class MarsScene extends Phaser.Scene {
       ctx.fillStyle = 'rgba(146, 68, 47, 0.65)';
       ctx.fill();
     }
-  }
-
-  private drawCompactRoads(ctx: CanvasRenderingContext2D): void {
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([]);
-
-    // Shoulder
-    ctx.lineWidth = 50;
-    ctx.strokeStyle = 'rgba(108, 44, 28, 0.42)';
-    ctx.beginPath();
-    ctx.moveTo(160, 760);
-    ctx.lineTo(1840, 760);
-    ctx.stroke();
-
-    // Roadbed
-    ctx.lineWidth = 38;
-    ctx.strokeStyle = 'rgba(126, 54, 36, 0.88)';
-    ctx.beginPath();
-    ctx.moveTo(160, 760);
-    ctx.lineTo(1840, 760);
-    ctx.stroke();
-
-    // Worn path
-    ctx.lineWidth = 24;
-    ctx.strokeStyle = 'rgba(146, 68, 47, 0.72)';
-    ctx.beginPath();
-    ctx.moveTo(160, 760);
-    ctx.lineTo(1840, 760);
-    ctx.stroke();
-
-    // Tire ruts
-    if (typeof ctx.setLineDash === 'function') ctx.setLineDash([7, 5]);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = 'rgba(58, 20, 12, 0.65)';
-    ctx.beginPath();
-    ctx.moveTo(160, 749);
-    ctx.lineTo(1840, 749);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(160, 771);
-    ctx.lineTo(1840, 771);
-    ctx.stroke();
   }
 
   private drawTireRuts(
@@ -1412,7 +1334,11 @@ export class MarsScene extends Phaser.Scene {
   }
 
   private syncVirtualJoystick(): void {
-    const isTouch = this.touchInputActive || isTouchDevice();
+    const isTouch =
+      this.touchInputActive ||
+      isTouchDevice() ||
+      this.scale.width < 768 ||
+      this.scale.height < 500;
     if (!isTouch) {
       this.destroyVirtualJoystick();
       return;
@@ -1429,7 +1355,7 @@ export class MarsScene extends Phaser.Scene {
         .setScrollFactor(0)
         .setDepth(60);
       this.joystickThumb = this.add
-        .circle(x, y, 18, 0x0284c7, 0.95)
+        .circle(x, y, 21, 0x0284c7, 0.95)
         .setStrokeStyle(2.5, 0xf0f9ff, 0.95)
         .setScrollFactor(0)
         .setDepth(61);
@@ -1457,14 +1383,7 @@ export class MarsScene extends Phaser.Scene {
     }
 
     const isDirectHit = this.isPointerOverJoystick(pointer);
-    const inZone = isPointInMovementZone(
-      pointer.x,
-      pointer.y,
-      this.scale.width,
-      this.scale.height
-    );
-
-    if (!isDirectHit && !inZone) {
+    if (!isDirectHit) {
       return;
     }
 
@@ -1647,59 +1566,29 @@ export class MarsScene extends Phaser.Scene {
     );
   }
 
-  private isCompactViewport(): boolean {
-    const { width, height } = this.scale;
-    return width < 768 || height < 500;
-  }
-
-  private isMediumViewport(): boolean {
-    return !this.isCompactViewport() && this.scale.width < 1400;
-  }
-
   private getInitialCameraTarget(): TrackPoint {
-    if (this.isCompactViewport()) return { x: 1000, y: 580 };
-    if (this.isMediumViewport()) return { x: 1000, y: 750 };
     return { x: 1000, y: 750 };
   }
 
   private getBuildingPosition(building: BuildingData): { x: number; y: number } {
-    if (this.isCompactViewport()) return COMPACT_BUILDING_POSITIONS[building.id] ?? building;
-    if (this.isMediumViewport()) return MEDIUM_BUILDING_POSITIONS[building.id] ?? building;
     return building;
   }
 
   private updateResponsiveComposition(): void {
-    const compact = this.isCompactViewport();
-    const medium = this.isMediumViewport();
-
     for (const building of CANONICAL_BUILDINGS) {
       const sprite = this.buildings.get(building.id);
       const label = this.buildingLabels.get(building.id);
       if (!sprite) continue;
 
       const position = this.getBuildingPosition(building);
-      const targetWidth =
-        APPROVED_BUILDING_DISPLAY_WIDTHS[building.id] * (compact ? 0.95 : 1);
+      const targetWidth = APPROVED_BUILDING_DISPLAY_WIDTHS[building.id];
       sprite.setScale(targetWidth / sprite.width);
       sprite.setPosition(position.x, position.y);
 
       if (label) {
-        label.setFontSize(compact ? 20 : medium ? 12 : 11);
-        const badgeY = position.y + sprite.displayHeight / 2 + (compact ? 10 : 14);
-        label.setPosition(position.x, badgeY);
-        if (building.id === 'habitat') {
-          if (compact) {
-            label.setPosition(
-              position.x + sprite.displayWidth / 2 + label.displayWidth / 2 + 8,
-              badgeY
-            );
-          } else {
-            label.setPosition(
-              position.x,
-              position.y - sprite.displayHeight / 2 - label.displayHeight / 2 - 10
-            );
-          }
-        }
+        label.setFontSize(11);
+        const labelY = position.y - sprite.displayHeight / 2 - label.displayHeight / 2 - 10;
+        label.setPosition(position.x, labelY);
       }
     }
 
@@ -1710,20 +1599,18 @@ export class MarsScene extends Phaser.Scene {
         habitat.y +
           habitat.displayHeight / 2 +
           ASTRONAUT_DISPLAY_HEIGHT / 2 +
-          (compact ? 0 : 8)
+          8
       );
       this.hasPositionedAstronaut = true;
     }
 
-    this.astronautStatusLabel?.setFontSize(compact ? 16 : 9);
+    this.astronautStatusLabel?.setFontSize(9);
     this.positionAstronautStatusLabel();
   }
 
   private positionAstronautStatusLabel(): void {
     if (!this.astronautStatusLabel || !this.astronaut) return;
-    const placeAbove =
-      this.isCompactViewport() ||
-      this.astronaut.y > WORLD_HEIGHT - ASTRONAUT_DISPLAY_HEIGHT;
+    const placeAbove = this.astronaut.y > WORLD_HEIGHT - ASTRONAUT_DISPLAY_HEIGHT;
     this.astronautStatusLabel.setPosition(
       this.astronaut.x,
       placeAbove
