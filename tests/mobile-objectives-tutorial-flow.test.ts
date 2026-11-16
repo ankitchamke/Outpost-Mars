@@ -67,7 +67,7 @@ if (typeof window === 'undefined') {
   };
 }
 
-const { getJoystickPosition, JOYSTICK_HIT_RADIUS } = await import(
+const { getJoystickPosition, getControlEdgeClearance, JOYSTICK_RADIUS, JOYSTICK_HIT_RADIUS } = await import(
   '../src/game/touch-controls'
 );
 const { FirstTimeTutorialUI } = await import('../src/ui/first-time-tutorial');
@@ -172,30 +172,32 @@ describe('Mobile Objectives & Tutorial Flow (fix/mobile-objectives-tutorial-flow
   describe('1. Dedicated Bottom Control Dock & Independent Touch Areas', () => {
     it('anchors joystick base permanently at bottom-left within viewport', () => {
       const joy390 = getJoystickPosition(390, 844);
-      expect(joy390.x).toBe(70);
+      expect(joy390.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(390));
       expect(joy390.y).toBe(844 - 70);
 
       const joy360 = getJoystickPosition(360, 800);
-      expect(joy360.x).toBe(70);
+      expect(joy360.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(360));
       expect(joy360.y).toBe(800 - 70);
 
       const joy412 = getJoystickPosition(412, 915);
-      expect(joy412.x).toBe(70);
+      expect(joy412.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(412));
       expect(joy412.y).toBe(915 - 70);
     });
 
-    it('positions building interaction pill immediately to the right of the joystick with clear hit clearance', () => {
-      // Joystick hit radius = 75px, centered at x = 70 => hit zone x in [0, 145]
-      const joyX = 70;
-      const joyHitRight = joyX + JOYSTICK_HIT_RADIUS; // 145
-      const pillLeft = 144; // dock anchor immediately to right of joystick
+    it('anchors interaction on the opposite edge with a clear joystick hit zone', () => {
+      const viewportWidth = 390;
+      const edgeClearance = getControlEdgeClearance(viewportWidth);
+      const joyX = getJoystickPosition(viewportWidth, 844).x;
+      const joyHitRight = joyX + JOYSTICK_HIT_RADIUS;
+      const promptWidth = 128;
+      const pillLeft = viewportWidth - edgeClearance - promptWidth;
+      expect(viewportWidth - (pillLeft + promptWidth)).toBeCloseTo(edgeClearance);
+      expect(pillLeft).toBeGreaterThan(joyHitRight);
 
-      expect(joyHitRight).toBeLessThanOrEqual(pillLeft + 1);
-
-      // Objectives bar bottom anchor is 124px, above joystick top (114px) and pill (26px)
+      // The compact objectives card is 14px above the visible joystick ring.
       const viewportHeight = 844;
       const joyTopFromBottom = 114;
-      const objectivesBottomFromBottom = 124;
+      const objectivesBottomFromBottom = 70 + JOYSTICK_RADIUS + 14;
       expect(objectivesBottomFromBottom).toBeGreaterThan(joyTopFromBottom);
 
       const joyTopY = viewportHeight - joyTopFromBottom; // 730

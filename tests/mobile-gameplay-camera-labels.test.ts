@@ -84,7 +84,7 @@ describe('Mobile Gameplay Camera, Joystick & World Layout (fix/mobile-gameplay-c
       expect(JOYSTICK_RADIUS).toBe(44);
       // Hit radius enlarged from 64 to 75 (~17% increase, 150px touch target)
       expect(JOYSTICK_HIT_RADIUS).toBe(75);
-      // Margin from bottom-left corner adjusted from 62 to 70
+      // Control center remains 70px above the viewport bottom.
       expect(JOYSTICK_MARGIN).toBe(70);
     });
 

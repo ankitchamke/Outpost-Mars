@@ -177,6 +177,7 @@ describe('Mobile UX Polish & Game Controls Verification', async () => {
     JOYSTICK_RADIUS,
     JOYSTICK_HIT_RADIUS,
     JOYSTICK_MARGIN,
+    getControlEdgeClearance,
     getJoystickPosition,
     isPointInMovementZone,
   } = await import('../src/game/touch-controls');
@@ -191,11 +192,11 @@ describe('Mobile UX Polish & Game Controls Verification', async () => {
 
     it('calculates stationary bottom-left anchor position based on viewport size', () => {
       const pos390 = getJoystickPosition(390, 844);
-      expect(pos390.x).toBe(70);
+      expect(pos390.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(390));
       expect(pos390.y).toBe(844 - 70);
 
       const pos360 = getJoystickPosition(360, 800);
-      expect(pos360.x).toBe(70);
+      expect(pos360.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(360));
       expect(pos360.y).toBe(800 - 70);
     });
 
@@ -241,7 +242,7 @@ describe('Mobile UX Polish & Game Controls Verification', async () => {
 
       const fixedAnchorX = scene.joystickCenter.x;
       const fixedAnchorY = scene.joystickCenter.y;
-      expect(fixedAnchorX).toBe(70);
+      expect(fixedAnchorX).toBeCloseTo(getJoystickPosition(390, 844).x);
       expect(fixedAnchorY).toBe(844 - 70);
 
       // Simulate touch down at an offset position within hit radius

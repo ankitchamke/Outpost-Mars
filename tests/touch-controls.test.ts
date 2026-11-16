@@ -64,6 +64,7 @@ if (typeof window === 'undefined') {
 
 import {
   calculateJoystickVector,
+  getControlEdgeClearance,
   getJoystickPosition,
   isTouchDevice,
   isPointInMovementZone,
@@ -129,32 +130,44 @@ describe('Touch Controls & Capability Detection (Phase 07.1)', () => {
   describe('getJoystickPosition() - Tablet & Mobile Responsive Positioning', () => {
     it('positions joystick at bottom-left on tablet portrait (768 x 1024)', () => {
       const pos = getJoystickPosition(768, 1024);
-      expect(pos.x).toBe(JOYSTICK_MARGIN);
+      expect(pos.x).toBe(JOYSTICK_RADIUS + getControlEdgeClearance(768));
       expect(pos.y).toBe(1024 - JOYSTICK_MARGIN); // 968
     });
 
     it('positions joystick at bottom-left on tablet landscape (1024 x 768)', () => {
       const pos = getJoystickPosition(1024, 768);
-      expect(pos.x).toBe(JOYSTICK_MARGIN);
+      expect(pos.x).toBe(JOYSTICK_RADIUS + getControlEdgeClearance(1024));
       expect(pos.y).toBe(768 - JOYSTICK_MARGIN); // 712
     });
 
     it('positions joystick at bottom-left on mobile portrait (375 x 812)', () => {
       const pos = getJoystickPosition(375, 812);
-      expect(pos.x).toBe(JOYSTICK_MARGIN);
+      expect(pos.x).toBe(JOYSTICK_RADIUS + getControlEdgeClearance(375));
       expect(pos.y).toBe(812 - JOYSTICK_MARGIN); // 756
     });
 
     it('positions joystick at bottom-left on mobile landscape (844 x 390)', () => {
       const pos = getJoystickPosition(844, 390);
-      expect(pos.x).toBe(JOYSTICK_MARGIN);
+      expect(pos.x).toBe(JOYSTICK_RADIUS + getControlEdgeClearance(844));
       expect(pos.y).toBe(390 - JOYSTICK_MARGIN); // 334
     });
 
     it('clamps coordinates safely on extremely compact viewports', () => {
-      const pos = getJoystickPosition(80, 80, 56);
+      const pos = getJoystickPosition(80, 80, {
+        leftClearance: 56,
+        bottomFromEdge: 56,
+      });
       expect(pos.x).toBeGreaterThanOrEqual(24);
       expect(pos.y).toBeGreaterThanOrEqual(24);
+    });
+
+    it('keeps the joystick ring clear of the viewport edge and honors CSS dock insets', () => {
+      const pos = getJoystickPosition(390, 844, {
+        leftClearance: 20,
+        bottomFromEdge: 70,
+      });
+      expect(pos.x - JOYSTICK_RADIUS).toBe(20);
+      expect(844 - pos.y).toBe(70);
     });
   });
 

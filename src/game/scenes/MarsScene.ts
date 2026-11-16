@@ -7,10 +7,12 @@ import { MARS_DISCOVERIES, type MarsDiscovery } from '../../data/discoveries';
 import {
   isTouchDevice,
   getJoystickPosition,
+  getCameraCompensatedPosition,
   calculateJoystickVector,
   isPointInMovementZone,
   JOYSTICK_RADIUS,
   JOYSTICK_HIT_RADIUS,
+  type CameraViewportTransform,
 } from '../touch-controls';
 import {
   applyBuildingHitArea,
@@ -337,8 +339,10 @@ export class MarsScene extends Phaser.Scene {
   private joystickCenter = new Phaser.Math.Vector2();
   private joystickVector = new Phaser.Math.Vector2();
   private joystickPointerId: number | null = null;
-  private readonly joystickRadius = JOYSTICK_RADIUS;
-  private readonly joystickHitRadius = JOYSTICK_HIT_RADIUS;
+  private joystickRadius = JOYSTICK_RADIUS;
+  private joystickHitRadius = JOYSTICK_HIT_RADIUS;
+  private viewportResizeObserver?: ResizeObserver;
+  private readonly handleVisualViewportResize = (): void => this.syncVirtualJoystick();
   private touchInputActive = false;
 
   constructor() {
@@ -648,6 +652,8 @@ export class MarsScene extends Phaser.Scene {
     camera.startFollow(this.astronaut, true, 0.12, 0.12, 0, 0);
     this.isFollowingAstronaut = true;
     this.updateTerrainBackgroundCover();
+    this.syncVirtualJoystick();
+    this.observeViewportSize();
 
     console.info('[OUTPOST: MARS] Terrain background dimensions', {
       source: {
@@ -751,6 +757,31 @@ export class MarsScene extends Phaser.Scene {
       this.syncCameraFollowOffset();
     }
     this.updateTerrainBackgroundCover();
+  }
+
+  private observeViewportSize(): void {
+    const target = this.game.canvas?.parentElement;
+    if (target && typeof ResizeObserver !== 'undefined') {
+      this.viewportResizeObserver = new ResizeObserver((entries) => {
+        const rect = entries[0]?.contentRect ?? target.getBoundingClientRect();
+        const width = Math.round(rect.width);
+        const height = Math.round(rect.height);
+        if (
+          width > 0 &&
+          height > 0 &&
+          (Math.abs(width - this.scale.width) > 1 || Math.abs(height - this.scale.height) > 1)
+        ) {
+          this.scale.resize(width, height);
+        } else {
+          this.syncVirtualJoystick();
+        }
+      });
+      this.viewportResizeObserver.observe(target);
+    }
+
+    if (typeof window !== 'undefined') {
+      window.visualViewport?.addEventListener('resize', this.handleVisualViewportResize);
+    }
   }
 
   private syncCameraFollowOffset(): void {
@@ -1344,27 +1375,102 @@ export class MarsScene extends Phaser.Scene {
       return;
     }
 
-    const { x, y } = getJoystickPosition(this.scale.width, this.scale.height);
-    this.joystickCenter.set(x, y);
+    this.syncJoystickLayout(false, true);
+  }
 
-    if (!this.joystickBase) {
-      // Fixed base: familiar mobile game joystick with outer ring and high-contrast thumb
+  private syncJoystickLayout(resetThumb: boolean, createIfMissing = false): void {
+    const canvas = this.game?.canvas;
+    const dockElement = canvas?.parentElement;
+    const dockRect = dockElement?.getBoundingClientRect?.();
+    const canvasRect = canvas?.getBoundingClientRect?.();
+    let leftClearance: number | undefined;
+    let bottomFromEdge: number | undefined;
+
+    if (dockElement && typeof window !== 'undefined') {
+      try {
+        const dockGuide = window.getComputedStyle(dockElement, '::before');
+        const left = Number.parseFloat(dockGuide.left);
+        const bottom = Number.parseFloat(dockGuide.bottom);
+        if (Number.isFinite(left)) leftClearance = left;
+        if (Number.isFinite(bottom)) bottomFromEdge = bottom;
+      } catch {
+        // Headless browsers may not expose pseudo-element computed styles.
+      }
+    }
+
+    const cssWidth = dockRect?.width ?? this.scale.width;
+    const cssHeight = dockRect?.height ?? this.scale.height;
+    const cssPosition = getJoystickPosition(cssWidth, cssHeight, {
+      leftClearance,
+      bottomFromEdge,
+    });
+    const scaleX = this.scale.width / (canvasRect?.width || this.scale.width || 1);
+    const scaleY = this.scale.height / (canvasRect?.height || this.scale.height || 1);
+    const dockOffsetX = dockRect && canvasRect ? dockRect.left - canvasRect.left : 0;
+    const dockOffsetY = dockRect && canvasRect ? dockRect.top - canvasRect.top : 0;
+    this.joystickCenter.set(
+      (dockOffsetX + cssPosition.x) * scaleX,
+      (dockOffsetY + cssPosition.y) * scaleY
+    );
+    const cssToGameScale = Math.min(scaleX, scaleY);
+    this.joystickRadius = JOYSTICK_RADIUS * cssToGameScale;
+    this.joystickHitRadius = JOYSTICK_HIT_RADIUS * cssToGameScale;
+
+    const cameraTransform = this.getJoystickCameraTransform();
+    const cameraScaleX = 1 / (cameraTransform.zoomX || 1);
+    const cameraScaleY = 1 / (cameraTransform.zoomY || 1);
+    const basePosition = getCameraCompensatedPosition(this.joystickCenter, cameraTransform);
+
+    if (!this.joystickBase && createIfMissing) {
+      // Counter-transform camera zoom so this canvas control stays in CSS screen space.
       this.joystickBase = this.add
-        .circle(x, y, this.joystickRadius, 0x090e17, 0.65)
+        .circle(basePosition.x, basePosition.y, this.joystickRadius, 0x090e17, 0.65)
         .setStrokeStyle(2, 0x38bdf8, 0.8)
+        .setScale(cameraScaleX, cameraScaleY)
         .setScrollFactor(0)
         .setDepth(60);
       this.joystickThumb = this.add
-        .circle(x, y, 21, 0x0284c7, 0.95)
+        .circle(basePosition.x, basePosition.y, this.joystickRadius * (21 / JOYSTICK_RADIUS), 0x0284c7, 0.95)
         .setStrokeStyle(2.5, 0xf0f9ff, 0.95)
+        .setScale(cameraScaleX, cameraScaleY)
         .setScrollFactor(0)
         .setDepth(61);
-    } else {
-      this.joystickBase.setPosition(x, y);
-      if (this.joystickPointerId === null) {
-        this.joystickThumb?.setPosition(x, y);
-      }
+    } else if (this.joystickBase) {
+      this.joystickBase.setPosition(basePosition.x, basePosition.y);
+      this.joystickBase.setScale?.(cameraScaleX, cameraScaleY);
     }
+
+    if (this.joystickThumb && (resetThumb || this.joystickPointerId === null)) {
+      this.joystickThumb.setPosition(basePosition.x, basePosition.y);
+      this.joystickThumb.setScale?.(cameraScaleX, cameraScaleY);
+    }
+  }
+
+  private getJoystickCameraTransform(): CameraViewportTransform {
+    const camera = this.cameras?.main;
+    return camera
+      ? {
+          x: camera.x,
+          y: camera.y,
+          width: camera.width,
+          height: camera.height,
+          originX: camera.originX,
+          originY: camera.originY,
+          rotation: (camera as unknown as { rotation: number }).rotation ?? 0,
+          zoomX: camera.zoomX,
+          zoomY: camera.zoomY,
+        }
+      : {
+          x: 0,
+          y: 0,
+          width: this.scale.width,
+          height: this.scale.height,
+          originX: 0.5,
+          originY: 0.5,
+          rotation: 0,
+          zoomX: 1,
+          zoomY: 1,
+        };
   }
 
   private handleJoystickPointerDown(pointer: Phaser.Input.Pointer): void {
@@ -1409,10 +1515,13 @@ export class MarsScene extends Phaser.Scene {
     const dy = pointer.y - this.joystickCenter.y;
     const vector = calculateJoystickVector(dx, dy, this.joystickRadius);
     this.joystickVector.set(vector.x, vector.y);
-    this.joystickThumb?.setPosition(
-      this.joystickCenter.x + this.joystickVector.x * this.joystickRadius,
-      this.joystickCenter.y + this.joystickVector.y * this.joystickRadius
-    );
+    const cameraTransform = this.getJoystickCameraTransform();
+    const thumbScreenPosition = {
+      x: this.joystickCenter.x + this.joystickVector.x * this.joystickRadius,
+      y: this.joystickCenter.y + this.joystickVector.y * this.joystickRadius,
+    };
+    const thumbPosition = getCameraCompensatedPosition(thumbScreenPosition, cameraTransform);
+    this.joystickThumb?.setPosition(thumbPosition.x, thumbPosition.y);
   }
 
   private capturePointer(pointer: Phaser.Input.Pointer): void {
@@ -1476,14 +1585,7 @@ export class MarsScene extends Phaser.Scene {
       this.joystickPointerId = null;
     }
     this.joystickVector.set(0, 0);
-    const { x, y } = getJoystickPosition(this.scale.width, this.scale.height);
-    this.joystickCenter.set(x, y);
-    if (this.joystickBase) {
-      this.joystickBase.setPosition(x, y);
-    }
-    if (this.joystickThumb) {
-      this.joystickThumb.setPosition(x, y);
-    }
+    this.syncJoystickLayout(true);
     if (this.astronaut?.body) {
       (this.astronaut.body as Phaser.Physics.Arcade.Body | null)?.setVelocity(0, 0);
     }
@@ -1506,6 +1608,11 @@ export class MarsScene extends Phaser.Scene {
     this.input.off('pointerup', this.handleJoystickPointerUp, this);
     this.input.off('pointerupoutside', this.handleJoystickPointerUp, this);
     this.scale.off('resize', this.handleResize, this);
+    this.viewportResizeObserver?.disconnect();
+    this.viewportResizeObserver = undefined;
+    if (typeof window !== 'undefined') {
+      window.visualViewport?.removeEventListener('resize', this.handleVisualViewportResize);
+    }
     this.removeBuildingInteractionListeners();
   }
 

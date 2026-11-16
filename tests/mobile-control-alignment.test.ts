@@ -68,7 +68,13 @@ if (typeof window === 'undefined') {
 }
 
 const { MarsScene } = await import('../src/game/scenes/MarsScene');
-const { getJoystickPosition, JOYSTICK_RADIUS, JOYSTICK_HIT_RADIUS } =
+const {
+  getJoystickPosition,
+  getControlEdgeClearance,
+  getCameraCompensatedPosition,
+  JOYSTICK_RADIUS,
+  JOYSTICK_HIT_RADIUS,
+} =
   await import('../src/game/touch-controls');
 const { BuildingInteractionUI } = await import('../src/ui/building-interactions');
 const { createInitialGameState } = await import('../src/core/state');
@@ -183,7 +189,7 @@ describe('Mobile Control Alignment & Camera Refinement (fix/mobile-control-align
       expect(appliedZoom).toBe(0.85);
     });
 
-    it('applies optimal 0.85 zoom on standard mobile (390x844)', () => {
+    it('applies the mobile zoom on standard mobile (390x844)', () => {
       const scene: any = new MarsScene();
       let appliedZoom = 0;
       scene.cameras = { main: { setZoom: vi.fn((z: number) => { appliedZoom = z; }) } };
@@ -216,82 +222,71 @@ describe('Mobile Control Alignment & Camera Refinement (fix/mobile-control-align
     });
   });
 
-  describe('2. Joystick and Interaction Button Alignment (Shared Horizontal Equator)', () => {
-    it('aligns joystick and interaction prompt around the exact same vertical center line (70px)', () => {
-      const viewportHeight = 844;
-      const joyPos = getJoystickPosition(390, viewportHeight);
+  describe('2. Joystick and Interaction Button Alignment (Shared Viewport Dock)', () => {
+    it.each([
+      [360, 800],
+      [390, 844],
+      [412, 915],
+      [432, 798],
+    ])('keeps both control centers aligned and edge clearances equal at %i x %i', (width, height) => {
+      const gutter = getControlEdgeClearance(width);
+      const joy = getJoystickPosition(width, height, {
+        leftClearance: gutter,
+        bottomFromEdge: 70,
+      });
+      const interactionRight = width - gutter;
+      const interactionLeft = interactionRight - 128;
+      const joystickCenterFromBottom = height - joy.y;
+      const interactionCenterFromBottom = 70;
 
-      // Joystick center Y from bottom of viewport
-      const joyCenterYFromBottom = viewportHeight - joyPos.y;
-      expect(joyCenterYFromBottom).toBe(70);
+      expect(joy.x - JOYSTICK_RADIUS).toBeCloseTo(gutter);
+      expect(width - interactionRight).toBeCloseTo(gutter);
+      expect(interactionLeft).toBeGreaterThan(joy.x + JOYSTICK_HIT_RADIUS);
+      expect(Math.abs(interactionCenterFromBottom - joystickCenterFromBottom)).toBe(0);
+      expect(joystickCenterFromBottom - JOYSTICK_RADIUS).toBe(26);
 
-      // Building interaction prompt uses shared token --mobile-control-center-y = 70px
-      // With bottom: 70px and transform: translateY(50%), its center is precisely 70px
-      const promptCenterYFromBottom = 70;
-      expect(promptCenterYFromBottom).toBe(joyCenterYFromBottom);
-
-      // Vertical offset between centers is exactly 0px
-      const centerDelta = Math.abs(promptCenterYFromBottom - joyCenterYFromBottom);
-      expect(centerDelta).toBe(0);
+      const objectivesBottomFromBottom = 70 + JOYSTICK_RADIUS + 14;
+      const joystickTopFromBottom = 70 + JOYSTICK_RADIUS;
+      expect(objectivesBottomFromBottom - joystickTopFromBottom).toBe(14);
     });
 
-    it('maintains comfortable horizontal gap between joystick visual ring and interaction pill', () => {
-      const joyCenterX = 70;
-      const joyVisualRadius = JOYSTICK_RADIUS; // 44px
-      const joyVisualRightEdge = joyCenterX + joyVisualRadius; // 114px
+    it('counteracts Phaser camera zoom so the joystick renders at its DOM dock point', () => {
+      const target = { x: 62, y: 618 };
+      const camera = {
+        x: 0,
+        y: 0,
+        width: 360,
+        height: 688,
+        originX: 0.5,
+        originY: 0.5,
+        rotation: 0,
+        zoomX: 0.85,
+        zoomY: 0.85,
+      };
+      const compensated = getCameraCompensatedPosition(target, camera);
+      const rendered = {
+        x: camera.x + camera.width * camera.originX + camera.zoomX * (compensated.x - camera.width * camera.originX),
+        y: camera.y + camera.height * camera.originY + camera.zoomY * (compensated.y - camera.height * camera.originY),
+      };
 
-      // Building prompt starts at --mobile-control-dock-left (148px)
-      const pillLeft = 148;
-      const horizontalGap = pillLeft - joyVisualRightEdge;
-
-      // Comfortable visual gap is 34px (greater than 20px and less than 50px)
-      expect(horizontalGap).toBe(34);
-      expect(horizontalGap).toBeGreaterThanOrEqual(24);
-      expect(horizontalGap).toBeLessThanOrEqual(48);
-    });
-
-    it('guarantees touch hit clearance between joystick active area and interaction pill', () => {
-      const joyCenterX = 70;
-      const joyHitRadius = JOYSTICK_HIT_RADIUS; // 75px
-      const joyHitRightEdge = joyCenterX + joyHitRadius; // 145px
-
-      const pillLeft = 148;
-      expect(pillLeft).toBeGreaterThan(joyHitRightEdge);
-
-      // Buffer between joystick hit circle and interaction button
-      const touchBuffer = pillLeft - joyHitRightEdge;
-      expect(touchBuffer).toBe(3);
-    });
-
-    it('preserves clean bottom clearance above the Sol footer for both controls', () => {
-      const joyCenterY = 70;
-      const joyRadius = JOYSTICK_RADIUS; // 44px
-      const joyBottomClearance = joyCenterY - joyRadius; // 26px above Sol footer
-      expect(joyBottomClearance).toBe(26);
-      expect(joyBottomClearance).toBeGreaterThanOrEqual(20);
-
-      const promptCenterY = 70;
-      const promptHeight = 40;
-      const promptBottomClearance = promptCenterY - promptHeight / 2; // 50px above Sol footer
-      expect(promptBottomClearance).toBe(50);
-      expect(promptBottomClearance).toBeGreaterThan(joyBottomClearance);
+      expect(rendered.x).toBeCloseTo(target.x);
+      expect(rendered.y).toBeCloseTo(target.y);
     });
   });
 
   describe('3. Spacing System & Non-Overlap with Objectives Panel', () => {
     it('positions objectives panel safely above the bottom control dock', () => {
-      // Taller control in dock is the joystick (reaches 70 + 44 = 114px)
+      // The joystick ring ends 114px above the viewport bottom.
       const joyTop = 70 + JOYSTICK_RADIUS; // 114px
-      const promptTop = 70 + 20; // 90px
+      const promptTop = 70 + 22; // 92px for the 44px touch target
 
-      // Objectives bar bottom anchor is 128px
-      const objectivesBottom = 128;
+      const objectivesBottom = 70 + JOYSTICK_RADIUS + 14;
 
       expect(objectivesBottom).toBeGreaterThan(joyTop);
       expect(objectivesBottom).toBeGreaterThan(promptTop);
 
       const marginToJoystick = objectivesBottom - joyTop;
-      expect(marginToJoystick).toBe(14); // 14px clean vertical separation
+      expect(marginToJoystick).toBe(14);
     });
 
     it('hides building interaction button completely when objectives panel is expanded', () => {

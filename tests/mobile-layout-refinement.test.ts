@@ -72,6 +72,7 @@ const {
   JOYSTICK_RADIUS,
   JOYSTICK_HIT_RADIUS,
   JOYSTICK_MARGIN,
+  getControlEdgeClearance,
   getJoystickPosition,
 } = await import('../src/game/touch-controls');
 const { OutpostHud } = await import('../src/ui/hud');
@@ -165,15 +166,15 @@ describe('Mobile Layout Refinement (fix/mobile-layout-refinement)', () => {
       expect(JOYSTICK_MARGIN).toBe(70);
 
       const pos360 = getJoystickPosition(360, 800);
-      expect(pos360.x).toBe(70);
+      expect(pos360.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(360));
       expect(pos360.y).toBe(800 - 70);
 
       const pos390 = getJoystickPosition(390, 844);
-      expect(pos390.x).toBe(70);
+      expect(pos390.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(390));
       expect(pos390.y).toBe(844 - 70);
 
       const pos412 = getJoystickPosition(412, 915);
-      expect(pos412.x).toBe(70);
+      expect(pos412.x - JOYSTICK_RADIUS).toBeCloseTo(getControlEdgeClearance(412));
       expect(pos412.y).toBe(915 - 70);
     });
 
@@ -270,9 +271,9 @@ describe('Mobile Layout Refinement (fix/mobile-layout-refinement)', () => {
       // Joystick bounding circle
       const joyTop = joyY - JOYSTICK_RADIUS; // 774 - 44 = 730
       const joyBottom = joyY + JOYSTICK_RADIUS; // 774 + 44 = 818
-      const joyRight = joyX + JOYSTICK_RADIUS; // 70 + 44 = 114
+      const joyRight = joyX + JOYSTICK_RADIUS;
 
-      expect(joyRight).toBe(114);
+      expect(joyRight).toBeCloseTo(JOYSTICK_RADIUS * 2 + getControlEdgeClearance(390));
       expect(joyTop).toBe(730);
       expect(joyBottom).toBe(818);
 
