@@ -31,6 +31,8 @@
 > **Post-Submission Development Note**
 >
 > The mobile-responsive experience and subsequent interface refinements were developed after the NASA Space Apps Challenge submission deadline as part of the project's continued development. These improvements are included in this repository's ongoing development and should not be confused with the original submitted version.
+>
+> The desktop and science showcase visuals elsewhere in this README are retained unchanged. The mobile gameplay image in the section below is a fresh post-submission capture of the refined interface, not a screenshot of the original submission.
 
 ---
 
@@ -59,7 +61,7 @@
    - [NASA DONKI Space Weather Crisis & Mission Debrief](#nasa-donki-space-weather-crisis--mission-debrief)
    - [Interactive NASA Science Challenges](#interactive-nasa-science-challenges)
    - [Atmospheric Sci-Fi Audio Engine](#atmospheric-sci-fi-audio-engine)
-4. [Responsive Mobile Gameplay & Touch Controls](#responsive-mobile-gameplay--touch-controls)
+4. [Post-Submission Mobile Gameplay & Touch Controls](#post-submission-mobile-gameplay--touch-controls)
    - [Stationary Virtual Joystick](#stationary-virtual-joystick)
    - [Proximity Interaction Dock](#proximity-interaction-dock)
    - [Compact HUD & Telemetry Drawers](#compact-hud--telemetry-drawers)
@@ -194,17 +196,15 @@ An immersive, subtle audio subsystem designed to enhance engagement without dist
 
 ---
 
-## 📱 Responsive Mobile Gameplay & Touch Controls
-
-*(Developed post-submission as part of the project's continued development roadmap)*
+## 📱 Post-Submission Mobile Gameplay & Touch Controls
 
 OUTPOST: MARS delivers a first-class mobile and tablet experience optimized across 320px to 432px portrait viewports and landscape orientations:
 
 <div align="center">
 
-<img src="public/assets/showcase/mobile-gameplay.png" alt="OUTPOST: MARS Mobile Gameplay — Touch Controls & Dedicated Control Dock" width="390" style="max-width: 100%; border-radius: 12px; border: 1.5px solid #ff6b35; box-shadow: 0 12px 36px rgba(0,0,0,0.7);" />
+<img src="public/assets/showcase/mobile-gameplay.png" alt="Post-submission OUTPOST: MARS mobile gameplay — joystick on the left and Habitat interaction button on the right, vertically aligned" width="390" style="max-width: 100%; border-radius: 12px; border: 1.5px solid #ff6b35; box-shadow: 0 12px 36px rgba(0,0,0,0.7);" />
 
-<p><em>OUTPOST: MARS Mobile Interface — Dedicated bottom control dock with fixed virtual joystick (bottom-left), proximity interaction pill (aligned on shared 70px horizontal centerline), compact telemetry status strip, and collapsible objectives card.</em></p>
+<p><em>Current mobile capture at 390 × 844 CSS pixels (2× image resolution): fixed left joystick and proximity-only Habitat button share a horizontal centerline, with the compact objectives card above the controls and the Sol footer below.</em></p>
 
 </div>
 
@@ -214,7 +214,7 @@ OUTPOST: MARS delivers a first-class mobile and tablet experience optimized acro
 - **Camera Compensation:** Inverts Phaser camera scale transforms so the canvas joystick maintains exact 1:1 alignment with DOM safe-area overlays regardless of viewport zoom.
 
 ### Proximity Interaction Dock
-- **Collinear Control Equator:** The building interaction button anchors to the exact same vertical centerline ($70\text{px}$ from the viewport bottom) as the virtual joystick, creating a balanced, thumb-friendly handheld console layout.
+- **Collinear Control Equator:** The building interaction button and virtual joystick share one responsive dock coordinate and remain vertically aligned, with equal safe-area-aware clearance from their screen edges.
 - **Independent Touch Targets:** Visual and touch clearances ($> 34\text{px}$ visual gap, isolated touch hit areas) prevent accidental interactions while steering.
 - **WCAG 2.1 AA Compliant Touch Areas:** All mobile buttons maintain a minimum $44 \times 44\text{px}$ touch target size.
 
@@ -223,7 +223,7 @@ OUTPOST: MARS delivers a first-class mobile and tablet experience optimized acro
 - **Slide-Out Telemetry Drawers:** Tapping any status pill reveals detailed subsystem telemetry cards with glassmorphic styling, smooth animations, and backdrop blur.
 
 ### Conflict-Free Objectives Panel
-- **Non-Overlapping Bottom Anchor:** Objectives card anchors safely at $128\text{px}$ above the viewport bottom, leaving $14\text{px}$ clearance above the joystick.
+- **Non-Overlapping Bottom Anchor:** Objectives card stays centered above the control dock with a $14\text{px}$ gap from the joystick ring.
 - **Auto-Hiding Interaction Button:** When expanding the mission objectives drawer, the interaction prompt automatically hides (`display: none !important`), ensuring zero collision while preserving full joystick control.
 - **Sticky Collapse Controls:** Features a prominent, accessible `Hide` toggle button with full keyboard and touch focus handling.
 
